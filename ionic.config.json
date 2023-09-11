@@ -1,0 +1,7 @@
+{
+  "name": "Web2",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

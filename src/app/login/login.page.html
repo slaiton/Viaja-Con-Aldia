@@ -1,0 +1,38 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <!-- <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons> -->
+    <ion-title class="ml-3">Inicio de Sesion</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="container-fluid p-3">
+
+  <div class="sing-in text-center">
+    <main class="form-signin w-100 m-auto p-2">
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+            <img class="mb-4" src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png" alt=""  height="150">
+            <!-- <h1 class="h3 mb-3 fw-normal">Inicio de sesion </h1>               -->
+            <div class="form-floating">
+                <input type="text" formControlName="username" name="username" matInput class="form-control" id="username" placeholder="Usuario" required>
+                <label for="floatingInput">Cedula</label>
+              </div>
+              <div class="form-floating">
+                  <input type="password" formControlName="password" name="password" matInput  class="form-control" id="password" placeholder="Clave" required>
+                  <label for="floatingPassword">Placa</label>
+              </div>
+              
+              <!-- <div class="checkbox mb-3">
+                  <label>
+                      <input type="checkbox" value="remember-me"> Remember me
+                  </label>
+              </div> -->
+              <!-- <button class="w-100 btn btn-lg btn-primary" type="submit">Iniciar Sesion</button> -->
+              <ion-button  type="submit" >Iniciar Sesion</ion-button>
+              <p class="mt-5 mb-3 text-muted">Viaja Con  Aldia &copy;2022</p>
+          </form>
+      </main>
+  </div>
+
+</ion-content>
