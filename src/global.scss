@@ -366,10 +366,11 @@ ul.list-unstyled li h3 {
   }
 
   .questions {
-    border: 2px solid #3880ff;
+    border: 1px solid #3880ff;
     margin-bottom: 5px;
     border-radius: 15px;
     background-color: #5888b8;
+    padding: 10px;
   }
 
   ion-button[type="submit"] {
@@ -379,6 +380,7 @@ ul.list-unstyled li h3 {
     font-weight: bold; /* Texto en negrita */
     margin-top: 20px; /* Espacio superior */
     padding: 10px;
+
   }
 
 
