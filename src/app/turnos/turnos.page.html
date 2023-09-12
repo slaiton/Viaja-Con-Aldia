@@ -26,11 +26,11 @@
                 <div class="col-md-12 mt-2">
                     <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
                     <input [ngModel]="nombre" type="hidden" id="origen" formControlName="origen">
-                </div> 
+                </div>
                 <ion-item class="col-md-12 mt-2">
                     <!-- <label for="destino1">Destino 1</label> -->
                     <!-- <select class="form-control" formControlName="destino1" id="destino1" required> -->
-                        <ion-select formControlName="destino1" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 1 ...">    
+                        <ion-select formControlName="destino1" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 1 ...">
                             <ion-select-option></ion-select-option>
                             <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
                         </ion-select>
@@ -38,14 +38,14 @@
                 </ion-item>
                 <ion-item class="col-md-12 mt-2">
                     <!-- <label for="destino2">Destino 2</label> -->
-                    <ion-select formControlName="destino2" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 2 ...">    
+                    <ion-select formControlName="destino2" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 2 ...">
                         <ion-select-option></ion-select-option>
                         <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
                     </ion-select>
                 </ion-item>
                 <ion-item class="col-md-12 mt-2">
                     <!-- <label for="">Destino 3</label> -->
-                    <ion-select formControlName="destino3" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 3 ...">    
+                    <ion-select formControlName="destino3" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 3 ...">
                         <ion-select-option></ion-select-option>
                         <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
                     </ion-select>
@@ -63,7 +63,7 @@
                 <h6 style="color: #DB1824; font-size: 12px;" id="labelPorcentaje">* De detectar que la información brindada no es cierta podrá incurrir en sanciones drásticas por parte de la compañía.</h6>
 
                 <div class="col-md-12 mt-4 mb-4">
-                    <label for="">Vechiulo vacio</label>
+                    <label for="">Vehiculo vacio</label>
                     <ion-select  interface="action-sheet" formControlName="vehiculovac" id="vehiculovac" required>
                         <ion-select-option selected>Seleccionar</ion-select-option>
                         <ion-select-option value="SI">SI</ion-select-option>

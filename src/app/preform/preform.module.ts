@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { CommonModule} from '@angular/common';
+import {HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
@@ -13,7 +14,9 @@ import { PreformPage } from './preform.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    PreformPageRoutingModule
+    PreformPageRoutingModule,
+    HttpClientModule,
+    ReactiveFormsModule,
   ],
   declarations: [PreformPage]
 })
