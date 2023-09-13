@@ -388,3 +388,15 @@ ul.list-unstyled li h3 {
 .questions ion-radio {
   --color-checked: #3880ff; /* Color cuando está seleccionado */
 }
+
+
+.questions ion-label,
+  .questions ion-radio-label {
+    text-align: center;
+  }
+
+
+  .questions ion-radio {
+    height: 20px;
+    width: 20px;
+  }

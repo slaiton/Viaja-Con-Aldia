@@ -24,7 +24,7 @@ export class UserService {
 
     getUser(): Observable<any>{
       // console.log(localStorage.getItem("placa"));
-    
+
       const params = new HttpParams({
         fromString: 'placa='+localStorage.getItem("placa")
       });
@@ -43,7 +43,7 @@ export class UserService {
     getConductor():Observable<any>{
 
       console.log(localStorage.getItem("conductor"));
-      
+
 
       const params = new HttpParams({
         fromString: 'documento='+localStorage.getItem("conductor")
@@ -73,7 +73,7 @@ export class UserService {
       const url = 'https://3slogistica.com/tr_panel/wsr_aldia/ingresoApp';
 
       return this.http.post(url, params, requestOptions)
-    } 
+    }
 
     cargaDocumentos(params: any):Observable<any> {
       const headers = new HttpHeaders({
@@ -85,9 +85,9 @@ export class UserService {
       const requestOptions = { headers: headers };
 
       return this.http.post("http://api.aldialogistica.com/api/documento", params, requestOptions)
-    } 
+    }
 
-    
+
     registroApi(params: any):Observable<any>{
 
       const headers = new HttpHeaders({
@@ -121,8 +121,8 @@ export class UserService {
       "ciudad_destino3": destino3,
       "desacorasado": desacorasa,
       "ciudad_origen": ciudadOrigen,
-      "estado_trailer": trailer 
-    } 
+      "estado_trailer": trailer
+    }
    };
 
      const headers = new HttpHeaders({
@@ -133,7 +133,7 @@ export class UserService {
 
      const requestOptions = { headers: headers };
 
-     return this.http.post("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)   
+     return this.http.post("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)
     }
 
     getTurnoUser()
@@ -150,11 +150,11 @@ export class UserService {
      const params = new HttpParams({
       fromString: 'view=enturnamiento/' + placa
      });
- 
+
      const requestOptions = { headers: headers, params: params };
 
 
-     return this.http.get("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , requestOptions)   
+     return this.http.get("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , requestOptions)
 
     }
 
