@@ -9,6 +9,7 @@ import { PreformPageRoutingModule } from './preform-routing.module';
 
 import { PreformPage } from './preform.page';
 
+import { UserService } from '../api/user.service';
 @NgModule({
   imports: [
     CommonModule,
@@ -18,6 +19,9 @@ import { PreformPage } from './preform.page';
     HttpClientModule,
     ReactiveFormsModule,
   ],
-  declarations: [PreformPage]
+  declarations: [PreformPage],
+  providers: [
+    UserService,
+  ],
 })
 export class PreformPageModule {}

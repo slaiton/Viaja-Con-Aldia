@@ -181,4 +181,27 @@ export class UserService {
     {
       return this.onLoginChange.asObservable();
     }
+
+
+
+    postPreoperacionalData(params: any):Observable<any> {
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8',
+        'usuario':'USUSEGINT',
+        'clave':'12249'
+      });
+
+
+
+
+      const requestOptions = { headers: headers, params: params  };
+      const url = 'http://api.aldialogistica.com/api/maestros/preoperacional';
+
+      return this.http.post(url,requestOptions)
+    }
+
+
+
+
+
 }

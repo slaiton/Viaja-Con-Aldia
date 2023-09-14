@@ -326,7 +326,7 @@
 
     <!-- Leyenda de advertencia -->
     <ion-card>
-      <ion-card-content>
+      <ion-card-header>
         <p>
           SEÑOR CONDUCTOR POR FAVOR TENGA EN CUENTA ESTAS RECOMENDACIONES:
         </p>
@@ -335,10 +335,41 @@
           <li>Recuerde que el exceso de velocidad y las tragedias van de la mano.</li>
           <!-- Agrega más puntos de advertencia según tus necesidades -->
         </ul>
-      </ion-card-content>
+      </ion-card-header>
     </ion-card>
 
     <!-- Botón para enviar el formulario -->
-    <ion-button expand="block" color="primary" type="submit"> Enviar </ion-button>
+    <ion-button expand="block" color="primary" type="submit" onsubmit=""> Enviar </ion-button>
   </form>
+</ion-content>
+<ion-content>
+
+
+  <!-- Mostrar mensaje de éxito o error -->
+  <ion-card *ngIf="apiResponseData">
+    <ion-card-content>
+      <h2>Respuesta de la API:</h2>
+      <p>{{ apiResponseData | json }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="apiError">
+    <ion-card-content>
+      <h2>Error:</h2>
+      <p>{{ apiError }}</p>
+    </ion-card-content>
+  </ion-card>
+  <ion-card *ngIf="apiResponseData">
+    <ion-card-content>
+      <h2>Respuesta de la API:</h2>
+      <p>{{ apiResponseData | json }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="apiError">
+    <ion-card-content>
+      <h2>Error:</h2>
+      <p>{{ apiError }}</p>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
