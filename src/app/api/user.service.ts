@@ -22,6 +22,10 @@ export class UserService {
       return this.http.post("http://api.aldialogistica.com/api/auth/login-external", user);
     }
 
+    getPlaca() {
+      return localStorage.getItem("placa");
+    }
+
     getUser(): Observable<any>{
       // console.log(localStorage.getItem("placa"));
 
@@ -192,12 +196,10 @@ export class UserService {
       });
 
 
+      const requestOptions = { headers: headers };
+      const url = 'http://siat.aldialogistica.com:8000/api/maestros/preoperacional';
 
-
-      const requestOptions = { headers: headers, params: params  };
-      const url = 'http://api.aldialogistica.com/api/maestros/preoperacional';
-
-      return this.http.post(url,requestOptions)
+      return this.http.post(url,params,requestOptions)
     }
 
 
