@@ -9,7 +9,7 @@
 
 <div class="container panel-turno">
   <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
-      <h3>Inspeccion Pre-operacional Vehiculos</h3>
+      <h5>Inspeccion Pre-operacional Vehiculos</h5>
   </div>
 </div>
 <br>
@@ -84,7 +84,7 @@
 
   <!-- Pregunta 5 -->
   <ion-item class="questions">
-    <ion-label>¿Espejos / Panoramico (Limpios, bien fijados, en buen estado, sin presencia de rayones, fisuras o rotos, limpiabrisas funiconal?</ion-label>
+    <ion-label>¿Espejos / Panoramico (Limpios, bien fijados, en buen estado, sin presencia de rayones, fisuras o rotos, limpiabrisas funiconal)?</ion-label>
     <ion-radio-group formControlName="pregunta5">
       <ion-item>
         <ion-label>Cumple</ion-label>
@@ -342,34 +342,34 @@
     <ion-button expand="block" color="primary" type="submit" onsubmit=""> Enviar </ion-button>
   </form>
 </ion-content>
-<ion-content>
+<!-- <ion-content> -->
 
 
   <!-- Mostrar mensaje de éxito o error -->
-  <ion-card *ngIf="apiResponseData">
+  <!-- <ion-card *ngIf="apiResponseData">
     <ion-card-content>
       <h2>Respuesta de la API:</h2>
       <p>{{ apiResponseData | json }}</p>
     </ion-card-content>
-  </ion-card>
+  </ion-card> -->
 
-  <ion-card *ngIf="apiError">
+  <!-- <ion-card *ngIf="apiError">
+    <ion-card-content>
+      <h2>Error:</h2>
+      <p>{{ apiError }}</p>
+    </ion-card-content>
+  </ion-card> -->
+  <!-- <ion-card *ngIf="apiResponseData">
+    <ion-card-content>
+      <h2>Respuesta de la API:</h2>
+      <p>{{ apiResponseData | json }}</p>
+    </ion-card-content>
+  </ion-card> -->
+
+  <!-- <ion-card *ngIf="apiError">
     <ion-card-content>
       <h2>Error:</h2>
       <p>{{ apiError }}</p>
     </ion-card-content>
   </ion-card>
-  <ion-card *ngIf="apiResponseData">
-    <ion-card-content>
-      <h2>Respuesta de la API:</h2>
-      <p>{{ apiResponseData | json }}</p>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card *ngIf="apiError">
-    <ion-card-content>
-      <h2>Error:</h2>
-      <p>{{ apiError }}</p>
-    </ion-card-content>
-  </ion-card>
-</ion-content>
+</ion-content> -->

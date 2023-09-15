@@ -371,6 +371,7 @@ ul.list-unstyled li h3 {
     border-radius: 15px;
     background-color: #5888b8;
     padding: 10px;
+    justify-content: baseline;
   }
 
   ion-button[type="submit"] {
@@ -393,6 +394,7 @@ ul.list-unstyled li h3 {
 .questions ion-label,
   .questions ion-radio-label {
     text-align: center;
+
   }
 
 
