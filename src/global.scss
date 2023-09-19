@@ -433,7 +433,7 @@ ion-content {
 
 /* Ajustar el tamaño de la fuente de la advertencia */
 ion-card ul li {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 /* Añadir espacio alrededor del botón de envío */
@@ -469,7 +469,7 @@ ion-button[type="submit"] span {
 .warning-icon {
   font-size: 24px; /* Tamaño del ícono */
   margin-right: 10px; /* Espaciado entre el ícono y el título */
-  color: #ff5722; /* Color del ícono, puedes cambiarlo */
+  color: #ff3f22; /* Color del ícono, puedes cambiarlo */
 }
 
 .warning-content {
@@ -477,7 +477,7 @@ ion-button[type="submit"] span {
 }
 
 .warning-text {
-  font-size: 16px; /* Tamaño del texto */
+  font-size: 12px; /* Tamaño del texto */
   margin-bottom: 10px; /* Espaciado inferior del texto */
 }
 
@@ -488,6 +488,6 @@ ion-button[type="submit"] span {
 }
 
 .warning-list li {
-  font-size: 16px; /* Tamaño de los elementos de la lista */
+  font-size: 10px; /* Tamaño de los elementos de la lista */
   margin-bottom: 2px; /* Espaciado inferior entre elementos de la lista */
 }

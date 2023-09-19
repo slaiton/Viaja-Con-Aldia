@@ -64,6 +64,7 @@ export class PreformPage implements OnInit {
         // Llama al servicio para consumir la API con el JSON de envío
         this.userService.postPreoperacionalData(jsonEnvio).subscribe(
           (response) => {
+            alert('Respuesta de la API:'+ response);
             console.log('Respuesta de la API:', response);
             this.apiResponseData = response;
 
@@ -73,20 +74,20 @@ export class PreformPage implements OnInit {
             this.resetForm();
           },
           (error) => {
-            console.error('Error al consumir la API:', error);
+            alert('Error al consumir la API:'+ error);
 
             // Manejo de errores, por ejemplo, mostrar un mensaje de error al usuario.
             this.apiError = 'Error al cargar los datos desde el servidor.';
           }
         );
       } else {
-        console.error(
+        alert(
           'Formulario no válido. Algunas respuestas no son "Cumple".'
         );
         // Muestra un mensaje de error al usuario o realiza alguna otra acción de manejo de errores.
       }
     } else {
-      console.error('Formulario no válido. Revise los campos.');
+      alert('Formulario no válido. Revise los campos.');
     }
   }
 
