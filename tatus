@@ -1,0 +1,47 @@
+[33mcommit 674d70985465b45bf6bdc8efe78478908c60a561[m[33m ([m[1;36mHEAD -> [m[1;32mnueva-rama[m[33m, [m[1;31morigin/nueva-rama[m[33m)[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Fri Sep 15 17:01:00 2023 -0500
+
+    titulo corregido y sin icard de rta
+
+[33mcommit f2540047ae6cd6a725724b27c412e1b4bcd32ef6[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Fri Sep 15 10:53:58 2023 -0500
+
+    validacion de preguntas realizado
+
+[33mcommit a1a26370e13cad7093cfa066af91e58487e70e8a[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Thu Sep 14 15:26:49 2023 -0500
+
+    pendiente por arreglar unauthorized
+
+[33mcommit 506950e3c12ec93aefbf6f93599d729d5bd32893[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Wed Sep 13 16:55:11 2023 -0500
+
+    commit de prueba
+
+[33mcommit e517ef126f3f6a6e780f30c891958362a0e31150[m[33m ([m[1;31morigin/rama_jhoan[m[33m)[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Tue Sep 12 16:20:22 2023 -0500
+
+    estilos de las preguntas
+
+[33mcommit 5c5740f18d23a515a1b4c75752b66e548e9bc019[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Tue Sep 12 14:57:17 2023 -0500
+
+    arreglo boton enviar
+
+[33mcommit e065d2f4ade981c4c9e88af0da87dffc7ef8911a[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Tue Sep 12 12:34:49 2023 -0500
+
+    preguntas inspeccion 12092023_1234
+
+[33mcommit e43358ba909359d119b1dd748dae79a952459489[m[33m ([m[1;32mmain[m[33m)[m
+Author: Andres Espinosa <andres.espinosa@aldialogistics.com>
+Date:   Mon Sep 11 10:43:18 2023 -0500
+
+    Primer commit web2 aldia
