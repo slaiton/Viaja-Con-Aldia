@@ -449,4 +449,45 @@ ion-button[type="submit"] span {
 
 
 
-/**/
+/*estilos para las advertencias*/
+
+.warning-card {
+  background-color: #d5d1d1; /* Cambia el color de fondo a tu preferencia */
+  border: 5px solid #ddd; /* Agrega un borde sutil */
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Agrega una sombra suave */
+  margin: 10px 0; /* Espaciado alrededor de la tarjeta */
+}
+
+.warning-title {
+  font-size: 20px; /* Tamaño del título */
+  font-weight: bold; /* Texto en negrita */
+  display: flex;
+  align-items: center;
+}
+
+.warning-icon {
+  font-size: 24px; /* Tamaño del ícono */
+  margin-right: 10px; /* Espaciado entre el ícono y el título */
+  color: #ff5722; /* Color del ícono, puedes cambiarlo */
+}
+
+.warning-content {
+  padding: 15px; /* Espaciado interno del contenido */
+}
+
+.warning-text {
+  font-size: 16px; /* Tamaño del texto */
+  margin-bottom: 10px; /* Espaciado inferior del texto */
+}
+
+.warning-list {
+  list-style: disc inside; /* Cambia el estilo de la lista, por ejemplo, a puntos */
+  margin-left: 20px; /* Espaciado izquierdo de la lista */
+  padding-left: 0; /* Elimina el relleno izquierdo predeterminado de la lista */
+}
+
+.warning-list li {
+  font-size: 16px; /* Tamaño de los elementos de la lista */
+  margin-bottom: 2px; /* Espaciado inferior entre elementos de la lista */
+}

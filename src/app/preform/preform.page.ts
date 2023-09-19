@@ -11,7 +11,7 @@ import { UserService } from '../api/user.service';
 export class PreformPage implements OnInit {
   preformForm: FormGroup;
   apiResponseData: any;
-  apiError: string = '';
+  apiError: any = '';
   placa: any = ''; // Variable para almacenar la placa del vehículo
 
   constructor(

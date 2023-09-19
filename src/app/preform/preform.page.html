@@ -325,17 +325,23 @@
     </ion-item>
 
     <!-- Leyenda de advertencia -->
-    <ion-card>
+    <ion-card class="warning-card">
       <ion-card-header>
-        <p>
-          SEÑOR CONDUCTOR POR FAVOR TENGA EN CUENTA ESTAS RECOMENDACIONES:
-        </p>
-        <ul>
-          <li>Maneje siempre a la defensiva, en cualquier momento se pueden presentar obstáculos.</li>
-          <li>Recuerde que el exceso de velocidad y las tragedias van de la mano.</li>
-          <!-- Agrega más puntos de advertencia según tus necesidades -->
-        </ul>
+        <ion-card-title class="warning-title">
+          <ion-icon name="warning-outline" class="warning-icon"></ion-icon>
+          Recomendaciones Importantes
+        </ion-card-title>
       </ion-card-header>
+      <ion-card-content class="warning-content">
+        <p class="warning-text">
+          Estimado conductor, le pedimos que tenga en cuenta las siguientes recomendaciones:
+        </p>
+        <ul class="warning-list">
+          <li>Siempre conduzca de manera defensiva, ya que pueden surgir obstáculos en cualquier momento.</li>
+          <li>Recuerde que el exceso de velocidad puede llevar a tragedias.</li>
+          <!-- Agregue más puntos de advertencia según sea necesario -->
+        </ul>
+      </ion-card-content>
     </ion-card>
 
     <!-- Botón para enviar el formulario -->
