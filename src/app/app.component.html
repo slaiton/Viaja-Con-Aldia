@@ -7,7 +7,7 @@
             <img class="" src="https://aldialogistica.com/wp-content/uploads/2019/04/cropped-favicon-1.png" class="bi pe-none me-2 text-center" width=
             "30">
           </a>
-          <!-- 
+<!--
           <ion-list-header>Viaja con Aldia</ion-list-header> -->
           <!-- <ion-note>hi@ionicframework.com</ion-note> -->
           <!-- <a href="#" class="d-flex ml-4 mt-3 align-items-center pb-3 mb-1 link-dark text-decoration-none collapsed" data-bs-toggle="collapse" data-bs-target="#user-collapse" aria-expanded="true">
@@ -15,15 +15,13 @@
           </a> -->
           <ion-item>
             <ion-avatar  [style.width]="'110px'" [style.height]="'110px'" slot="start">
-              <img alt="person"  class="rounded-circle me-2" src="https://github.com/mdo.png" />
+              <img alt="persons"  class="rounded-circle me-2" src="../assets/img/photoshop.jpg"/>
             </ion-avatar>
             <ul class="list-unstyled ps-0 ml-3">
               <li class="mb-1">
                 <h2><strong id="nameUser">{{ nombre }}</strong></h2>
               </li>
 
-            
-  
               <li class="mb-1">
                 <span class="{{clase_estado}}">{{estado}}</span>
               </li>
@@ -31,12 +29,12 @@
               <li class="mt-2">
                 <h3>{{ placa }}</h3>
               </li>
-  
+
               </ul>
           </ion-item>
 
         </ion-toolbar>
-        
+
         <ion-list id="inbox-list">
           <ion-menu-toggle auto-hide="false" *ngFor="let p of appPages; let i = index" >
             <ion-item *ngIf="statusLogin()"  routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
@@ -60,7 +58,7 @@
             <ion-label>{{ label }}</ion-label>
           </ion-item>
         </ion-list> -->
-        
+
        <!-- <ion-fab slot="fixed" vertical="bottom" horizontal="end">
          <ion-fab-button>
            <ion-icon name="chevron-up-circle"></ion-icon>
@@ -76,7 +74,7 @@
              <ion-icon name="globe"></ion-icon>
            </ion-fab-button>
          </ion-fab-list>
-     
+
        </ion-fab> -->
 
 
@@ -84,7 +82,7 @@
     </ion-menu>
 
     <ion-router-outlet id="main-content"></ion-router-outlet>
-    
+
   </ion-split-pane>
 
 

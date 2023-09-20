@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../api/user.service';
+import { AlertController } from '@ionic/angular';
+
 
 @Component({
   selector: 'app-preform',
@@ -17,7 +19,8 @@ export class PreformPage implements OnInit {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private userService: UserService
+    private userService: UserService,
+    private alertController: AlertController
   ) {
     this.preformForm = this.formBuilder.group({
       pregunta1: [''],
@@ -64,7 +67,8 @@ export class PreformPage implements OnInit {
         // Llama al servicio para consumir la API con el JSON de envío
         this.userService.postPreoperacionalData(jsonEnvio).subscribe(
           (response) => {
-            alert('Respuesta de la API:'+ response);
+            // alert('Respuesta de la API:'+ response.data);
+            this.presentAlert('¡¡Perfecto!!','Respuesta de la API:',response.data,'Confirmar')
             console.log('Respuesta de la API:', response);
             this.apiResponseData = response;
 
@@ -74,16 +78,17 @@ export class PreformPage implements OnInit {
             this.resetForm();
           },
           (error) => {
-            alert('Error al consumir la API:'+ error);
+            this.presentAlert('Error al consumir la API:','Error',error.data,'Volver');
 
             // Manejo de errores, por ejemplo, mostrar un mensaje de error al usuario.
             this.apiError = 'Error al cargar los datos desde el servidor.';
           }
         );
       } else {
-        alert(
-          'Formulario no válido. Algunas respuestas no son "Cumple".'
-        );
+        this.presentAlert('Formulario no válido','Revisar','Algunas respuestas son "No Cumple"','Volver');
+        // alert(
+        //   'Formulario no válido. Algunas respuestas no son "Cumple".'
+        // );
         // Muestra un mensaje de error al usuario o realiza alguna otra acción de manejo de errores.
       }
     } else {
@@ -111,5 +116,15 @@ export class PreformPage implements OnInit {
       }
     }
     return true; // Si todas las respuestas son "Cumple", la validación es exitosa.
+  }
+
+  async presentAlert(title: String, subheader: String, desc: String, botton: String ) {
+    const alert = await this.alertController.create({
+      header: '' + title,
+      subHeader: '' + subheader,
+      message: '' + desc,
+      buttons: ['' + botton],
+    });
+    await alert.present();
   }
 }
