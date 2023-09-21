@@ -24,16 +24,16 @@
                   <ion-img alt="person" *ngIf="!fotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"></ion-img>
                 </ion-avatar>
               </div>
-              
+
               <div class="col col-12 text-center">
                 <ul class="list-unstyled ps-0 ml-3">
                   <li class="mb-1">
                     <h2 class="text-white"><strong id="nameUser">{{ nombre }} {{ apellidos }}</strong></h2>
                   </li>
-                  
+
                   <li class="mb-1">
                     <span class="{{clase_estado}}">{{estado}}</span>
-                  </li>   
+                  </li>
                 </ul>
               </div>
 
@@ -52,14 +52,14 @@
 
 
         <!-- </ion-item> -->
-      
-      
+
+
       <!-- <ion-item class="d-flex justify-content-center">
 
         <ion-avatar>
           <img alt="Silhouette of a person's head" src="https://github.com/mdo.png"  width="100" />
         </ion-avatar>
-        
+
       </ion-item> -->
 
       <div class="p-2">
@@ -69,8 +69,8 @@
               <ion-thumbnail class="icon-select" slot="start">
                 <img alt="{{p.nombre}}" src="{{p.icon}}" />
               </ion-thumbnail>
-              
-              
+
+
               <ion-label>
                 <h2>{{p.nombre}}</h2>
                 <p>{{p.desc}}</p>
@@ -79,7 +79,7 @@
               <span slot="end" class="dataCorrect">
                 <img src="{{p.status}}" alt="">
               </span>
-              
+
               <ion-ripple-effect></ion-ripple-effect>
             </ion-item>
 
@@ -112,7 +112,7 @@
             <div class="container panel-user">
 
               <div class="row p-3">
-  
+
                 <div class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3">
                   <ion-avatar  [style.width]="'130px'" [style.height]="'130px'" slot="start">
                     <ion-img alt="person" *ngIf="dataFotoUser" class="rounded-circle me-2" [src]="dataFotoUser.webviewPath"></ion-img>
@@ -122,7 +122,7 @@
                     <img src="http://54.176.177.178/checklist/camara_min.png" alt="">
                   </span>
                 </div>
-                
+
                 <div class="col col-12 text-center">
                   <ul class="list-unstyled ps-0 ml-3">
                     <li class="mb-1">
@@ -132,14 +132,14 @@
                     <li class="mb-1">
                       <h2 class="text-white"><strong id="nameUser">CC. {{ cedula }}</strong></h2>
                     </li>
-                    
-                    
+
+
                     <!-- <li class="mb-1">
                       <span class="{{clase_estado}}">{{estado}}</span>
                     </li>    -->
                   </ul>
                 </div>
-              
+
               </div>
 
             </div>
@@ -147,63 +147,63 @@
             <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
               <strong><h1>Datos Personales</h1></strong>
             </div>
-      
-      
+
+
             <!-- <ion-item>
               <ion-label  position="floating">Cedula</ion-label>
               <ion-input [readonly]="true" [ngModel]="cedula"  formControlName="cedula"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label  position="floating">Nombres</ion-label>
               <ion-input [readonly]="true" [ngModel]="nombres"  formControlName="nombres"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Apellidos</ion-label>
               <ion-input [ngModel]="apellidos"  formControlName="apellidos"></ion-input>
             </ion-item> -->
-      
+
             <ion-item>
               <ion-label position="floating">Correo</ion-label>
               <ion-input [ngModel]="correo" type="email" formControlName="correo"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Celular</ion-label>
               <ion-input [ngModel]="celular"  formControlName="celular"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Direccion</ion-label>
               <ion-input [ngModel]="direccion"  formControlName="direccion"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Fecha Nacimiento</ion-label>
               <ion-input [ngModel]="fecha" id="fecha" formControlName="fecha_nacimeinto" (ionFocus)="changeInput('date')" (ionBlur)="changeInput('text')"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Ciudad</ion-label>
               <ion-input [ngModel]="ciudad"  formControlName="ciudad"></ion-input>
             </ion-item>
 
-            
+
             <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
               <strong><h1>Contacto de Emergencia</h1></strong>
             </div>
-      
+
             <ion-item>
               <ion-label position="floating">Nombre</ion-label>
               <ion-input   formControlName="nombre_contacto"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Celular</ion-label>
               <ion-input  id="fecha" formControlName="celular_contacto"></ion-input>
             </ion-item>
-      
+
             <ion-item>
               <ion-label position="floating">Parentesco</ion-label>
               <ion-input   formControlName="parentesco"></ion-input>
@@ -213,7 +213,7 @@
             <div class="mt-5 p-4">
               <ion-button expand="block" type="bottom" (click)="saveDataProfile()">Guardar</ion-button>
             </div>
-          
+
           </ion-content>
         </ng-template>
       </ion-modal>
@@ -235,12 +235,12 @@
           </ion-header>
           <ion-content>
 
-                
+
             <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center  title-form">
               <strong><h1>Cedula de ciudadania</h1></strong>
             </div>
 
-            <ion-title class="ml-4 p-4">
+            <ion-title class="ml-3 p-3">
               <strong>
                 Frontal
               </strong>
@@ -255,7 +255,7 @@
             <!-- <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
               <strong><h1>Cedula - Reverso</h1></strong>
             </div> -->
-            <ion-title class="ml-4 p-4">
+            <ion-title class="ml-3 p-3">
               <strong>
                 Reverso
               </strong>
@@ -266,7 +266,7 @@
               <div *ngIf="!cedula2" class="camera"></div>
             </div>
 
-            
+
 
 
             <div class="col-md-12 d-flex mt-5 mb-1 justify-content-center text-center  title-form">
@@ -284,7 +284,7 @@
               <div *ngIf="!licencia" class="camera"></div>
             </div>
 
-            
+
             <!-- <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
               <strong><h1>Licencia - Reverso</h1></strong>
             </div> -->
@@ -310,7 +310,7 @@
             <div class="mt-5 p-4">
               <ion-button expand="block" type="bottom" (click)="saveDocumentos()">Guardar</ion-button>
             </div>
-          
+
           </ion-content>
         </ng-template>
       </ion-modal>
@@ -336,23 +336,23 @@
                <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
                  <strong><h1>Datos del vehiculo</h1></strong>
                </div>
-         
-         
+
+
                <!-- <ion-item>
                  <ion-label position="floating">Placa</ion-label>
                  <ion-input  [ngModel]="placa" formControlName="placa"></ion-input>
                </ion-item> -->
-         
+
                <ion-item>
                  <ion-label position="floating">Clase vehiculo</ion-label>
                  <ion-input [ngModel]="clase_vehiculo" id="fecha" formControlName="clase_vehiculo"></ion-input>
                </ion-item>
-         
+
                <ion-item>
                  <ion-label position="floating">Marca</ion-label>
                  <ion-input  [ngModel]="marca" formControlName="marca"></ion-input>
                </ion-item>
-         
+
                <ion-item>
                  <ion-label position="floating">Carroceria</ion-label>
                  <ion-input  [ngModel]="carroceria" formControlName="carroceria"></ion-input>
@@ -364,7 +364,7 @@
                   Soat
                 </strong>
               </ion-title>
-  
+
               <div (click)="getSoat1()" class="container-upload">
                 <ion-img *ngIf="apiSoat1" [src]="apiSoat1.webviewPath"></ion-img>
                 <div *ngIf="!apiSoat1" class="camera"></div>
@@ -375,7 +375,7 @@
                   Tecnomecanica
                 </strong>
               </ion-title>
-  
+
               <div (click)="getTecno()" class="container-upload">
                 <ion-img *ngIf="apiTecno1" [src]="apiTecno1.webviewPath"></ion-img>
                 <div *ngIf="!apiTecno1" class="camera"></div>
@@ -385,7 +385,7 @@
                <div class="mt-5 p-4">
                 <ion-button expand="block" type="bottom" (click)="saveDocumentos()">Guardar</ion-button>
               </div>
-          
+
           </ion-content>
         </ng-template>
       </ion-modal>
