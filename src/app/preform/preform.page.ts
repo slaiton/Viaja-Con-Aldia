@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Component, OnInit,ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../api/user.service';
 import { AlertController } from '@ionic/angular';
+import { PhotoService } from '../api/photo.service';
+import { log } from 'console';
+import { Foto } from '../models/photo.interface';
 
 
 @Component({
@@ -15,12 +18,14 @@ export class PreformPage implements OnInit {
   apiResponseData: any;
   apiError: any = '';
   placa: any = ''; // Variable para almacenar la placa del vehículo
+  car: any = '';
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private userService: UserService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private photo: PhotoService
   ) {
     this.preformForm = this.formBuilder.group({
       pregunta1: [''],
@@ -55,6 +60,12 @@ export class PreformPage implements OnInit {
     if (this.preformForm.valid) {
       const formData = this.preformForm.value;
       console.log('Datos a enviar al servidor:', formData);
+
+      // Validar que se tome la foto del vehiculo
+      if (!this.car) {
+        this.presentAlert('Por favor, cargue una foto del vehículo.','Click a la camara','dddd','Volver');
+        return;
+      }
 
       // Validar que todas las respuestas sean "Cumple" usando la función de validación
       if (this.validarRespuestas(formData)) {
@@ -117,6 +128,15 @@ export class PreformPage implements OnInit {
     }
     return true; // Si todas las respuestas son "Cumple", la validación es exitosa.
   }
+
+
+  getPhotoCar(){
+    this.photo.addNewToGallery('car').then(da => {
+      console.log(da);
+      this.car = da;
+    })
+
+   }
 
   async presentAlert(title: String, subheader: String, desc: String, botton: String ) {
     const alert = await this.alertController.create({

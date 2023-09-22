@@ -44,7 +44,7 @@ export class DatosPage implements OnInit {
   estado:any;
   placa:any;
   marca:any;
-  carroceria:any;  
+  carroceria:any;
   clase_vehiculo:any;
   clase_estado:any;
   licencia:any;
@@ -103,10 +103,10 @@ export class DatosPage implements OnInit {
 
 
   constructor(
-    private menu: MenuController, 
-    private alertController:AlertController, 
-    private formBuilder: FormBuilder, 
-    private userService: UserService, 
+    private menu: MenuController,
+    private alertController:AlertController,
+    private formBuilder: FormBuilder,
+    private userService: UserService,
     private router: Router,
     private photo: PhotoService) { }
 
@@ -167,17 +167,17 @@ export class DatosPage implements OnInit {
       });
   }
 
-  
+
   onSubmit(){
 
     this.presentAlert("Envio de datos a 3SL", "","", "Cerrar")
 
-    
+
     const dataSubmit = this.dataForm.value;
-    
+
     // console.log(dataSubmit);
         // console.log(this.jsonDocs);
- 
+
 
      let datparams2: { [key: string]: any } = {
       codigoTercerox: this.cedula,
@@ -232,9 +232,9 @@ export class DatosPage implements OnInit {
 
     // console.log(jsonParse);
     // return;
-    
 
-    
+
+
     // let datparams: { [key: string]: any } = {
     //   codigoTercerox: this.cedula,
     //   numeroPlacaxxx: this.placa
@@ -265,17 +265,17 @@ export class DatosPage implements OnInit {
 // const dataJsonApi =  this.params;
 
 // console.log(dataJsonApi);
- 
+
   }
 
 
   saveDataProfile() {
 
     this.savePhoto();
-    
+
     const dataSubmit = this.dataForm.value;
 
-    
+
     this.celular = dataSubmit.celular
     this.direccion = dataSubmit.direccion
     this.ciudad = dataSubmit.ciudad
@@ -293,15 +293,15 @@ export class DatosPage implements OnInit {
       "files": []
     }
 
-    if (this.dataFotoUser) {      
+    if (this.dataFotoUser) {
 
        const dataDoc = {"codigo":this.cedula, "tipo":"foto", "data64": this.dataFotoUser.base64}
        this.jsonPhoto.files.push(dataDoc)
-   
+
         this.userService.cargaDocumentos(this.jsonPhoto).subscribe(
            data => {
              console.log(data);
-             
+
              const files = data.data;
               if (files.foto) {
                this.fotoUser = 'http://54.215.78.160' + files.foto;
@@ -370,7 +370,7 @@ export class DatosPage implements OnInit {
           this.apiLicencia2 = 'http://54.215.78.160' + files.licencia2;
          }
 
-  
+
 
          this.modal2.dismiss();
       },
@@ -395,10 +395,10 @@ export class DatosPage implements OnInit {
 
   changeInput(type: any): any {
     const fecha = document.querySelector("#fecha input") as HTMLInputElement;
-    
+
     fecha.type = type;
     // console.log(fecha.type);
-    
+
 
   }
 
@@ -407,7 +407,7 @@ export class DatosPage implements OnInit {
      console.log(da);
      this.cedula1 = da;
    })
-        
+
   }
 
   getCedula2(){
@@ -422,7 +422,7 @@ export class DatosPage implements OnInit {
     //  console.log(da);
      this.licencia = da;
    })
-    
+
   }
 
   getLicencia2(){
@@ -447,7 +447,11 @@ export class DatosPage implements OnInit {
     })
    }
 
-   loadProfile(){    
+
+
+
+
+   loadProfile(){
     this.photo.addNewToGallery('profile').then(da => {
       this.dataFotoUser = da;
         // params.apiLicencia2 = this.licencia2.base64;

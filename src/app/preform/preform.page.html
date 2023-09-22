@@ -325,10 +325,21 @@
     </ion-list>
 
     <!-- Campo para subir imagen -->
-    <ion-item>
+    <!-- <ion-item>
       <ion-label>Subir imagen del vehiculo</ion-label>
       <input type="file" accept="image/*" (change)="onFileChange($event)">
-    </ion-item>
+    </ion-item> -->
+    <hr>
+    <ion-title class="ml-2 p-2">
+      <strong>
+        Foto Vehiculo
+      </strong>
+    </ion-title>
+
+    <div (click)="getPhotoCar()" class="container-upload">
+      <ion-img *ngIf="car" [src]="car.webviewPath"></ion-img>
+      <div *ngIf="!car" class="camera"></div>
+    </div>
 
     <!-- Leyenda de advertencia -->
     <ion-card class="warning-card">
