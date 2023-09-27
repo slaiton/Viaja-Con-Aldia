@@ -12,11 +12,6 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 
 
 
-
-
-
-
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
@@ -29,16 +24,17 @@ export class HomePage implements OnInit {
 
 
   constructor(
-    public userService: UserService, 
+    public userService: UserService,
     private router:Router,
     private modalController: ModalController,
     private formBuilder: FormBuilder,
     private geolocation: Geolocation,
     private geodata:GeodataService,
     private alert:AlertController
-  
+
     ) {}
 
+  turnoExistente:any = true;
   conductor:any;
   estado:any;
   placa:any;
@@ -46,7 +42,7 @@ export class HomePage implements OnInit {
   carroceria:any;
   clase_vehiculo:any;
   respuesta:any;
-  turnoForm:any = FormGroup; 
+  turnoForm:any = FormGroup;
   longitud:any;
   nombre:any;
 
@@ -80,7 +76,7 @@ export class HomePage implements OnInit {
 ]
 
 
-  
+
 
   ngOnInit(){
 
@@ -92,7 +88,7 @@ export class HomePage implements OnInit {
     this.userService.getUser().subscribe(data => {
       data = data.view.data[0];
       // console.log(data);
-      
+
       this.conductor = data.conductor.toLowerCase();
       this.estado = data.estado;
       this.placa = data.placa;
@@ -100,13 +96,13 @@ export class HomePage implements OnInit {
       this.marca = data.marca;
       this.clase_vehiculo = data.clase_vehiculo;
       // console.log(data)
-      
+
       this.placa = this.placa.substr(0,3)+" - "+this.placa.substr(3,5);
-      
-    }, 
+
+    },
     err => {
       console.log(err);
-      
+
       this.presentAlert('Error al Consultar','', err.message ,'Continuar')
     }
     );
@@ -114,7 +110,7 @@ export class HomePage implements OnInit {
     // this.userService.getTurnoUser().subscribe(
     //   data => {
     //     console.log(data);
-        
+
     //   },
     //   err => {
 
@@ -122,7 +118,7 @@ export class HomePage implements OnInit {
 
     //   }
     //   );
-    
+
   }
 
   onSubmit(){
@@ -146,16 +142,16 @@ export class HomePage implements OnInit {
         "desacorasado": this.turnoForm.value.vehiculovac,
         "estado_trailer":this.turnoForm.value.remolque
     };
-        this.geodata.turnoCreacion(turno).subscribe(data => { 
+        this.geodata.turnoCreacion(turno).subscribe(data => {
                this.respuesta = JSON.stringify(data)
                this.respuesta = JSON.parse(this.respuesta);
                this.presentAlert('Respuesta enturnamiento','',this.respuesta.data ,'Aceptar')
                this.turnoForm.reset();
                this.ngOnInit();
           });
-      
+
       // this.userService.nevoTurnoApi(
-      //                         this.turnoForm.value.origen, 
+      //                         this.turnoForm.value.origen,
       //                         this.turnoForm.value.destino1,
       //                         this.turnoForm.value.destino3,this.turnoForm.value.vehiculovac,
       //                         this.turnoForm.value.origen,
@@ -181,16 +177,27 @@ export class HomePage implements OnInit {
         remolque: ['', [Validators.required]],
         vehiculovac: ['', [Validators.required]]
         });
-  
+
       this.geolocation.getCurrentPosition().then((resp) => {
-        
+
         this.geolocationService(resp.coords.latitude,resp.coords.longitude);
-  
+
       }).catch((error) => {
         console.log('Error getting location', error);
       });
-  
+
        this.modalTurno.present();
+
+    }
+
+
+    getTurno(){
+
+      const listTurnos = this.userService.getTurnoUser().subscribe(data=>{
+        console.log(data);
+      });
+
+      return listTurnos;
 
     }
 
@@ -206,18 +213,18 @@ export class HomePage implements OnInit {
     this.geodata.getCityByLatLon(lat,lon).subscribe(data => {
       this.longitud = data.results.length;
       console.log(data.results)
-      
+
 
 
         if(data.results[this.longitud-1].address_components.length > 2)
         {
           // console.log(data.results[11].address_components)
-          this.nombre = data.results[this.longitud-1].address_components[0].long_name;        
+          this.nombre = data.results[this.longitud-1].address_components[0].long_name;
         }
-        else if (data.results[this.longitud-2].address_components.length > 2) 
+        else if (data.results[this.longitud-2].address_components.length > 2)
         {
           // console.log(data.results[10].address_components)
-          this.nombre = data.results[this.longitud-2].address_components[0].long_name;  
+          this.nombre = data.results[this.longitud-2].address_components[0].long_name;
         }
         else if (data.results[this.longitud-3].address_components.length > 2)
         {
@@ -228,7 +235,7 @@ export class HomePage implements OnInit {
         const origenLabel = document.getElementById('origenLabel') as HTMLInputElement | null;
 
         console.log(origenLabel);
-        
+
 
         if (origenLabel != null) {
           origenLabel.innerHTML = "<ion-icon name='location'> </ion-icon> <strong>" + this.nombre + "</strong>";
@@ -252,7 +259,7 @@ async presentAlert(title: String, subheader: String, desc: String, botton: Strin
   await alert.present();
 }
 
-  
+
 
 
 }

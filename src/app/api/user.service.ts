@@ -147,18 +147,18 @@ export class UserService {
 
       const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user': 'WSTERCEROS',
-      'password':'aldia2019'
+      'user': 'aespinosa',
+      'password':'12345'
       });
 
      const params = new HttpParams({
-      fromString: 'view=enturnamiento/' + placa
+      fromString: 'placa=' + placa
      });
 
      const requestOptions = { headers: headers, params: params };
 
 
-     return this.http.get("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , requestOptions)
+     return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
 
     }
 
