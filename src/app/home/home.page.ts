@@ -19,6 +19,7 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 })
 export class HomePage implements OnInit {
   @ViewChild(IonModal) modalTurno!:IonModal;
+  @ViewChild(IonModal) modalTurno2!:IonModal;
 
 
 
@@ -34,7 +35,8 @@ export class HomePage implements OnInit {
 
     ) {}
 
-  turnoExistente:any = true;
+  turnoExistente:boolean=false;
+  listTurnos:any = [];
   conductor:any;
   estado:any;
   placa:any;
@@ -106,6 +108,29 @@ export class HomePage implements OnInit {
       this.presentAlert('Error al Consultar','', err.message ,'Continuar')
     }
     );
+
+
+
+
+     this.userService.getTurnoUser().subscribe(data=>{
+        this.listTurnos = data;
+        console.log(this.listTurnos);
+        this.turnoExistente = true;
+
+
+      },
+      err => {
+        console.log(err);
+        this.presentAlert('Sin turnos','', 'Puedes agregar un turno con el boton Rojo' ,'Continuar')
+      });
+
+
+
+
+
+
+
+
 
     // this.userService.getTurnoUser().subscribe(
     //   data => {
@@ -190,16 +215,11 @@ export class HomePage implements OnInit {
 
     }
 
-
     getTurno(){
-
-      const listTurnos = this.userService.getTurnoUser().subscribe(data=>{
-        console.log(data);
-      });
-
-      return listTurnos;
+      console.log('aqui se cargan los turnos');
 
     }
+
 
   redirect(page:any)
   {
@@ -235,6 +255,7 @@ export class HomePage implements OnInit {
         const origenLabel = document.getElementById('origenLabel') as HTMLInputElement | null;
 
         console.log(origenLabel);
+
 
 
         if (origenLabel != null) {

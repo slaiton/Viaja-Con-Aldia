@@ -21,13 +21,14 @@
 
 
 
-      <div class="col col-6"></div>
+      <div class="col col-6">
       <ion-button (click)="turnoExistente ? getTurno():nuevoTurno()" expand="block" fill="solid" size="large" [color]="turnoExistente ? 'success' : 'danger'">
         <ion-icon slot="start" name="archive"></ion-icon>
         <h5 class="ml-2 mb-0+">
           {{ turnoExistente ? 'Turno Existente' : 'Sin Turno' }}
         </h5>
       </ion-button>
+    </div>
     </div>
 
 
