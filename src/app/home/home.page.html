@@ -22,11 +22,11 @@
 
 
       <div class="col col-6">
-      <ion-button (click)="turnoExistente ? getTurno():nuevoTurno()" expand="block" fill="solid" size="large" [color]="turnoExistente ? 'success' : 'danger'">
+      <ion-button id= "{{idModal}}" (click)="turnoExistente ? getTurno():nuevoTurno()" expand="block" fill="solid" size="large" [color]="turnoExistente ? 'success' : 'danger'">
         <ion-icon slot="start" name="archive"></ion-icon>
-        <h5 class="ml-2 mb-0+">
+        <h4 class="ml-2 mb-0+">
           {{ turnoExistente ? 'Turno Existente' : 'Sin Turno' }}
-        </h5>
+        </h4>
       </ion-button>
     </div>
     </div>
@@ -172,6 +172,18 @@
       </ion-content>
     </ng-template>
   </ion-modal>
+
+  <ion-modal #modalTurno2
+  trigger="open-modal2"
+  [initialBreakpoint]="0.50"
+  [breakpoints]="[0.5, 0.75]"
+  handleBehavior="cycle">
+  <ng-template>
+
+    <div>sdfsdfsfd</div>
+  </ng-template>
+  </ion-modal>
+
 
 </ion-content>
 

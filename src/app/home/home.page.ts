@@ -20,8 +20,8 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 export class HomePage implements OnInit {
   @ViewChild(IonModal) modalTurno!:IonModal;
   @ViewChild(IonModal) modalTurno2!:IonModal;
-
-
+  // @ViewChild('modalTurno') modalTurno!:ModalController;
+  // @ViewChild('modalTurno2') modalTurno2!:ModalController;
 
 
   constructor(
@@ -47,6 +47,7 @@ export class HomePage implements OnInit {
   turnoForm:any = FormGroup;
   longitud:any;
   nombre:any;
+  idModal: any;
 
   get f() { return this.turnoForm.controls; }
 
@@ -112,16 +113,19 @@ export class HomePage implements OnInit {
 
 
 
+
+
      this.userService.getTurnoUser().subscribe(data=>{
         this.listTurnos = data;
         console.log(this.listTurnos);
         this.turnoExistente = true;
-
+        this.idModal = "open-modal2"
 
       },
       err => {
         console.log(err);
         this.presentAlert('Sin turnos','', 'Puedes agregar un turno con el boton Rojo' ,'Continuar')
+        this.idModal = "open-modal"
       });
 
 
@@ -211,12 +215,39 @@ export class HomePage implements OnInit {
         console.log('Error getting location', error);
       });
 
+      console.log('nuevo turno ejecutado');
+
        this.modalTurno.present();
 
     }
 
     getTurno(){
-      console.log('aqui se cargan los turnos');
+
+      console.log('funcion que muestra modal con los turnos cargados');
+
+      // this.userService.getTurno().subscribe(data => {
+      //   this.dataTercero = data.data[0];
+      //   this.cedula = this.dataTercero.documento;
+      //   this.nombres = this.dataTercero.nombre;
+      //   this.apellidos = this.dataTercero.apellido;
+
+
+
+
+
+      // this.turnoForm = this.formBuilder.group({
+      //   origen: ['', [Validators.required]],
+      //   destino1: ['', [Validators.required]],
+      //   destino2: ['', [Validators.required]],
+      //   destino3: ['', [Validators.required]],
+      //   remolque: ['', [Validators.required]],
+      //   vehiculovac: ['', [Validators.required]]
+      //   });
+
+
+      // this.modalTurno.dismiss();
+      // this.modalTurno2.present();
+
 
     }
 
