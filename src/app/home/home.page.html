@@ -187,22 +187,28 @@
               <h3>Turno Actual</h3>
             </div>
           </div>
-          <!-- ... el resto de tu código HTML ... -->
-          <div class="col-md-12 mt-2">
-            <label for="">ID Turno: {{ listTurnos.idturno }}</label>
+          <div class="col-md-8">
+            <form [formGroup]="turnoForm" (ngSubmit)="onSubmit()">
+              <div class="form-row p-2">
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
+                  <input type="hidden" id="origen" formControlName="origen">
+                </div>
+                <ion-item class="col-md-12 mt-2">
+                  <ion-select formControlName="origen" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 1 ...">
+                    <ion-select-option value="{{listTurnos.data.origen}}">{{ listTurnos.data.origen }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+                <!-- ... el resto de tu código HTML ... -->
+                <ion-button expand="block" color="primary" type="submit"> Enturnarme </ion-button>
+              </div> <!-- Cierra el div de form-row aquí -->
+            </form>
           </div>
-          <div class="col-md-12 mt-2">
-            <label for="">Destino 1: {{ listTurnos.destino1 }}</label>
-          </div>
-          <div class="col-md-12 mt-2">
-            <label for="">Destino 2: {{ listTurnos.destino2 }}</label>
-          </div>
-          <!-- ... repite para cada campo que quieras mostrar ... -->
         </div>
       </div>
     </ion-content>
   </ng-template>
-  </ion-modal>
+</ion-modal>
 
 
 </ion-content>
