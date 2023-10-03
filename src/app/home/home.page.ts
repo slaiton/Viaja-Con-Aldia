@@ -39,7 +39,7 @@ export class HomePage implements OnInit {
   listTurnos:any = [];
   conductor:any;
   estado:any;
-  placa:any;
+
   marca:any;
   carroceria:any;
   clase_vehiculo:any;
@@ -48,6 +48,23 @@ export class HomePage implements OnInit {
   longitud:any;
   nombre:any;
   idModal: any;
+
+  idTurno:any;
+  destino1:any;
+  destino2:any;
+  destino3:any;
+  placa:any;
+  origen:any;
+  vacio:any;
+  ejecutada:any;
+  anulada:any;
+  autorizada:any;
+  observacion:any;
+  fechaCreacion:any
+  user:any;
+  tipoRemolque:any;
+  tiempoRestante:any
+
 
   get f() { return this.turnoForm.controls; }
 
@@ -225,31 +242,19 @@ export class HomePage implements OnInit {
 
       console.log('funcion que muestra modal con los turnos cargados');
 
-      // this.userService.getTurno().subscribe(data => {
-      //   this.dataTercero = data.data[0];
-      //   this.cedula = this.dataTercero.documento;
-      //   this.nombres = this.dataTercero.nombre;
-      //   this.apellidos = this.dataTercero.apellido;
+      const listTurnos = this.userService.getTurnoUser().subscribe(data => {
+        this.listTurnos = data;
 
-
-
-
-
-      // this.turnoForm = this.formBuilder.group({
-      //   origen: ['', [Validators.required]],
-      //   destino1: ['', [Validators.required]],
-      //   destino2: ['', [Validators.required]],
-      //   destino3: ['', [Validators.required]],
-      //   remolque: ['', [Validators.required]],
-      //   vehiculovac: ['', [Validators.required]]
-      //   });
-
-
+        // this.openModal();
       // this.modalTurno.dismiss();
       // this.modalTurno2.present();
 
 
+
+  });
     }
+
+
 
 
   redirect(page:any)
