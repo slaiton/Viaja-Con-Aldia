@@ -65,16 +65,31 @@ export class UserService {
     }
 
 
-    registroApiAldia(params: any):Observable<any> {
+    getTercero3sL():Observable<any> {
+
+      const params = new HttpParams({
+        fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
+      });
+
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
         'user':'jlaiton',
         'password':'Jhoan1309'
       });
+      const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
+    } 
+
+
+    registroApiAldia(params: any):Observable<any> {
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json'
+      });
 
       const requestOptions = { headers: headers };
       // const url = 'http://api.aldialogistica.com/api/pruebas';
-      const url = 'https://3slogistica.com/tr_panel/wsr_aldia/ingresoApp';
+      const url = 'https://api.3slogistica.com/api/ingresos';
 
       return this.http.post(url, params, requestOptions)
     }
@@ -95,9 +110,7 @@ export class UserService {
     registroApi(params: any):Observable<any>{
 
       const headers = new HttpHeaders({
-        'Content-Type':'application/json; charset=utf-8',
-        'emailxUsuariox':'jhoan.laiton@aldialogistica.com',
-        'clavexUsuariox':'Jhoan1309'
+        'Content-Type':'application/json'
       });
 
       const requestOptions = { headers: headers };

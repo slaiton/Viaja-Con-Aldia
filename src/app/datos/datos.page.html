@@ -41,9 +41,7 @@
             <div class="row mt-1">
 
               <div class="col col-12">
-
-
-
+                
               </div>
 
           </div>
@@ -247,8 +245,8 @@
             </ion-title>
 
             <div (click)="getCedula1()" class="container-upload">
-              <ion-img *ngIf="cedula1" [src]="cedula1.webviewPath"></ion-img>
-              <div *ngIf="!cedula1" class="camera"></div>
+              <ion-img *ngIf="cedula1.webviewPath" [src]="cedula1.webviewPath"></ion-img>
+              <div *ngIf="!cedula1.webviewPath" class="camera"></div>
             </div>
 
 
@@ -262,8 +260,8 @@
             </ion-title>
 
             <div (click)="getCedula2()" class="container-upload">
-              <ion-img *ngIf="cedula2" [src]="cedula2.webviewPath"></ion-img>
-              <div *ngIf="!cedula2" class="camera"></div>
+              <ion-img *ngIf="cedula2.webviewPath" [src]="cedula2.webviewPath"></ion-img>
+              <div *ngIf="!cedula2.webviewPath" class="camera"></div>
             </div>
 
 
@@ -280,8 +278,8 @@
             </ion-title>
 
             <div (click)="getLicencia1()" class="container-upload">
-              <ion-img *ngIf="licencia" [src]="licencia.webviewPath"></ion-img>
-              <div *ngIf="!licencia" class="camera"></div>
+              <ion-img *ngIf="licencia.webviewPath" [src]="licencia.webviewPath"></ion-img>
+              <div *ngIf="!licencia.webviewPath" class="camera"></div>
             </div>
 
 
@@ -296,8 +294,8 @@
             </ion-title>
 
             <div (click)="getLicencia2()" class="container-upload">
-              <ion-img *ngIf="licencia2" [src]="licencia2.webviewPath"></ion-img>
-              <div *ngIf="!licencia2" class="camera"></div>
+              <ion-img *ngIf="licencia2.webviewPath" [src]="licencia2.webviewPath"></ion-img>
+              <div *ngIf="!licencia2.webviewPath" class="camera"></div>
             </div>
 
 
@@ -366,8 +364,8 @@
               </ion-title>
 
               <div (click)="getSoat1()" class="container-upload">
-                <ion-img *ngIf="apiSoat1" [src]="apiSoat1.webviewPath"></ion-img>
-                <div *ngIf="!apiSoat1" class="camera"></div>
+                <ion-img *ngIf="apiSoat1.webviewPath" [src]="apiSoat1.webviewPath"></ion-img>
+                <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
               </div>
 
               <ion-title class="ml-4 p-4">
@@ -377,13 +375,13 @@
               </ion-title>
 
               <div (click)="getTecno()" class="container-upload">
-                <ion-img *ngIf="apiTecno1" [src]="apiTecno1.webviewPath"></ion-img>
-                <div *ngIf="!apiTecno1" class="camera"></div>
+                <ion-img *ngIf="apiTecno1.webviewPath" [src]="apiTecno1.webviewPath"></ion-img>
+                <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
               </div>
 
 
                <div class="mt-5 p-4">
-                <ion-button expand="block" type="bottom" (click)="saveDocumentos()">Guardar</ion-button>
+                <ion-button expand="block" type="bottom" (click)="datosVehiculo()">Guardar</ion-button>
               </div>
 
           </ion-content>

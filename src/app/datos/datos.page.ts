@@ -47,23 +47,23 @@ export class DatosPage implements OnInit {
   carroceria:any;
   clase_vehiculo:any;
   clase_estado:any;
-  licencia:any;
-  licencia2:any;
-  cedula1:any;
-  cedula2:any;
-  seguridad_social:any;
+  licencia:any = [];
+  licencia2:any = [];
+  cedula1:any = [];
+  cedula2:any = [];
+  seguridad_social:any = [];
   jsonDocs:any = [];
   jsonPhoto:any = [];
   params:any = [];
-  dataFotoUser:any;
+  dataFotoUser:any = [];
   fotoUser:any;
   apiCedula1:any;
   apiCedula2:any;
-  apiLicencia1:any;
-  apiLicencia2:any;
-  apiSoat1:any;
+  apiLicencia1:any = [];
+  apiLicencia2:any = [];
+  apiSoat1:any = [];
   apiSoat2:any;
-  apiTecno1:any;
+  apiTecno1:any = [];
   apiTecno2:any;
   apiFoto1:any;
   apiFoto2:any;
@@ -129,6 +129,31 @@ export class DatosPage implements OnInit {
       }
       // console.log(data.data[0])
     });
+
+    this.userService.getTercero3sL().subscribe(
+      data => {
+        console.log(data['data']);
+
+        const dataUser = data['data'];
+
+        this.cedula = dataUser.codigoTercerox
+        this.fotoUser = dataUser.apiFotoConductor
+        this.dataFotoUser['webviewPath'] = dataUser.apiFotoConductor
+        this.apiFoto1 = dataUser.apiFoto1
+        this.apiFoto2 = dataUser.apiFoto2
+        // this.apiSoat2 = dataUser.apiSoat2
+        this.apiSoat1['webviewPath'] = dataUser.apiSoat1
+        this.apiTecno1['webviewPath'] = dataUser.apiTecnico1
+        this.cedula1['webviewPath'] = dataUser.apiCedula1
+        this.cedula2['webviewPath'] = dataUser.apiCedula2
+        this.licencia['webviewPath'] = dataUser.apiLicencia1
+        this.licencia2['webviewPath'] = dataUser.apiLicencia2
+
+
+      },
+      err => {
+
+      });
 
     this.userService.getUser().subscribe(data => {
       data = data.view.data[0];
@@ -204,12 +229,12 @@ export class DatosPage implements OnInit {
       apiSeguridad: "",
       apiFotoConductor: this.fotoUser,
       apiTarjeta1: "",
-      apiCedula1: this.apiCedula1,
-      apiCedula2: this.apiCedula2,
+      apiCedula1: this.cedula1,
+      apiCedula2: this.cedula2,
       apiLicencia1: this.apiLicencia1,
       apiLicencia2: this.apiLicencia2,
       apiTarjeta2: "",
-      apiSoat1: "",
+      apiSoat1: this.apiSoat1,
       apiSoat2: "",
       apiRecibo: "",
       apiTrailer: "",
@@ -219,7 +244,7 @@ export class DatosPage implements OnInit {
       apiFoto2: "",
       apiFoto3: "",
       apiFoto4: "",
-      apiTecnico1: "",
+      apiTecnico1: this.apiTecno1,
       apiTecnico2: "",
       indicaApruebax: "",
       usuariApruebax: "",
@@ -246,7 +271,7 @@ export class DatosPage implements OnInit {
 
 
 
-    // console.log(datparams2);
+    console.log(datparams2);
     // this.cargaDatosfinal(datparams2);
     this.userService.registroApiAldia(datparams2).subscribe(data => {
 
@@ -296,6 +321,8 @@ export class DatosPage implements OnInit {
     if (this.dataFotoUser) {
 
        const dataDoc = {"codigo":this.cedula, "tipo":"foto", "data64": this.dataFotoUser.base64}
+       console.log(dataDoc);
+       
        this.jsonPhoto.files.push(dataDoc)
 
         this.userService.cargaDocumentos(this.jsonPhoto).subscribe(
@@ -324,25 +351,25 @@ export class DatosPage implements OnInit {
     }
 
 
-    if (this.cedula1) {
+    if (this.cedula1.base64) {
       // params.apiCedula1 = this.cedula1.base64;
       const dataDoc = {"codigo":this.cedula, "tipo":"cedula1", "data64": this.cedula1.base64}
       this.jsonDocs.files.push(dataDoc)
     }
 
-    if (this.cedula2) {
+    if (this.cedula2.base64) {
       // params.apiCedula2 = this.cedula2.base64;
       const dataDoc = {"codigo":this.cedula, "tipo":"cedula2", "data64": this.cedula2.base64}
       this.jsonDocs.files.push(dataDoc)
     }
 
-    if (this.licencia) {
+    if (this.licencia.base64) {
       // params.apiLicencia1 = this.licencia.base64;
       const dataDoc = {"codigo":this.cedula, "tipo":"licencia", "data64": this.licencia.base64}
       this.jsonDocs.files.push(dataDoc)
     }
 
-    if (this.licencia2) {
+    if (this.licencia2.base64) {
       // params.apiLicencia2 = this.licencia2.base64;
       const dataDoc = {"codigo":this.cedula, "tipo":"licencia2", "data64": this.licencia2.base64}
       this.jsonDocs.files.push(dataDoc)
@@ -385,8 +412,51 @@ export class DatosPage implements OnInit {
 
   }
 
-  datosPersonales()
-  {}
+  datosVehiculo()
+  {
+    this.jsonDocs =  {
+      "files": []
+    }
+
+
+    if (this.apiSoat1.base64) {
+      // params.apiCedula1 = this.cedula1.base64;
+      const dataDoc = {"codigo":this.cedula, "tipo":"soat1", "data64": this.apiSoat1.base64}
+      this.jsonDocs.files.push(dataDoc)
+    }
+
+    if (this.apiTecno1.base64) {
+      // params.apiCedula1 = this.cedula1.base64;
+      const dataDoc = {"codigo":this.cedula, "tipo":"tecno1", "data64": this.apiTecno1.base64}
+      this.jsonDocs.files.push(dataDoc)
+    }
+
+    this.userService.cargaDocumentos(this.jsonDocs).subscribe(
+      data => {
+        const files = data.data;
+
+         if (files.soat1) {
+          this.apiSoat1 = 'http://54.215.78.160' + files.soat1;
+         }
+
+         if (files.tecno1) {
+          this.apiTecno1 = 'http://54.215.78.160' + files.tecno1;
+         }
+
+
+         this.modal3.dismiss();
+      },
+      err => {
+        this.presentAlert("Error al cargan documentos Vehiculo", "", "Por favor validar documentos", "Cerrar")
+        console.log(err);
+        console.log(this.jsonDocs);
+      }
+    )
+
+
+
+
+  }
 
   cargaDatosfinal(params:any){
 
