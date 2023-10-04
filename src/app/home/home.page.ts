@@ -45,6 +45,7 @@ export class HomePage implements OnInit {
   clase_vehiculo:any;
   respuesta:any;
   turnoForm:any = FormGroup;
+  turnoForm2:any = FormGroup;
   longitud:any;
   nombre:any;
   idModal: any;
@@ -137,6 +138,8 @@ export class HomePage implements OnInit {
         console.log(this.listTurnos);
         this.turnoExistente = true;
         this.idModal = "open-modal2"
+        // this.loadForm();
+
 
       },
       err => {
@@ -241,16 +244,21 @@ export class HomePage implements OnInit {
     getTurno(){
 
       console.log('funcion que muestra modal con los turnos cargados');
+      this.turnoForm2 = this.formBuilder.group({
+        origen: ['', [Validators.required]],
+        destino1: ['', [Validators.required]],
+        destino2: ['', [Validators.required]],
+        destino3: ['', [Validators.required]],
+        remolque: ['', [Validators.required]],
+        vehiculovac: ['', [Validators.required]]
+        });
+
 
       const listTurnos = this.userService.getTurnoUser().subscribe(data => {
         this.listTurnos = data;
+        console.log(data);
 
-        // this.openModal();
-      // this.modalTurno.dismiss();
-      // this.modalTurno2.present();
-
-
-
+        this.loadForm(data);
   });
     }
 
@@ -268,7 +276,7 @@ export class HomePage implements OnInit {
 
     this.geodata.getCityByLatLon(lat,lon).subscribe(data => {
       this.longitud = data.results.length;
-      console.log(data.results)
+      //console.log(data.results)
 
 
 
@@ -316,7 +324,16 @@ async presentAlert(title: String, subheader: String, desc: String, botton: Strin
   await alert.present();
 }
 
-
+loadForm(data:any) {
+  this.turnoForm2.patchValue({
+    destino1: data.data.destino1,
+    destino2: data.data.destino2,
+    destino3: data.data.destino3,
+    remolque:data.data.remolque,
+    vacio:data.data.vacio
+    // Carga aquí los campos del form
+  });
+}
 
 
 }

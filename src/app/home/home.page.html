@@ -28,10 +28,10 @@
           {{ turnoExistente ? 'Turno Existente' : 'Sin Turno' }}
         </h3>
       </ion-button>
-      <p class="tiemporestante mb-0" style="font-size: 10px;">{{ turnoExistente ? 'Creado hace: ' +
+      <p class="tiemporestante mb-0" style="font-size: 10px;">{{ turnoExistente ? 'Turno creado hace: ' +
         listTurnos.data.tiemporestante : '' }}</p>
     </div>
-    
+
     </div>
 
 
@@ -178,9 +178,91 @@
 
 
 
+  <ion-modal
+  #modalTurno2
+  trigger="open-modal2"
+  [initialBreakpoint]="0.50"
+  [breakpoints]="[0.5, 0.75]"
+  handleBehavior="cycle"
+  >
+  <ng-template>
+    <ion-content class="ion-padding">
+
+      <div class="container-fluid">
+
+        <div class="row d-flex justify-content-center">
+
+        <div class="container panel-turno">
+            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
+                <h3>Enturnamiento</h3>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+          <form [formGroup]="turnoForm2" (ngSubmit)="onSubmit()">
+
+            <div class="form-row p-2">
+              <div class="col-md-12 mt-2">
+                <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
+                <input [ngModel]="nombre" type="hidden" id="origen" formControlName="origen">
+              </div>
+                    <ion-item class="col-md-12 mt-2">
+                            <ion-select formControlName="destino1" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 1 ...">
+                                <ion-select-option></ion-select-option>
+                                <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
+                            </ion-select>
+                    </ion-item>
+                    <ion-item class="col-md-12 mt-2">
+                        <ion-select formControlName="destino2" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 2 ...">
+                            <ion-select-option></ion-select-option>
+                            <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
+                        </ion-select>
+                    </ion-item>
+                    <ion-item class="col-md-12 mt-2">
+                        <ion-select formControlName="destino3" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 3 ...">
+                            <ion-select-option></ion-select-option>
+                            <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre }}</ion-select-option>
+                        </ion-select>
+                    </ion-item>
+
+                    <div class="col-md-12 mt-2 mb-3">
+                        <label for="remolque">Tipo de Remolque</label>
+                        <ion-select  interface="action-sheet" formControlName="remolque" id="remolque" required>
+                            <ion-select-option selected>Seleccionar</ion-select-option>
+                            <ion-select-option value="CONTENEDOR">CONTENEDOR</ion-select-option>
+                            <ion-select-option value="PLANCHA">PLANCHA</ion-select-option>
+                        </ion-select>
+                    </div>
+
+                    <h6 style="color: #DB1824; font-size: 12px;" id="labelPorcentaje">* De detectar que la información brindada no es cierta podrá incurrir en sanciones drásticas por parte de la compañía.</h6>
+
+                    <div class="col-md-12 mt-4 mb-4">
+                        <label for="">Vehiculo vacio</label>
+                        <ion-select  interface="action-sheet" formControlName="vehiculovac" id="vehiculovac" required>
+                            <ion-select-option selected>Seleccionar</ion-select-option>
+                            <ion-select-option value="SI">SI</ion-select-option>
+                            <ion-select-option value="NO">NO</ion-select-option>
+                        </ion-select>
+                    </div>
+                </div>
+
+                <ion-button expand="block" color="primary" type="submit"> Enturnarme </ion-button>
+
+              </form>
+        </div>
+
+        </div>
+
+    </div>
 
 
-  <ion-modal #modalTurno2 trigger="open-modal2" [initialBreakpoint]="0.50" [breakpoints]="[0.5, 0.75]"
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+
+  <!-- <ion-modal #modalTurno2 trigger="open-modal2" [initialBreakpoint]="0.50" [breakpoints]="[0.5, 0.75]"
     handleBehavior="cycle">
     <ng-template>
       <ion-content class="ion-padding">
@@ -222,7 +304,7 @@
                   <p>{{ listTurnos.data.tiporemolque }}</p>
                 </div>
                 <div class="col-md-12 mt-2">
-                  <label id="origenLabel" for="">Ejecutada:</label>
+                  <label id="origenLabel" for="">Ejecutada?:</label>
                   <p>{{ listTurnos.data.ejecutada }}</p>
                 </div>
                 <div class="col-md-12 mt-2">
@@ -245,7 +327,7 @@
                   <label id="origenLabel" for="">Usuario:</label>
                   <p>{{ listTurnos.data.user }}</p>
                 </div>
-                
+
                 <div class="col-md-12 mt-2">
                   <label id="origenLabel" for="">prueba:</label>
                   <p>{{ listTurnos.data.destino1 }}</p>
@@ -254,14 +336,14 @@
                   <label id="origenLabel" for="">prueba:</label>
                   <p>{{ listTurnos.data.destino1 }}</p>
                 </div>
-                <!-- Muestra los otros campos de datos del turno aquí -->
-              </div>
+                <!-- aqui terminan -->
+              <!-- </div>
             </div>
           </div>
         </div>
       </ion-content>
     </ng-template>
-  </ion-modal>
+  </ion-modal> -->
 
 
 
