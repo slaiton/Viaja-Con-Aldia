@@ -19,8 +19,9 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 })
 export class HomePage implements OnInit {
   @ViewChild(IonModal) modalTurno!:IonModal;
-
-
+  @ViewChild(IonModal) modalTurno2!:IonModal;
+  // @ViewChild('modalTurno') modalTurno!:ModalController;
+  // @ViewChild('modalTurno2') modalTurno2!:ModalController;
 
 
   constructor(
@@ -34,17 +35,37 @@ export class HomePage implements OnInit {
 
     ) {}
 
-  turnoExistente:any = true;
+  turnoExistente:boolean=false;
+  listTurnos:any = [];
   conductor:any;
   estado:any;
-  placa:any;
+
   marca:any;
   carroceria:any;
   clase_vehiculo:any;
   respuesta:any;
   turnoForm:any = FormGroup;
+  turnoForm2:any = FormGroup;
   longitud:any;
   nombre:any;
+  idModal: any;
+
+  idTurno:any;
+  destino1:any;
+  destino2:any;
+  destino3:any;
+  placa:any;
+  origen:any;
+  vacio:any;
+  ejecutada:any;
+  anulada:any;
+  autorizada:any;
+  observacion:any;
+  fechaCreacion:any
+  user:any;
+  tipoRemolque:any;
+  tiempoRestante:any
+
 
   get f() { return this.turnoForm.controls; }
 
@@ -106,6 +127,34 @@ export class HomePage implements OnInit {
       this.presentAlert('Error al Consultar','', err.message ,'Continuar')
     }
     );
+
+
+
+
+
+
+     this.userService.getTurnoUser().subscribe(data=>{
+        this.listTurnos = data;
+        console.log(this.listTurnos);
+        this.turnoExistente = true;
+        this.idModal = "open-modal2"
+        // this.loadForm();
+
+
+      },
+      err => {
+        console.log(err);
+        this.presentAlert('Sin turnos','', 'Puedes agregar un turno con el boton Rojo' ,'Continuar')
+        this.idModal = "open-modal"
+      });
+
+
+
+
+
+
+
+
 
     // this.userService.getTurnoUser().subscribe(
     //   data => {
@@ -186,20 +235,35 @@ export class HomePage implements OnInit {
         console.log('Error getting location', error);
       });
 
+      console.log('nuevo turno ejecutado');
+
        this.modalTurno.present();
 
     }
 
-
     getTurno(){
 
-      const listTurnos = this.userService.getTurnoUser().subscribe(data=>{
+      console.log('funcion que muestra modal con los turnos cargados');
+      this.turnoForm2 = this.formBuilder.group({
+        origen: ['', [Validators.required]],
+        destino1: ['', [Validators.required]],
+        destino2: ['', [Validators.required]],
+        destino3: ['', [Validators.required]],
+        remolque: ['', [Validators.required]],
+        vehiculovac: ['', [Validators.required]]
+        });
+
+
+      const listTurnos = this.userService.getTurnoUser().subscribe(data => {
+        this.listTurnos = data;
         console.log(data);
-      });
 
-      return listTurnos;
-
+        this.loadForm(data);
+  });
     }
+
+
+
 
   redirect(page:any)
   {
@@ -212,7 +276,7 @@ export class HomePage implements OnInit {
 
     this.geodata.getCityByLatLon(lat,lon).subscribe(data => {
       this.longitud = data.results.length;
-      console.log(data.results)
+      //console.log(data.results)
 
 
 
@@ -237,6 +301,7 @@ export class HomePage implements OnInit {
         console.log(origenLabel);
 
 
+
         if (origenLabel != null) {
           origenLabel.innerHTML = "<ion-icon name='location'> </ion-icon> <strong>" + this.nombre + "</strong>";
         }else{
@@ -259,7 +324,16 @@ async presentAlert(title: String, subheader: String, desc: String, botton: Strin
   await alert.present();
 }
 
-
+loadForm(data:any) {
+  this.turnoForm2.patchValue({
+    destino1: data.data.destino1,
+    destino2: data.data.destino2,
+    destino3: data.data.destino3,
+    remolque:data.data.remolque,
+    vacio:data.data.vacio
+    // Carga aquí los campos del form
+  });
+}
 
 
 }
