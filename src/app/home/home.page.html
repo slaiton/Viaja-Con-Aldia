@@ -22,14 +22,16 @@
 
 
       <div class="col col-6">
-      <ion-button id= "{{idModal}}" (click)="turnoExistente ? getTurno():nuevoTurno()" expand="block" fill="solid" size="large" [color]="turnoExistente ? 'success' : 'danger'">
-        <ion-icon slot="start" name="refresh-circle"></ion-icon>
+      <ion-button id= "{{idModal}}" class="botontiemporestante" (click)="turnoExistente ? getTurno():nuevoTurno()" expand="block" fill="solid" size="large" [color]="turnoExistente ? 'success' : 'danger'">
+        <ion-icon slot="start" [name]="turnoExistente ? 'refresh-circle':'archive'"></ion-icon>
         <h3 class="ml-2 mb-0" style="font-size: 14px;">
           {{ turnoExistente ? 'Turno Existente' : 'Sin Turno' }}
         </h3>
       </ion-button>
+      <p class="tiemporestante mb-0" style="font-size: 10px;">{{ turnoExistente ? 'Creado hace: ' +
+        listTurnos.data.tiemporestante : '' }}</p>
     </div>
-    <p class="mb-0" style="font-size: 10px;">{{ turnoExistente ? 'Tiempo Restante: ' + listTurnos.data.tiemporestante : '' }}</p>
+    
     </div>
 
 

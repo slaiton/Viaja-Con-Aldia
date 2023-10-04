@@ -491,3 +491,27 @@ ion-button[type="submit"] span {
   font-size: 10px; /* Tamaño de los elementos de la lista */
   margin-bottom: 2px; /* Espaciado inferior entre elementos de la lista */
 }
+
+
+/* Tus estilos CSS existentes */
+
+/* Agrega las clases CSS personalizadas para el botón y el tiempo restante */
+.botontiemporestante {
+  font-family: 'Raleway', sans-serif;
+  /* Reemplaza 'TuFuentePersonalizada' con la fuente deseada */
+  font-size: 18px;
+  /* Tamaño de fuente deseado */
+  color: #0088FF;
+  /* Color deseado para el botón */
+}
+
+.tiemporestante {
+  font-family: 'Raleway', sans-serif;
+  /* Reemplaza 'TuFuentePersonalizada' con la fuente deseada */
+  font-size: 24px;
+  /* Tamaño de fuente deseado para el reloj digital */
+  color: #FF5500;
+  /* Color deseado para el texto del tiempo restante */
+}
+
+/* Más estilos CSS existentes */
