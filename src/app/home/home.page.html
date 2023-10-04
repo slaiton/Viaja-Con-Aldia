@@ -173,42 +173,93 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal #modalTurno2
-  trigger="open-modal2"
-  [initialBreakpoint]="0.50"
-  [breakpoints]="[0.5, 0.75]"
-  handleBehavior="cycle">
-  <ng-template>
-    <ion-content class="ion-padding">
-      <div class="container-fluid">
-        <div class="row d-flex justify-content-center">
-          <div class="container panel-turno">
-            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
-              <h3>Turno Actual</h3>
+
+
+
+
+  <ion-modal #modalTurno2 trigger="open-modal2" [initialBreakpoint]="0.50" [breakpoints]="[0.5, 0.75]"
+    handleBehavior="cycle">
+    <ng-template>
+      <ion-content class="ion-padding">
+        <div class="container-fluid">
+          <div class="row d-flex justify-content-center">
+            <div class="container panel-turno">
+              <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
+                <h3>Turno Actual</h3>
+              </div>
             </div>
-          </div>
-          <div class="col-md-8">
-            <form [formGroup]="turnoForm" (ngSubmit)="onSubmit()">
+            <div class="col-md-8">
               <div class="form-row p-2">
                 <div class="col-md-12 mt-2">
-                  <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
-                  <input type="hidden" id="origen" formControlName="origen">
+                  <label id="origenLabel" for="">Origen:</label>
+                  <p>{{ listTurnos.data.origen }}</p>
                 </div>
-                <ion-item class="col-md-12 mt-2">
-                  <ion-select formControlName="origen" interface="action-sheet" placeholder="* Selecciona la ciudad de destino 1 ...">
-                    <ion-select-option value="{{listTurnos.data.origen}}">{{ listTurnos.data.origen }}</ion-select-option>
-                  </ion-select>
-                </ion-item>
-                <!-- ... el resto de tu código HTML ... -->
-                <ion-button expand="block" color="primary" type="submit"> Enturnarme </ion-button>
-              </div> <!-- Cierra el div de form-row aquí -->
-            </form>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Destino 1:</label>
+                  <p>{{ listTurnos.data.destino1 }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Destino 2:</label>
+                  <p>{{ listTurnos.data.destino2 }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Destino 3:</label>
+                  <p>{{ listTurnos.data.destino3 }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Placa:</label>
+                  <p>{{ listTurnos.data.placa }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Vehiculo vacio?:</label>
+                  <p>{{ listTurnos.data.vacio }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Tipo Remolque:</label>
+                  <p>{{ listTurnos.data.tiporemolque }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Ejecutada:</label>
+                  <p>{{ listTurnos.data.ejecutada }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Anulada?:</label>
+                  <p>{{ listTurnos.data.anulada }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Autorizada?:</label>
+                  <p>{{ listTurnos.data.autorizada }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Observacion:</label>
+                  <p>{{ listTurnos.data.observacion }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Fecha de Creacion:</label>
+                  <p>{{ listTurnos.data.fechacreacion }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">Usuario:</label>
+                  <p>{{ listTurnos.data.user }}</p>
+                </div>
+                
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">prueba:</label>
+                  <p>{{ listTurnos.data.destino1 }}</p>
+                </div>
+                <div class="col-md-12 mt-2">
+                  <label id="origenLabel" for="">prueba:</label>
+                  <p>{{ listTurnos.data.destino1 }}</p>
+                </div>
+                <!-- Muestra los otros campos de datos del turno aquí -->
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </ion-content>
-  </ng-template>
-</ion-modal>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 
 
 </ion-content>
