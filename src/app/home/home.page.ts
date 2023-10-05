@@ -171,7 +171,7 @@ export class HomePage implements OnInit {
   }
 
   onSubmit(){
-
+    console.log(this.turnoForm.value);
 
     if (this.turnoForm.value.origen != null) {
 
@@ -179,6 +179,9 @@ export class HomePage implements OnInit {
       .replace(/[\u0300-\u036f|.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // Quitamos los acentos y símbolos de puntuación
       .replace(/ +/g, '-') // Reemplazamos los espacios por guiones
       .toLowerCase();
+
+
+
 
       const placa = localStorage.getItem("placa")?.toUpperCase();
 
@@ -244,7 +247,7 @@ export class HomePage implements OnInit {
     getTurno(){
 
       console.log('funcion que muestra modal con los turnos cargados');
-      this.turnoForm2 = this.formBuilder.group({
+      this.turnoForm = this.formBuilder.group({
         origen: ['', [Validators.required]],
         destino1: ['', [Validators.required]],
         destino2: ['', [Validators.required]],
@@ -256,7 +259,15 @@ export class HomePage implements OnInit {
 
       const listTurnos = this.userService.getTurnoUser().subscribe(data => {
         this.listTurnos = data;
-        console.log(data);
+        //console.log(data);
+
+        this.geolocation.getCurrentPosition().then((resp) => {
+
+        this.geolocationService(resp.coords.latitude,resp.coords.longitude);
+
+        }).catch((error) => {
+          console.log('Error getting location', error);
+        });
 
         this.loadForm(data);
   });
@@ -325,12 +336,12 @@ async presentAlert(title: String, subheader: String, desc: String, botton: Strin
 }
 
 loadForm(data:any) {
-  this.turnoForm2.patchValue({
+  this.turnoForm.patchValue({
     destino1: data.data.destino1,
     destino2: data.data.destino2,
     destino3: data.data.destino3,
-    remolque:data.data.remolque,
-    vacio:data.data.vacio
+    remolque:data.data.tiporemolque,
+    vehiculovac:data.data.vacio
     // Carga aquí los campos del form
   });
 }
