@@ -12,6 +12,7 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 
 
 
+
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
@@ -39,7 +40,7 @@ export class HomePage implements OnInit {
   listTurnos:any = [];
   conductor:any;
   estado:any;
-
+  event:any; //variable para cuenta regresiva
   marca:any;
   carroceria:any;
   clase_vehiculo:any;
@@ -49,7 +50,6 @@ export class HomePage implements OnInit {
   longitud:any;
   nombre:any;
   idModal: any;
-
   idTurno:any;
   destino1:any;
   destino2:any;
@@ -62,6 +62,7 @@ export class HomePage implements OnInit {
   autorizada:any;
   observacion:any;
   fechaCreacion:any
+  fechaModifica:any;
   user:any;
   tipoRemolque:any;
   tiempoRestante:any
@@ -270,6 +271,7 @@ export class HomePage implements OnInit {
         });
 
         this.loadForm(data);
+        // this.modalTurno2.present();
   });
     }
 
@@ -345,6 +347,7 @@ loadForm(data:any) {
     // Carga aquí los campos del form
   });
 }
+
 
 
 }
