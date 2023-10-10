@@ -276,6 +276,13 @@ export class HomePage implements OnInit {
     }
 
 
+    getPositionTurn(){
+      console.log
+
+
+
+
+    }
 
 
   redirect(page:any)

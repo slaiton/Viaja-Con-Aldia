@@ -35,8 +35,8 @@ export class UserService {
 
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'jlaiton',
-        'password':'Jhoan1309'
+         'user':'USUSEGINT',
+        'password':'12249'
       });
 
     const requestOptions = { headers: headers, params: params };
@@ -55,8 +55,8 @@ export class UserService {
 
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'jlaiton',
-        'password':'Jhoan1309'
+        'user':'USUSEGINT',
+        'passwor':'12249'
       });
       const requestOptions = { headers: headers, params: params };
 
@@ -73,13 +73,13 @@ export class UserService {
 
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'jlaiton',
-        'password':'Jhoan1309'
+        'user':'USUSEGINT',
+        'password':'12249'
       });
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
-    } 
+    }
 
 
     registroApiAldia(params: any):Observable<any> {
@@ -97,8 +97,8 @@ export class UserService {
     cargaDocumentos(params: any):Observable<any> {
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'jlaiton',
-        'password':'Jhoan1309'
+        'user':'USUSEGINT',
+        'password':'12249'
       });
 
       const requestOptions = { headers: headers };
@@ -144,8 +144,8 @@ export class UserService {
 
      const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user': 'WSTERCEROS',
-      'password':'aldia2019'
+      'user':'USUSEGINT',
+      'password':'12249'
      });
 
      const requestOptions = { headers: headers };
@@ -160,8 +160,32 @@ export class UserService {
 
       const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user': 'aespinosa',
-      'password':'12345'
+      'user':'USUSEGINT',
+      'password':'12249'
+      });
+
+     const params = new HttpParams({
+      fromString: 'placa=' + placa
+     });
+
+     const requestOptions = { headers: headers, params: params };
+
+
+     return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
+
+    }
+
+
+
+    getPosicion()
+    {
+
+      const placa = localStorage.getItem("placa")?.toUpperCase();
+
+      const headers = new HttpHeaders({
+      'Content-Type':'application/json; charset=utf-8',
+      'user':'USUSEGINT',
+        'password':'12249'
       });
 
      const params = new HttpParams({
@@ -204,8 +228,8 @@ export class UserService {
     postPreoperacionalData(params: any):Observable<any> {
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'usuario':'USUSEGINT',
-        'clave':'12249'
+        'user':'USUSEGINT',
+        'password':'12249'
       });
 
 
