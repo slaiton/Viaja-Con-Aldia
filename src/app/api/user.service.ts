@@ -177,27 +177,27 @@ export class UserService {
 
 
 
-    getPosicion()
-    {
+    // getPosicion()
+    // {
 
-      const placa = localStorage.getItem("placa")?.toUpperCase();
+    //   const placa = localStorage.getItem("placa")?.toUpperCase();
 
-      const headers = new HttpHeaders({
-      'Content-Type':'application/json; charset=utf-8',
-      'user':'USUSEGINT',
-        'password':'12249'
-      });
+    //   const headers = new HttpHeaders({
+    //   'Content-Type':'application/json; charset=utf-8',
+    //   'user':'USUSEGINT',
+    //     'password':'12249'
+    //   });
 
-     const params = new HttpParams({
-      fromString: 'placa=' + placa
-     });
+    //  const params = new HttpParams({
+    //   fromString: 'placa=' + placa
+    //  });
 
-     const requestOptions = { headers: headers, params: params };
+    //  const requestOptions = { headers: headers, params: params };
 
 
-     return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
+    //  return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
 
-    }
+    // }
 
     setToken(token: String) {
       localStorage.setItem("token", "auth-"+ token);

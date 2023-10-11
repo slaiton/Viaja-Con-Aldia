@@ -514,4 +514,31 @@ ion-button[type="submit"] span {
   /* Color deseado para el texto del tiempo restante */
 }
 
+.container-ticket{
+
+height: 40vh;
+width: 100%;
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+}
+
+.ticket{
+  position: relative;
+  padding: 1rem;
+}
+
+.ticket p{
+text-align: center;
+
+}
+.ticket span{
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 27%;
+  color: white;
+  font-size: 30px;
+  text-align: center;
+
+}
 /* Más estilos CSS existentes */

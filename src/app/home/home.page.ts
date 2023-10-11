@@ -37,6 +37,9 @@ export class HomePage implements OnInit {
     ) {}
 
   turnoExistente:boolean=false;
+  posicionTurno1: any;
+  posicionTurno2: any;
+  posicionTurno3: any;
   listTurnos:any = [];
   conductor:any;
   estado:any;
@@ -139,7 +142,16 @@ export class HomePage implements OnInit {
         console.log(this.listTurnos);
         this.turnoExistente = true;
         this.idModal = "open-modal2"
+        this.destino1 = this.listTurnos.data.destino1
+        this.destino2 = this.listTurnos.data.destino2
+        this.destino3 = this.listTurnos.data.destino3
+        this.posicionTurno1= this.listTurnos.data.posicionDestino1
+        this.posicionTurno2= this.listTurnos.data.posicionDestino2
+        this.posicionTurno3= this.listTurnos.data.posicionDestino3
+
         // this.loadForm();
+
+
 
 
       },
