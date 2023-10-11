@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import {FormControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 // import { UserService } from "../api/user.service";
-import { CookieService } from "ngx-cookie-service";
+import { CookieService } from 'ngx-cookie-service';
 import { AlertController } from '@ionic/angular';
 import { HomePage } from '../home/home.page';
 import { MenuController } from '@ionic/angular';
@@ -16,28 +21,39 @@ import { AppComponent } from '../app.component';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnInit {
-
-  
-
-  loginForm:any = FormGroup; 
+  loginForm: any = FormGroup;
 
   constructor(
     private app: AppComponent,
-    private menu: MenuController, 
-    private alertController:AlertController, 
-    private formBuilder: FormBuilder, 
-    private userService: AuthService, 
-    private cookies: CookieService, 
-    private router: Router) { }
-  get f() { return this.loginForm.controls; }
+    private menu: MenuController,
+    private alertController: AlertController,
+    private formBuilder: FormBuilder,
+    private userService: AuthService,
+    private cookies: CookieService,
+    private router: Router
+  ) {}
+  get f() {
+    return this.loginForm.controls;
+  }
 
   onLogin() {
-    // console.log(this.loginForm.value)
-    const user = { username: this.loginForm.value.password.toUpperCase(), password: this.loginForm.value.username };
-        
-    this.userService.login(user).subscribe(data => {
-      this.presentAlert('Alerta','Bienvenido',"App de ChecList",'Continuar');
-        localStorage.setItem('placa', this.loginForm.value.password.toUpperCase());
+    const user = {
+      username: this.loginForm.value.password.toUpperCase(),
+      password: this.loginForm.value.username,
+    };
+
+    this.userService.login(user).subscribe(
+      (data) => {
+        this.presentAlert(
+          'Alerta',
+          'Bienvenido',
+          'App de ChecList',
+          'Continuar'
+        );
+        localStorage.setItem(
+          'placa',
+          this.loginForm.value.password.toUpperCase()
+        );
         localStorage.setItem('conductor', this.loginForm.value.username);
         this.userService.setToken(data.token);
         this.menu.enable(true);
@@ -45,34 +61,41 @@ export class LoginPage implements OnInit {
         this.app.ngOnInit();
         this.router.navigate(['/home']);
       },
-      err => {
-        this.presentAlert('Error','Fallo al ingresar',err.error.data,'Cerrar');
+      (err) => {
+        this.presentAlert(
+          'Error',
+          'Fallo al ingresar',
+          err.error.data,
+          'Cerrar'
+        );
       }
     );
-   
   }
 
   ngOnInit() {
-
     if (localStorage.getItem('placa') != null) {
-      // console.log(this.cookies.get("placa"))
       this.router.navigate(['/home']);
-      }
+    }
 
     this.loginForm = this.formBuilder.group({
-    username: ['', [Validators.required]],
-    password: ['', [Validators.required]]
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]],
     });
- }
+  }
 
- async presentAlert(title: String, subheader: String, desc: String, botton: String ) {
-  const alert = await this.alertController.create({
-    header: '' + title,
-    subHeader: '' + subheader,
-    message: '' + desc,
-    buttons: ['' + botton],
-  });
+  async presentAlert(
+    title: String,
+    subheader: String,
+    desc: String,
+    botton: String
+  ) {
+    const alert = await this.alertController.create({
+      header: '' + title,
+      subHeader: '' + subheader,
+      message: '' + desc,
+      buttons: ['' + botton],
+    });
 
-  await alert.present();
- }
+    await alert.present();
+  }
 }

@@ -1,120 +1,117 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import {FormControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from "../api/user.service";
+import { UserService } from '../api/user.service';
 import { AlertController, ModalController } from '@ionic/angular';
 import { MenuController } from '@ionic/angular';
 import { PhotoService } from '../api/photo.service';
 import { log } from 'console';
 import { Foto } from '../models/photo.interface';
 
-
-
-
 @Component({
   selector: 'app-datos',
   templateUrl: './datos.page.html',
   styleUrls: ['./datos.page.scss'],
 })
-
-
-
 export class DatosPage implements OnInit {
+  @ViewChild('modal1') modal1!: ModalController;
+  @ViewChild('modal2') modal2!: ModalController;
+  @ViewChild('modal3') modal3!: ModalController;
 
+  dataForm: any = FormGroup;
+  dataTercero: any;
+  cedula: any;
+  nombres: any;
+  apellidos: any;
+  correo: any;
+  celular: any;
+  direccion: any;
+  fecha: any;
+  ciudad: any;
+  conductor: any;
+  nombre_contacto: any;
+  celular_contacto: any;
+  parentesco: any;
+  nombre: any;
+  estado: any;
+  placa: any;
+  marca: any;
+  carroceria: any;
+  clase_vehiculo: any;
+  clase_estado: any;
+  licencia: any = [];
+  licencia2: any = [];
+  cedula1: any = [];
+  cedula2: any = [];
+  seguridad_social: any = [];
+  jsonDocs: any = [];
+  jsonPhoto: any = [];
+  params: any = [];
+  dataFotoUser: any = [];
+  fotoUser: any;
+  apiCedula1: any;
+  apiCedula2: any;
+  apiLicencia1: any = [];
+  apiLicencia2: any = [];
+  apiSoat1: any = [];
+  apiSoat2: any;
+  apiTecno1: any = [];
+  apiTecno2: any;
+  apiFoto1: any;
+  apiFoto2: any;
+  apiFoto3: any;
+  apiFoto4: any;
 
-@ViewChild('modal1') modal1!:ModalController;
-@ViewChild('modal2') modal2!:ModalController;
-@ViewChild('modal3') modal3!:ModalController;
-
-  dataForm:any = FormGroup;
-  dataTercero:any;
-  cedula:any;
-  nombres:any;
-  apellidos:any;
-  correo:any;
-  celular:any;
-  direccion:any;
-  fecha:any;
-  ciudad:any;
-  conductor:any;
-  nombre_contacto:any;
-  celular_contacto:any;
-  parentesco:any;
-  nombre:any;
-  estado:any;
-  placa:any;
-  marca:any;
-  carroceria:any;
-  clase_vehiculo:any;
-  clase_estado:any;
-  licencia:any = [];
-  licencia2:any = [];
-  cedula1:any = [];
-  cedula2:any = [];
-  seguridad_social:any = [];
-  jsonDocs:any = [];
-  jsonPhoto:any = [];
-  params:any = [];
-  dataFotoUser:any = [];
-  fotoUser:any;
-  apiCedula1:any;
-  apiCedula2:any;
-  apiLicencia1:any = [];
-  apiLicencia2:any = [];
-  apiSoat1:any = [];
-  apiSoat2:any;
-  apiTecno1:any = [];
-  apiTecno2:any;
-  apiFoto1:any;
-  apiFoto2:any;
-  apiFoto3:any;
-  apiFoto4:any;
-
-  dataCorrect:any = "http://54.176.177.178/checklist/dataCorrect.png";
-  dataInCorrect:any = "http://54.176.177.178/checklist/dataInCorrect.png";
-
+  dataCorrect: any = 'http://54.176.177.178/checklist/dataCorrect.png';
+  dataInCorrect: any = 'http://54.176.177.178/checklist/dataInCorrect.png';
 
   modulos = [
     {
-      "id": 1,
-      "tag" : "personal-data",
-      "nombre" : "Datos Personales",
-      "icon" : "http://54.176.177.178/checklist/person.png",
-      "desc" : "Nombres, Telefono, Direccion, ",
-      "status" : this.dataCorrect
+      id: 1,
+      tag: 'personal-data',
+      nombre: 'Datos Personales',
+      icon: 'http://54.176.177.178/checklist/person.png',
+      desc: 'Nombres, Telefono, Direccion, ',
+      status: this.dataCorrect,
     },
     {
-      "id": 2,
-      "tag" : "document-data",
-      "nombre" : "Documentos",
-      "icon" : "http://54.176.177.178/checklist/document.png",
-      "desc" : "Licencia de conduccion, Seguridad social",
-      "status" : this.dataCorrect
+      id: 2,
+      tag: 'document-data',
+      nombre: 'Documentos',
+      icon: 'http://54.176.177.178/checklist/document.png',
+      desc: 'Licencia de conduccion, Seguridad social',
+      status: this.dataCorrect,
     },
     {
-      "id": 3,
-      "tag" : "vehicle-data",
-      "nombre" : "Vehiculo",
-      "icon" : "http://54.176.177.178/checklist/vehicle.png",
-      "desc" : "Placa, Marca, Clase, Carroceria",
-      "status" : this.dataInCorrect
-    }
-  ]
-
+      id: 3,
+      tag: 'vehicle-data',
+      nombre: 'Vehiculo',
+      icon: 'http://54.176.177.178/checklist/vehicle.png',
+      desc: 'Placa, Marca, Clase, Carroceria',
+      status: this.dataInCorrect,
+    },
+  ];
 
   constructor(
     private menu: MenuController,
-    private alertController:AlertController,
+    private alertController: AlertController,
     private formBuilder: FormBuilder,
     private userService: UserService,
     private router: Router,
-    private photo: PhotoService) { }
+    private photo: PhotoService
+  ) {}
 
-  get f() { return this.dataForm.controls; }
+  get f() {
+    return this.dataForm.controls;
+  }
 
   ngOnInit() {
-
-    this.userService.getConductor().subscribe(data => {
+    this.userService.getConductor().subscribe((data) => {
       this.dataTercero = data.data[0];
       this.cedula = this.dataTercero.documento;
       this.nombres = this.dataTercero.nombre;
@@ -127,35 +124,30 @@ export class DatosPage implements OnInit {
       if (this.dataTercero.foto) {
         this.fotoUser = this.dataTercero.foto;
       }
-      // console.log(data.data[0])
     });
 
     this.userService.getTercero3sL().subscribe(
-      data => {
+      (data) => {
         console.log(data['data']);
 
         const dataUser = data['data'];
 
-        this.cedula = dataUser.codigoTercerox
-        this.fotoUser = dataUser.apiFotoConductor
-        this.dataFotoUser['webviewPath'] = dataUser.apiFotoConductor
-        this.apiFoto1 = dataUser.apiFoto1
-        this.apiFoto2 = dataUser.apiFoto2
-        // this.apiSoat2 = dataUser.apiSoat2
-        this.apiSoat1['webviewPath'] = dataUser.apiSoat1
-        this.apiTecno1['webviewPath'] = dataUser.apiTecnico1
-        this.cedula1['webviewPath'] = dataUser.apiCedula1
-        this.cedula2['webviewPath'] = dataUser.apiCedula2
-        this.licencia['webviewPath'] = dataUser.apiLicencia1
-        this.licencia2['webviewPath'] = dataUser.apiLicencia2
-
-
+        this.cedula = dataUser.codigoTercerox;
+        this.fotoUser = dataUser.apiFotoConductor;
+        this.dataFotoUser['webviewPath'] = dataUser.apiFotoConductor;
+        this.apiFoto1 = dataUser.apiFoto1;
+        this.apiFoto2 = dataUser.apiFoto2;
+        this.apiSoat1['webviewPath'] = dataUser.apiSoat1;
+        this.apiTecno1['webviewPath'] = dataUser.apiTecnico1;
+        this.cedula1['webviewPath'] = dataUser.apiCedula1;
+        this.cedula2['webviewPath'] = dataUser.apiCedula2;
+        this.licencia['webviewPath'] = dataUser.apiLicencia1;
+        this.licencia2['webviewPath'] = dataUser.apiLicencia2;
       },
-      err => {
+      (err) => {}
+    );
 
-      });
-
-    this.userService.getUser().subscribe(data => {
+    this.userService.getUser().subscribe((data) => {
       data = data.view.data[0];
       this.conductor = data.conductor;
       this.nombre = this.conductor.split(' ')[0];
@@ -167,11 +159,11 @@ export class DatosPage implements OnInit {
       this.estado = data.estado;
 
       if (this.estado == 'ACTIVO') {
-        this.clase_estado = "badge text-bg-success";
-     }else{
-       this.clase_estado = "badge text-bg-danger";
-     }
- });
+        this.clase_estado = 'badge text-bg-success';
+      } else {
+        this.clase_estado = 'badge text-bg-danger';
+      }
+    });
 
     this.dataForm = this.formBuilder.group({
       cedula: ['', [Validators.required]],
@@ -189,348 +181,310 @@ export class DatosPage implements OnInit {
       clase_vehiculo: ['', [Validators.required]],
       marca: ['', [Validators.required]],
       carroceria: ['', [Validators.required]],
-      });
+    });
   }
 
-
-  onSubmit(){
-
-    this.presentAlert("Envio de datos a 3SL", "","", "Cerrar")
-
+  onSubmit() {
+    this.presentAlert('Envio de datos a 3SL', '', '', 'Cerrar');
 
     const dataSubmit = this.dataForm.value;
 
-    // console.log(dataSubmit);
-        // console.log(this.jsonDocs);
-
-
-     let datparams2: { [key: string]: any } = {
+    let datparams2: { [key: string]: any } = {
       codigoTercerox: this.cedula,
       numeroPlacaxxx: this.placa,
-      codigoRxxxxxxx: "",
-      codigoPropieta: "",
-      codigoTenedorx: "",
-      indicaIgualpro: "",
-      indicaIgualten: "",
+      codigoRxxxxxxx: '',
+      codigoPropieta: '',
+      codigoTenedorx: '',
+      indicaIgualpro: '',
+      indicaIgualten: '',
       nombreContacto: dataSubmit.nombre_contacto,
       movilxContacto: dataSubmit.celular_contacto,
       parentContacto: dataSubmit.parentesco,
-      nombreReferen1: "",
-      movilxReferen1: "",
-      empresReferen1: "",
-      fechaxTecnicox: "",
-      fechaxSoatxxxx: "",
-      indicaProptene: "",
-      numeroEstadoxx: "",
-      estadoSiatxx: "",
-      usuariCreacion: "",
-      fechaxCreacion: "",
-      ciudadCreacion: "",
-      apiSeguridad: "",
+      nombreReferen1: '',
+      movilxReferen1: '',
+      empresReferen1: '',
+      fechaxTecnicox: '',
+      fechaxSoatxxxx: '',
+      indicaProptene: '',
+      numeroEstadoxx: '',
+      estadoSiatxx: '',
+      usuariCreacion: '',
+      fechaxCreacion: '',
+      ciudadCreacion: '',
+      apiSeguridad: '',
       apiFotoConductor: this.fotoUser,
-      apiTarjeta1: "",
+      apiTarjeta1: '',
       apiCedula1: this.cedula1,
       apiCedula2: this.cedula2,
       apiLicencia1: this.apiLicencia1,
       apiLicencia2: this.apiLicencia2,
-      apiTarjeta2: "",
+      apiTarjeta2: '',
       apiSoat1: this.apiSoat1,
-      apiSoat2: "",
-      apiRecibo: "",
-      apiTrailer: "",
-      apiRegistroTrailer: "",
-      apiCertificadoTrailer: "",
-      apiFoto1: "",
-      apiFoto2: "",
-      apiFoto3: "",
-      apiFoto4: "",
+      apiSoat2: '',
+      apiRecibo: '',
+      apiTrailer: '',
+      apiRegistroTrailer: '',
+      apiCertificadoTrailer: '',
+      apiFoto1: '',
+      apiFoto2: '',
+      apiFoto3: '',
+      apiFoto4: '',
       apiTecnico1: this.apiTecno1,
-      apiTecnico2: "",
-      indicaApruebax: "",
-      usuariApruebax: "",
-      fechaxApruebax: "",
-      indicaSatelital: "",
+      apiTecnico2: '',
+      indicaApruebax: '',
+      usuariApruebax: '',
+      fechaxApruebax: '',
+      indicaSatelital: '',
     };
 
-    // const jsonParse = JSON.parse(JSON.stringify(datparams));
-
-
-    // console.log(jsonParse);
-    // return;
-
-
-
-    // let datparams: { [key: string]: any } = {
-    //   codigoTercerox: this.cedula,
-    //   numeroPlacaxxx: this.placa
-    // }
-
-
-
-//       this.params.push({ codigoTercerox: this.cedula, numeroPlacaxxx: this.placa })
-
-
-
     console.log(datparams2);
-    // this.cargaDatosfinal(datparams2);
-    this.userService.registroApiAldia(datparams2).subscribe(data => {
 
-      console.log(data);
-      this.presentAlert("Envio Exitoso", "","", "Cerrar")
-
-
-    },
-    err => {
-
-      this.presentAlert("Error al enviar", "", err.message, "Cerrar")
-
-    })
-    // return;
-
-// const dataJsonApi =  this.params;
-
-// console.log(dataJsonApi);
-
+    this.userService.registroApiAldia(datparams2).subscribe(
+      (data) => {
+        console.log(data);
+        this.presentAlert('Envio Exitoso', '', '', 'Cerrar');
+      },
+      (err) => {
+        this.presentAlert('Error al enviar', '', err.message, 'Cerrar');
+      }
+    );
   }
 
-
   saveDataProfile() {
-
     this.savePhoto();
 
     const dataSubmit = this.dataForm.value;
 
+    this.celular = dataSubmit.celular;
+    this.direccion = dataSubmit.direccion;
+    this.ciudad = dataSubmit.ciudad;
+    this.nombre_contacto = dataSubmit.nombre_contacto;
+    this.celular_contacto = dataSubmit.celular_contacto;
+    this.parentesco = dataSubmit.parentesco;
 
-    this.celular = dataSubmit.celular
-    this.direccion = dataSubmit.direccion
-    this.ciudad = dataSubmit.ciudad
-    this.nombre_contacto = dataSubmit.nombre_contacto
-    this.celular_contacto = dataSubmit.celular_contacto
-    this.parentesco = dataSubmit.parentesco
-
-  this.modal1.dismiss()
-
+    this.modal1.dismiss();
   }
 
-  savePhoto()
-  {
-    this.jsonPhoto =  {
-      "files": []
-    }
+  savePhoto() {
+    this.jsonPhoto = {
+      files: [],
+    };
 
     if (this.dataFotoUser) {
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'foto',
+        data64: this.dataFotoUser.base64,
+      };
+      console.log(dataDoc);
 
-       const dataDoc = {"codigo":this.cedula, "tipo":"foto", "data64": this.dataFotoUser.base64}
-       console.log(dataDoc);
-       
-       this.jsonPhoto.files.push(dataDoc)
+      this.jsonPhoto.files.push(dataDoc);
 
-        this.userService.cargaDocumentos(this.jsonPhoto).subscribe(
-           data => {
-             console.log(data);
+      this.userService.cargaDocumentos(this.jsonPhoto).subscribe(
+        (data) => {
+          console.log(data);
 
-             const files = data.data;
-              if (files.foto) {
-               this.fotoUser = 'http://54.215.78.160' + files.foto;
-              }
-           },
-           err => {
-             this.presentAlert("Error al cargan documentos", "", "Por favor validar documentos", "Cerrar")
-             console.log(err);
-             console.log(this.jsonPhoto);
-           }
-         )
-   }
-
+          const files = data.data;
+          if (files.foto) {
+            this.fotoUser = 'http://54.215.78.160' + files.foto;
+          }
+        },
+        (err) => {
+          this.presentAlert(
+            'Error al cargan documentos',
+            '',
+            'Por favor validar documentos',
+            'Cerrar'
+          );
+          console.log(err);
+          console.log(this.jsonPhoto);
+        }
+      );
+    }
   }
 
-  saveDocumentos(){
-
-    this.jsonDocs =  {
-      "files": []
-    }
-
+  saveDocumentos() {
+    this.jsonDocs = {
+      files: [],
+    };
 
     if (this.cedula1.base64) {
-      // params.apiCedula1 = this.cedula1.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"cedula1", "data64": this.cedula1.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'cedula1',
+        data64: this.cedula1.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
     if (this.cedula2.base64) {
-      // params.apiCedula2 = this.cedula2.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"cedula2", "data64": this.cedula2.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'cedula2',
+        data64: this.cedula2.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
     if (this.licencia.base64) {
-      // params.apiLicencia1 = this.licencia.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"licencia", "data64": this.licencia.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'licencia',
+        data64: this.licencia.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
     if (this.licencia2.base64) {
-      // params.apiLicencia2 = this.licencia2.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"licencia2", "data64": this.licencia2.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'licencia2',
+        data64: this.licencia2.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
-
-
     this.userService.cargaDocumentos(this.jsonDocs).subscribe(
-      data => {
+      (data) => {
         const files = data.data;
 
-         if (files.cedula1) {
+        if (files.cedula1) {
           this.apiCedula1 = 'http://54.215.78.160' + files.cedula1;
-         }
+        }
 
-         if (files.cedula2) {
+        if (files.cedula2) {
           this.apiCedula2 = 'http://54.215.78.160' + files.cedula2;
-         }
+        }
 
-         if (files.licencia) {
+        if (files.licencia) {
           this.apiLicencia1 = 'http://54.215.78.160' + files.licencia;
-         }
+        }
 
-         if (files.licencia2) {
+        if (files.licencia2) {
           this.apiLicencia2 = 'http://54.215.78.160' + files.licencia2;
-         }
+        }
 
-
-
-         this.modal2.dismiss();
+        this.modal2.dismiss();
       },
-      err => {
-        this.presentAlert("Error al cargan documentos", "", "Por favor validar documentos", "Cerrar")
+      (err) => {
+        this.presentAlert(
+          'Error al cargan documentos',
+          '',
+          'Por favor validar documentos',
+          'Cerrar'
+        );
         console.log(err);
         console.log(this.jsonDocs);
       }
-    )
-
-
-
+    );
   }
 
-  datosVehiculo()
-  {
-    this.jsonDocs =  {
-      "files": []
-    }
-
+  datosVehiculo() {
+    this.jsonDocs = {
+      files: [],
+    };
 
     if (this.apiSoat1.base64) {
-      // params.apiCedula1 = this.cedula1.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"soat1", "data64": this.apiSoat1.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'soat1',
+        data64: this.apiSoat1.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
     if (this.apiTecno1.base64) {
-      // params.apiCedula1 = this.cedula1.base64;
-      const dataDoc = {"codigo":this.cedula, "tipo":"tecno1", "data64": this.apiTecno1.base64}
-      this.jsonDocs.files.push(dataDoc)
+      const dataDoc = {
+        codigo: this.cedula,
+        tipo: 'tecno1',
+        data64: this.apiTecno1.base64,
+      };
+      this.jsonDocs.files.push(dataDoc);
     }
 
     this.userService.cargaDocumentos(this.jsonDocs).subscribe(
-      data => {
+      (data) => {
         const files = data.data;
 
-         if (files.soat1) {
+        if (files.soat1) {
           this.apiSoat1 = 'http://54.215.78.160' + files.soat1;
-         }
+        }
 
-         if (files.tecno1) {
+        if (files.tecno1) {
           this.apiTecno1 = 'http://54.215.78.160' + files.tecno1;
-         }
+        }
 
-
-         this.modal3.dismiss();
+        this.modal3.dismiss();
       },
-      err => {
-        this.presentAlert("Error al cargan documentos Vehiculo", "", "Por favor validar documentos", "Cerrar")
+      (err) => {
+        this.presentAlert(
+          'Error al cargan documentos Vehiculo',
+          '',
+          'Por favor validar documentos',
+          'Cerrar'
+        );
         console.log(err);
         console.log(this.jsonDocs);
       }
-    )
-
-
-
-
+    );
   }
 
-  cargaDatosfinal(params:any){
-
-  }
-
+  cargaDatosfinal(params: any) {}
 
   changeInput(type: any): any {
-    const fecha = document.querySelector("#fecha input") as HTMLInputElement;
+    const fecha = document.querySelector('#fecha input') as HTMLInputElement;
 
     fecha.type = type;
-    // console.log(fecha.type);
-
-
   }
 
-  getCedula1(){
-   this.photo.addNewToGallery('cedula1').then(da => {
-     console.log(da);
-     this.cedula1 = da;
-   })
-
+  getCedula1() {
+    this.photo.addNewToGallery('cedula1').then((da) => {
+      this.cedula1 = da;
+    });
   }
 
-  getCedula2(){
-       this.photo.addNewToGallery('cedula2').then(da => {
-    //  console.log(da);
-     this.cedula2 = da;
-   })
+  getCedula2() {
+    this.photo.addNewToGallery('cedula2').then((da) => {
+      this.cedula2 = da;
+    });
   }
 
-  getLicencia1(){
-   this.photo.addNewToGallery('licencia').then(da => {
-    //  console.log(da);
-     this.licencia = da;
-   })
-
+  getLicencia1() {
+    this.photo.addNewToGallery('licencia').then((da) => {
+      this.licencia = da;
+    });
   }
 
-  getLicencia2(){
-   this.photo.addNewToGallery('licencia2').then(da => {
-    //  console.log(da);
-     this.licencia2 = da;
-   })
+  getLicencia2() {
+    this.photo.addNewToGallery('licencia2').then((da) => {
+      this.licencia2 = da;
+    });
   }
 
-  getSoat1(){
-    this.photo.addNewToGallery('soat1').then(da => {
-     //  console.log(da);
+  getSoat1() {
+    this.photo.addNewToGallery('soat1').then((da) => {
       this.apiSoat1 = da;
-    })
-   }
+    });
+  }
 
-
-   getTecno(){
-    this.photo.addNewToGallery('tencno').then(da => {
-     //  console.log(da);
+  getTecno() {
+    this.photo.addNewToGallery('tencno').then((da) => {
       this.apiTecno1 = da;
-    })
-   }
+    });
+  }
 
-
-
-
-
-   loadProfile(){
-    this.photo.addNewToGallery('profile').then(da => {
+  loadProfile() {
+    this.photo.addNewToGallery('profile').then((da) => {
       this.dataFotoUser = da;
-        // params.apiLicencia2 = this.licencia2.base64;
-    })
-   }
+    });
+  }
 
-
-
-  async presentAlert(title: String, subheader: String, desc: String, botton: String ) {
+  async presentAlert(
+    title: String,
+    subheader: String,
+    desc: String,
+    botton: String
+  ) {
     const alert = await this.alertController.create({
       header: '' + title,
       subHeader: '' + subheader,
@@ -539,5 +493,4 @@ export class DatosPage implements OnInit {
     });
     await alert.present();
   }
-
 }

@@ -8,387 +8,393 @@
 </ion-header>
 
 <ion-content class="ion-user">
+  <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
+    <div class="container panel-user">
+      <div class="row p-3">
+        <div
+          class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"
+        >
+          <ion-avatar
+            [style.width]="'130px'"
+            [style.height]="'130px'"
+            slot="start"
+          >
+            <ion-img
+              alt="person"
+              *ngIf="fotoUser"
+              class="rounded-circle me-2"
+              [src]="fotoUser"
+            ></ion-img>
+            <ion-img
+              alt="person"
+              *ngIf="!fotoUser"
+              class="rounded-circle me-2"
+              src="http://54.176.177.178/checklist/userDefault.png"
+            ></ion-img>
+          </ion-avatar>
+        </div>
 
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
+        <div class="col col-12 text-center">
+          <ul class="list-unstyled ps-0 ml-3">
+            <li class="mb-1">
+              <h2 class="text-white">
+                <strong id="nameUser">{{ nombre }} {{ apellidos }}</strong>
+              </h2>
+            </li>
 
+            <li class="mb-1">
+              <span class="{{clase_estado}}">{{estado}}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-1">
+        <div class="col col-12"></div>
+      </div>
+    </div>
 
-        <!-- <ion-item class="col-md-12 item-form" color="tertiary" > -->
+    <div class="p-2">
+      <ion-list>
+        <ion-item
+          id="{{p.tag}}"
+          *ngFor="let p of modulos; let i = index"
+          class="ion-activatable ripple-parent circle"
+        >
+          <ion-thumbnail class="icon-select" slot="start">
+            <img alt="{{p.nombre}}" src="{{p.icon}}" />
+          </ion-thumbnail>
 
+          <ion-label>
+            <h2>{{p.nombre}}</h2>
+            <p>{{p.desc}}</p>
+          </ion-label>
+
+          <span slot="end" class="dataCorrect">
+            <img src="{{p.status}}" alt="" />
+          </span>
+
+          <ion-ripple-effect></ion-ripple-effect>
+        </ion-item>
+      </ion-list>
+
+      <div class="mt-5 p-4">
+        <ion-button expand="block" type="submit">Guardar</ion-button>
+      </div>
+    </div>
+
+    <ion-modal #modal1 trigger="personal-data">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button color="medium" (click)="modal1.dismiss()"
+                >Cancelar</ion-button
+              >
+            </ion-buttons>
+            <ion-title class="ml-3">Ajustes</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="modal1.dismiss()" [strong]="true"
+                >Confirmar</ion-button
+              >
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content>
           <div class="container panel-user">
-
             <div class="row p-3">
-
-              <div class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3">
-                <ion-avatar  [style.width]="'130px'" [style.height]="'130px'" slot="start">
-                  <ion-img alt="person" *ngIf="fotoUser" class="rounded-circle me-2" [src]="fotoUser"></ion-img>
-                  <ion-img alt="person" *ngIf="!fotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"></ion-img>
+              <div
+                class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"
+              >
+                <ion-avatar
+                  [style.width]="'130px'"
+                  [style.height]="'130px'"
+                  slot="start"
+                >
+                  <ion-img
+                    alt="person"
+                    *ngIf="dataFotoUser"
+                    class="rounded-circle me-2"
+                    [src]="dataFotoUser.webviewPath"
+                  ></ion-img>
+                  <ion-img
+                    alt="person"
+                    *ngIf="!dataFotoUser"
+                    class="rounded-circle me-2"
+                    src="http://54.176.177.178/checklist/userDefault.png"
+                  ></ion-img>
                 </ion-avatar>
+                <span id="changePhoto" (click)="loadProfile()">
+                  <img
+                    src="http://54.176.177.178/checklist/camara_min.png"
+                    alt=""
+                  />
+                </span>
               </div>
 
               <div class="col col-12 text-center">
                 <ul class="list-unstyled ps-0 ml-3">
                   <li class="mb-1">
-                    <h2 class="text-white"><strong id="nameUser">{{ nombre }} {{ apellidos }}</strong></h2>
+                    <h2 class="text-white">
+                      <strong id="nameUser"
+                        >{{ nombre }} {{ apellidos }}</strong
+                      >
+                    </h2>
                   </li>
 
                   <li class="mb-1">
-                    <span class="{{clase_estado}}">{{estado}}</span>
+                    <h2 class="text-white">
+                      <strong id="nameUser">CC. {{ cedula }}</strong>
+                    </h2>
                   </li>
                 </ul>
               </div>
-
             </div>
-            <div class="row mt-1">
-
-              <div class="col col-12">
-                
-              </div>
-
           </div>
 
-        </div>
-
-
-        <!-- </ion-item> -->
-
-
-      <!-- <ion-item class="d-flex justify-content-center">
-
-        <ion-avatar>
-          <img alt="Silhouette of a person's head" src="https://github.com/mdo.png"  width="100" />
-        </ion-avatar>
-
-      </ion-item> -->
-
-      <div class="p-2">
-
-        <ion-list>
-            <ion-item id="{{p.tag}}" *ngFor="let p of modulos; let i = index" class="ion-activatable ripple-parent circle">
-              <ion-thumbnail class="icon-select" slot="start">
-                <img alt="{{p.nombre}}" src="{{p.icon}}" />
-              </ion-thumbnail>
-
-
-              <ion-label>
-                <h2>{{p.nombre}}</h2>
-                <p>{{p.desc}}</p>
-              </ion-label>
-
-              <span slot="end" class="dataCorrect">
-                <img src="{{p.status}}" alt="">
-              </span>
-
-              <ion-ripple-effect></ion-ripple-effect>
-            </ion-item>
-
-        </ion-list>
-
-
-
-
-       <div class="mt-5 p-4">
-         <ion-button expand="block" type="submit">Guardar</ion-button>
-       </div>
-
-      </div>
-
-      <ion-modal #modal1 trigger="personal-data">
-        <ng-template>
-          <ion-header>
-            <ion-toolbar>
-              <ion-buttons slot="start">
-                <ion-button color="medium" (click)="modal1.dismiss()">Cancelar</ion-button>
-              </ion-buttons>
-              <ion-title class="ml-3">Ajustes</ion-title>
-              <ion-buttons slot="end">
-                <ion-button (click)="modal1.dismiss()" [strong]="true">Confirmar</ion-button>
-              </ion-buttons>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content>
-
-            <div class="container panel-user">
-
-              <div class="row p-3">
-
-                <div class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3">
-                  <ion-avatar  [style.width]="'130px'" [style.height]="'130px'" slot="start">
-                    <ion-img alt="person" *ngIf="dataFotoUser" class="rounded-circle me-2" [src]="dataFotoUser.webviewPath"></ion-img>
-                    <ion-img alt="person" *ngIf="!dataFotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"></ion-img>
-                  </ion-avatar>
-                  <span id="changePhoto" (click)="loadProfile()">
-                    <img src="http://54.176.177.178/checklist/camara_min.png" alt="">
-                  </span>
-                </div>
-
-                <div class="col col-12 text-center">
-                  <ul class="list-unstyled ps-0 ml-3">
-                    <li class="mb-1">
-                      <h2 class="text-white"><strong id="nameUser">{{ nombre }} {{ apellidos }}</strong></h2>
-                    </li>
-
-                    <li class="mb-1">
-                      <h2 class="text-white"><strong id="nameUser">CC. {{ cedula }}</strong></h2>
-                    </li>
-
-
-                    <!-- <li class="mb-1">
-                      <span class="{{clase_estado}}">{{estado}}</span>
-                    </li>    -->
-                  </ul>
-                </div>
-
-              </div>
-
-            </div>
-
-            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
-              <strong><h1>Datos Personales</h1></strong>
-            </div>
-
-
-            <!-- <ion-item>
-              <ion-label  position="floating">Cedula</ion-label>
-              <ion-input [readonly]="true" [ngModel]="cedula"  formControlName="cedula"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label  position="floating">Nombres</ion-label>
-              <ion-input [readonly]="true" [ngModel]="nombres"  formControlName="nombres"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Apellidos</ion-label>
-              <ion-input [ngModel]="apellidos"  formControlName="apellidos"></ion-input>
-            </ion-item> -->
-
-            <ion-item>
-              <ion-label position="floating">Correo</ion-label>
-              <ion-input [ngModel]="correo" type="email" formControlName="correo"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Celular</ion-label>
-              <ion-input [ngModel]="celular"  formControlName="celular"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Direccion</ion-label>
-              <ion-input [ngModel]="direccion"  formControlName="direccion"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Fecha Nacimiento</ion-label>
-              <ion-input [ngModel]="fecha" id="fecha" formControlName="fecha_nacimeinto" (ionFocus)="changeInput('date')" (ionBlur)="changeInput('text')"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Ciudad</ion-label>
-              <ion-input [ngModel]="ciudad"  formControlName="ciudad"></ion-input>
-            </ion-item>
-
-
-            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
-              <strong><h1>Contacto de Emergencia</h1></strong>
-            </div>
-
-            <ion-item>
-              <ion-label position="floating">Nombre</ion-label>
-              <ion-input   formControlName="nombre_contacto"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Celular</ion-label>
-              <ion-input  id="fecha" formControlName="celular_contacto"></ion-input>
-            </ion-item>
-
-            <ion-item>
-              <ion-label position="floating">Parentesco</ion-label>
-              <ion-input   formControlName="parentesco"></ion-input>
-            </ion-item>
-
-
-            <div class="mt-5 p-4">
-              <ion-button expand="block" type="bottom" (click)="saveDataProfile()">Guardar</ion-button>
-            </div>
-
-          </ion-content>
-        </ng-template>
-      </ion-modal>
-
-
-
-      <ion-modal #modal2 trigger="document-data">
-        <ng-template>
-          <ion-header>
-            <ion-toolbar>
-              <ion-buttons slot="start">
-                <ion-button color="medium" (click)="modal2.dismiss()">Cancelar</ion-button>
-              </ion-buttons>
-              <ion-title class="ml-4">Carga Documentos</ion-title>
-              <ion-buttons slot="end">
-                <ion-button (click)="saveDocumentos()" [strong]="true">Confirmar</ion-button>
-              </ion-buttons>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content>
-
-
-            <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center  title-form">
-              <strong><h1>Cedula de ciudadania</h1></strong>
-            </div>
-
-            <ion-title class="ml-2 p-2">
-              <strong>
-                Frontal
-              </strong>
-            </ion-title>
-
-            <div (click)="getCedula1()" class="container-upload">
-              <ion-img *ngIf="cedula1.webviewPath" [src]="cedula1.webviewPath"></ion-img>
-              <div *ngIf="!cedula1.webviewPath" class="camera"></div>
-            </div>
-
-
-            <!-- <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
-              <strong><h1>Cedula - Reverso</h1></strong>
-            </div> -->
-            <ion-title class="ml-2 p-2">
-              <strong>
-                Reverso
-              </strong>
-            </ion-title>
-
-            <div (click)="getCedula2()" class="container-upload">
-              <ion-img *ngIf="cedula2.webviewPath" [src]="cedula2.webviewPath"></ion-img>
-              <div *ngIf="!cedula2.webviewPath" class="camera"></div>
-            </div>
-
-
-
-
-            <div class="col-md-12 d-flex mt-5 mb-1 justify-content-center text-center  title-form">
-              <strong><h1>Licencia de transito</h1></strong>
-            </div>
-
-            <ion-title class="ml-4 p-4">
-              <strong>
-                Frontal
-              </strong>
-            </ion-title>
-
-            <div (click)="getLicencia1()" class="container-upload">
-              <ion-img *ngIf="licencia.webviewPath" [src]="licencia.webviewPath"></ion-img>
-              <div *ngIf="!licencia.webviewPath" class="camera"></div>
-            </div>
-
-
-            <!-- <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
-              <strong><h1>Licencia - Reverso</h1></strong>
-            </div> -->
-
-            <ion-title class="ml-4 p-4">
-              <strong>
-                Reverso
-              </strong>
-            </ion-title>
-
-            <div (click)="getLicencia2()" class="container-upload">
-              <ion-img *ngIf="licencia2.webviewPath" [src]="licencia2.webviewPath"></ion-img>
-              <div *ngIf="!licencia2.webviewPath" class="camera"></div>
-            </div>
-
-
-            <!-- <ion-row>
-              <ion-col size="6" *ngFor="let photo of fotos; index as position">
-                <ion-img [src]="photo.webviewPath"></ion-img>
-              </ion-col>
-            </ion-row> -->
-
-            <div class="mt-5 p-4">
-              <ion-button expand="block" type="bottom" (click)="saveDocumentos()">Guardar</ion-button>
-            </div>
-
-          </ion-content>
-        </ng-template>
-      </ion-modal>
-
-
-
-
-      <ion-modal #modal3 trigger="vehicle-data">
-        <ng-template>
-          <ion-header>
-            <ion-toolbar>
-              <ion-buttons slot="start">
-                <ion-button color="medium" (click)="modal3.dismiss()">Cancelar</ion-button>
-              </ion-buttons>
-              <ion-title class="ml-4">Ajustes</ion-title>
-              <ion-buttons slot="end">
-                <ion-button (click)="modal3.dismiss()" [strong]="true">Confirmar</ion-button>
-              </ion-buttons>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content>
-
-               <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center  title-form">
-                 <strong><h1>Datos del vehiculo</h1></strong>
-               </div>
-
-
-               <!-- <ion-item>
-                 <ion-label position="floating">Placa</ion-label>
-                 <ion-input  [ngModel]="placa" formControlName="placa"></ion-input>
-               </ion-item> -->
-
-               <ion-item>
-                 <ion-label position="floating">Clase vehiculo</ion-label>
-                 <ion-input [ngModel]="clase_vehiculo" id="fecha" formControlName="clase_vehiculo"></ion-input>
-               </ion-item>
-
-               <ion-item>
-                 <ion-label position="floating">Marca</ion-label>
-                 <ion-input  [ngModel]="marca" formControlName="marca"></ion-input>
-               </ion-item>
-
-               <ion-item>
-                 <ion-label position="floating">Carroceria</ion-label>
-                 <ion-input  [ngModel]="carroceria" formControlName="carroceria"></ion-input>
-               </ion-item>
-
-
-               <ion-title class="ml-4 p-4">
-                <strong>
-                  Soat
-                </strong>
-              </ion-title>
-
-              <div (click)="getSoat1()" class="container-upload">
-                <ion-img *ngIf="apiSoat1.webviewPath" [src]="apiSoat1.webviewPath"></ion-img>
-                <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
-              </div>
-
-              <ion-title class="ml-4 p-4">
-                <strong>
-                  Tecnomecanica
-                </strong>
-              </ion-title>
-
-              <div (click)="getTecno()" class="container-upload">
-                <ion-img *ngIf="apiTecno1.webviewPath" [src]="apiTecno1.webviewPath"></ion-img>
-                <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
-              </div>
-
-
-               <div class="mt-5 p-4">
-                <ion-button expand="block" type="bottom" (click)="datosVehiculo()">Guardar</ion-button>
-              </div>
-
-          </ion-content>
-        </ng-template>
-      </ion-modal>
-
-
-    </form>
-
+          <div
+            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
+          >
+            <strong><h1>Datos Personales</h1></strong>
+          </div>
+
+          <ion-item>
+            <ion-label position="floating">Correo</ion-label>
+            <ion-input
+              [ngModel]="correo"
+              type="email"
+              formControlName="correo"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Celular</ion-label>
+            <ion-input
+              [ngModel]="celular"
+              formControlName="celular"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Direccion</ion-label>
+            <ion-input
+              [ngModel]="direccion"
+              formControlName="direccion"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Fecha Nacimiento</ion-label>
+            <ion-input
+              [ngModel]="fecha"
+              id="fecha"
+              formControlName="fecha_nacimeinto"
+              (ionFocus)="changeInput('date')"
+              (ionBlur)="changeInput('text')"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Ciudad</ion-label>
+            <ion-input [ngModel]="ciudad" formControlName="ciudad"></ion-input>
+          </ion-item>
+
+          <div
+            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
+          >
+            <strong><h1>Contacto de Emergencia</h1></strong>
+          </div>
+
+          <ion-item>
+            <ion-label position="floating">Nombre</ion-label>
+            <ion-input formControlName="nombre_contacto"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Celular</ion-label>
+            <ion-input
+              id="fecha"
+              formControlName="celular_contacto"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Parentesco</ion-label>
+            <ion-input formControlName="parentesco"></ion-input>
+          </ion-item>
+
+          <div class="mt-5 p-4">
+            <ion-button expand="block" type="bottom" (click)="saveDataProfile()"
+              >Guardar</ion-button
+            >
+          </div>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+
+    <ion-modal #modal2 trigger="document-data">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button color="medium" (click)="modal2.dismiss()"
+                >Cancelar</ion-button
+              >
+            </ion-buttons>
+            <ion-title class="ml-4">Carga Documentos</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="saveDocumentos()" [strong]="true"
+                >Confirmar</ion-button
+              >
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content>
+          <div
+            class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form"
+          >
+            <strong><h1>Cedula de ciudadania</h1></strong>
+          </div>
+
+          <ion-title class="ml-2 p-2">
+            <strong> Frontal </strong>
+          </ion-title>
+
+          <div (click)="getCedula1()" class="container-upload">
+            <ion-img
+              *ngIf="cedula1.webviewPath"
+              [src]="cedula1.webviewPath"
+            ></ion-img>
+            <div *ngIf="!cedula1.webviewPath" class="camera"></div>
+          </div>
+
+          <ion-title class="ml-2 p-2">
+            <strong> Reverso </strong>
+          </ion-title>
+
+          <div (click)="getCedula2()" class="container-upload">
+            <ion-img
+              *ngIf="cedula2.webviewPath"
+              [src]="cedula2.webviewPath"
+            ></ion-img>
+            <div *ngIf="!cedula2.webviewPath" class="camera"></div>
+          </div>
+
+          <div
+            class="col-md-12 d-flex mt-5 mb-1 justify-content-center text-center title-form"
+          >
+            <strong><h1>Licencia de transito</h1></strong>
+          </div>
+
+          <ion-title class="ml-4 p-4">
+            <strong> Frontal </strong>
+          </ion-title>
+
+          <div (click)="getLicencia1()" class="container-upload">
+            <ion-img
+              *ngIf="licencia.webviewPath"
+              [src]="licencia.webviewPath"
+            ></ion-img>
+            <div *ngIf="!licencia.webviewPath" class="camera"></div>
+          </div>
+
+          <ion-title class="ml-4 p-4">
+            <strong> Reverso </strong>
+          </ion-title>
+
+          <div (click)="getLicencia2()" class="container-upload">
+            <ion-img
+              *ngIf="licencia2.webviewPath"
+              [src]="licencia2.webviewPath"
+            ></ion-img>
+            <div *ngIf="!licencia2.webviewPath" class="camera"></div>
+          </div>
+
+          <div class="mt-5 p-4">
+            <ion-button expand="block" type="bottom" (click)="saveDocumentos()"
+              >Guardar</ion-button
+            >
+          </div>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+
+    <ion-modal #modal3 trigger="vehicle-data">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button color="medium" (click)="modal3.dismiss()"
+                >Cancelar</ion-button
+              >
+            </ion-buttons>
+            <ion-title class="ml-4">Ajustes</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="modal3.dismiss()" [strong]="true"
+                >Confirmar</ion-button
+              >
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content>
+          <div
+            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
+          >
+            <strong><h1>Datos del vehiculo</h1></strong>
+          </div>
+
+          <ion-item>
+            <ion-label position="floating">Clase vehiculo</ion-label>
+            <ion-input
+              [ngModel]="clase_vehiculo"
+              id="fecha"
+              formControlName="clase_vehiculo"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Marca</ion-label>
+            <ion-input [ngModel]="marca" formControlName="marca"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Carroceria</ion-label>
+            <ion-input
+              [ngModel]="carroceria"
+              formControlName="carroceria"
+            ></ion-input>
+          </ion-item>
+
+          <ion-title class="ml-4 p-4">
+            <strong> Soat </strong>
+          </ion-title>
+
+          <div (click)="getSoat1()" class="container-upload">
+            <ion-img
+              *ngIf="apiSoat1.webviewPath"
+              [src]="apiSoat1.webviewPath"
+            ></ion-img>
+            <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
+          </div>
+
+          <ion-title class="ml-4 p-4">
+            <strong> Tecnomecanica </strong>
+          </ion-title>
+
+          <div (click)="getTecno()" class="container-upload">
+            <ion-img
+              *ngIf="apiTecno1.webviewPath"
+              [src]="apiTecno1.webviewPath"
+            ></ion-img>
+            <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
+          </div>
+
+          <div class="mt-5 p-4">
+            <ion-button expand="block" type="bottom" (click)="datosVehiculo()"
+              >Guardar</ion-button
+            >
+          </div>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+  </form>
 </ion-content>

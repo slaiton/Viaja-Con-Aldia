@@ -525,18 +525,22 @@ grid-template-columns: 1fr 1fr 1fr;
 .ticket{
   position: relative;
   padding: 1rem;
+  font-size: 2.5vw;
 }
 
 .ticket p{
 text-align: center;
-
+font-family: 'Raleway', sans-serif;
+color: #0088FF;
+font-weight: bold;
 }
+
 .ticket span{
   width: 100%;
   position: absolute;
   left: 0;
   top: 27%;
-  color: white;
+  color: #ffffff;
   font-size: 30px;
   text-align: center;
 

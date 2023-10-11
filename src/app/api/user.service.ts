@@ -27,7 +27,7 @@ export class UserService {
     }
 
     getUser(): Observable<any>{
-      // console.log(localStorage.getItem("placa"));
+
 
       const params = new HttpParams({
         fromString: 'placa='+localStorage.getItem("placa")
@@ -46,7 +46,7 @@ export class UserService {
 
     getConductor():Observable<any>{
 
-      console.log(localStorage.getItem("conductor"));
+
 
 
       const params = new HttpParams({
@@ -176,28 +176,6 @@ export class UserService {
     }
 
 
-
-    // getPosicion()
-    // {
-
-    //   const placa = localStorage.getItem("placa")?.toUpperCase();
-
-    //   const headers = new HttpHeaders({
-    //   'Content-Type':'application/json; charset=utf-8',
-    //   'user':'USUSEGINT',
-    //     'password':'12249'
-    //   });
-
-    //  const params = new HttpParams({
-    //   fromString: 'placa=' + placa
-    //  });
-
-    //  const requestOptions = { headers: headers, params: params };
-
-
-    //  return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
-
-    // }
 
     setToken(token: String) {
       localStorage.setItem("token", "auth-"+ token);

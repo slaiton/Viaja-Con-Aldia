@@ -7,6 +7,8 @@ import { CookieService } from "ngx-cookie-service";
 import { User } from "../models/user.model";
 import { MenuController } from '@ionic/angular';
 
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,15 +26,15 @@ export class AuthService {
 
   getUser(): Observable<any>{
     // console.log(localStorage.getItem("placa"));
-  
+
     const params = new HttpParams({
       fromString: 'placa='+localStorage.getItem("placa")
     });
 
     const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user':'jlaiton',
-      'password':'Jhoan1309'
+      'user':'USUSEGINT',
+      'password':'12249'
     });
 
   const requestOptions = { headers: headers, params: params };
