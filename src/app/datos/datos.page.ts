@@ -69,6 +69,7 @@ export class DatosPage implements OnInit {
   dataUser:any;
   fechaxTecnicox:any;
   fechaxSoatxxxx:any;
+  fechaxLicencia:any;
 
 
 
@@ -140,7 +141,7 @@ export class DatosPage implements OnInit {
 
         const dataUser = data['data'];
         this.dataUser = data['data'];
-        console.log(data['data']);
+        console.log(dataUser);
 
 
 
@@ -157,7 +158,7 @@ export class DatosPage implements OnInit {
         this.licencia2['webviewPath'] = dataUser.apiLicencia2;
         this.fechaxTecnicox = dataUser.fechaxTecnicox;
         this.fechaxSoatxxxx  = dataUser.fechaxSoatxxxx;
-
+        this.fechaxLicencia = dataUser.fechaxLicencia;
 
       },
       (err) => {}
