@@ -66,6 +66,11 @@ export class DatosPage implements OnInit {
   apiFoto2: any;
   apiFoto3: any;
   apiFoto4: any;
+  dataUser:any;
+  fechaxTecnicox:any;
+  fechaxSoatxxxx:any;
+
+
 
   dataCorrect: any = 'http://54.176.177.178/checklist/dataCorrect.png';
   dataInCorrect: any = 'http://54.176.177.178/checklist/dataInCorrect.png';
@@ -104,6 +109,7 @@ export class DatosPage implements OnInit {
     private userService: UserService,
     private router: Router,
     private photo: PhotoService
+
   ) {}
 
   get f() {
@@ -121,6 +127,8 @@ export class DatosPage implements OnInit {
       this.direccion = this.dataTercero.direccion;
       this.fecha = this.dataTercero.fecha_nacimiento;
       this.ciudad = this.dataTercero.ciudad_expedicion;
+
+
       if (this.dataTercero.foto) {
         this.fotoUser = this.dataTercero.foto;
       }
@@ -131,6 +139,10 @@ export class DatosPage implements OnInit {
         console.log(data['data']);
 
         const dataUser = data['data'];
+        this.dataUser = data['data'];
+        console.log(data['data']);
+
+
 
         this.cedula = dataUser.codigoTercerox;
         this.fotoUser = dataUser.apiFotoConductor;
@@ -143,6 +155,10 @@ export class DatosPage implements OnInit {
         this.cedula2['webviewPath'] = dataUser.apiCedula2;
         this.licencia['webviewPath'] = dataUser.apiLicencia1;
         this.licencia2['webviewPath'] = dataUser.apiLicencia2;
+        this.fechaxTecnicox = dataUser.fechaxTecnicox;
+        this.fechaxSoatxxxx  = dataUser.fechaxSoatxxxx;
+
+
       },
       (err) => {}
     );
@@ -236,6 +252,8 @@ export class DatosPage implements OnInit {
       fechaxApruebax: '',
       indicaSatelital: '',
     };
+
+
 
     console.log(datparams2);
 
