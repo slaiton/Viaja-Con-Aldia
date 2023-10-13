@@ -166,6 +166,8 @@ export class DatosPage implements OnInit {
 
     this.userService.getUser().subscribe((data) => {
       data = data.view.data[0];
+      console.log('*******',data);
+
       this.conductor = data.conductor;
       this.nombre = this.conductor.split(' ')[0];
       this.estado = data.estado;
@@ -174,6 +176,7 @@ export class DatosPage implements OnInit {
       this.marca = data.marca;
       this.clase_vehiculo = data.clase_vehiculo;
       this.estado = data.estado;
+
 
       if (this.estado == 'ACTIVO') {
         this.clase_estado = 'badge text-bg-success';
@@ -198,6 +201,10 @@ export class DatosPage implements OnInit {
       clase_vehiculo: ['', [Validators.required]],
       marca: ['', [Validators.required]],
       carroceria: ['', [Validators.required]],
+      fechaxTecnicox: ['', [Validators.required]],
+      fechaxSoatxxxx: ['', [Validators.required]],
+      fechaxLicencia: ['', [Validators.required]],
+
     });
   }
 

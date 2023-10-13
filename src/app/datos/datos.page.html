@@ -285,9 +285,14 @@
             <strong><h1>Licencia de transito</h1></strong>
           </div>
 
+          <ion-item>
+            <ion-label position="floating">Licencia Vence el dia:</ion-label>
+            <ion-input [ngModel]="fechaxLicencia" formControlName="fechaxLicencia"></ion-input>
+          </ion-item>
+
+
           <ion-title class="ml-4 p-4">
             <strong> Frontal </strong>
-            <p>Tu licencia vence el dia:{{this.dataUser.fechaxLicencia}}</p>
           </ion-title>
 
           <div (click)="getLicencia1()" class="container-upload">
@@ -365,9 +370,13 @@
             ></ion-input>
           </ion-item>
 
+          <ion-item>
+            <ion-label position="floating">Soat vencimiento</ion-label>
+            <ion-input [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx"></ion-input>
+          </ion-item>
+
           <ion-title class="ml-4 p-4">
             <strong> Soat </strong>
-            <p>Vence el dia : {{this.dataUser.fechaxSoatxxxx}}</p>
           </ion-title>
 
           <div (click)="getSoat1()" class="container-upload">
@@ -380,8 +389,13 @@
 
           <ion-title class="ml-4 p-4">
             <strong> Tecnomecanica </strong>
-            <p>Vence el dia : {{this.dataUser.fechaxTecnicox}}</p>
           </ion-title>
+
+          <ion-item>
+            <ion-label position="floating">TecnoMecanica vencimiento</ion-label>
+            <ion-input [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox"></ion-input>
+          </ion-item>
+
 
           <div (click)="getTecno()" class="container-upload">
             <ion-img
