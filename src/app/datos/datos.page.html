@@ -54,6 +54,13 @@
     </div>
 
     <div class="p-2">
+      
+      <ion-item>
+        <ion-button id="change-vehicle" class="ion-activatable" (click)="changeVehicle()" color="medium" [strong]="true">
+          Cambiar Vehiculo
+        </ion-button>
+      </ion-item>
+
       <ion-list>
         <ion-item
           id="{{p.tag}}"
@@ -76,6 +83,8 @@
           <ion-ripple-effect></ion-ripple-effect>
         </ion-item>
       </ion-list>
+
+
 
       <div class="mt-5 p-4">
         <ion-button expand="block" type="submit">Guardar</ion-button>
@@ -286,8 +295,8 @@
           </div>
 
           <ion-item>
-            <ion-label position="floating">Licencia Vence el dia:</ion-label>
-            <ion-input [ngModel]="fechaxLicencia" formControlName="fechaxLicencia"></ion-input>
+            <ion-label position="floating">Vencimiento Licencia:</ion-label>
+            <ion-input type="date" [ngModel]="fechaxLicencia" formControlName="fechaxLicencia"></ion-input>
           </ion-item>
 
 
@@ -324,6 +333,96 @@
       </ng-template>
     </ion-modal>
 
+    <ion-modal #modal4 trigger="change-vehicle">
+
+      <ng-template>
+
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button color="medium" (click)="modal4.dismiss()">
+                Cancelar
+              </ion-button>
+            </ion-buttons>
+            <ion-title class="ml-2">Nuevo Vehiculo</ion-title>
+            <ion-buttons slot="end">
+              <ion-button (click)="modal4.dismiss()" [strong]="true">
+                Confirmar
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+      <ion-content>
+
+
+        <!-- <ion-item>
+          <ion-label position="floating">Placa</ion-label>
+          <ion-input id="placa"></ion-input>
+        </ion-item> -->
+        <form [formGroup]="dataChange" (ngSubmit)="onChange()" method="post">
+        
+        <ion-row class="mb-4">
+          <ion-col size="8" class="d-flex justify-content-center p-3">
+            <ion-item>
+              <ion-label position="floating">Placa Vehiculo</ion-label>
+              <ion-input 
+               [ngModel]="claseNewVh" 
+               formControlName="placa" 
+               value="{{searchTerm}}" 
+               (ionChange)="upperPlaca($event)" 
+               id="placa" 
+               type="text"></ion-input>
+            </ion-item>
+          </ion-col>
+          
+          <ion-col size="4" class="d-flex justify-content-center align-centr p-3">
+            <ion-button (click)="changeVehicle()" color="primary"> Buscar </ion-button>
+          </ion-col>
+        </ion-row>
+
+        <!-- <ion-row *ngIf="placaChange"> -->
+
+          <ion-item *ngIf="placaChange">
+            <ion-label position="floating">Clase vehiculo</ion-label>
+            <ion-input
+            [ngModel]="claseNewVh"
+            formControlName="clase_vehiculo"
+            [disabled]="isDisabled"
+            ></ion-input>
+          </ion-item>
+          
+          <ion-item *ngIf="placaChange">
+            <ion-label position="floating">Marca</ion-label>
+            <ion-input 
+            [ngModel]="marcaVeh" 
+            formControlName="marca" 
+            [disabled]="isDisabled1"
+            ></ion-input>
+          </ion-item >
+          
+        <ion-item *ngIf="placaChange">
+          <ion-label position="floating">Carroceria</ion-label>
+          <ion-input
+          [ngModel]="carroceVeh"
+          formControlName="carroceria"
+          [disabled]="isDisabled2"
+          ></ion-input>
+        </ion-item>
+        
+      <!-- </ion-row> -->
+        
+        
+      <ion-button *ngIf="placaChange" expand="block" color="primary" type="submit">
+        Cambiar
+      </ion-button>
+        
+      </form>
+
+      </ion-content>
+      </ng-template>
+      
+    </ion-modal>
+
     <ion-modal #modal3 trigger="vehicle-data">
       <ng-template>
         <ion-header>
@@ -342,9 +441,10 @@
           </ion-toolbar>
         </ion-header>
         <ion-content>
-          <div
-            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
-          >
+          
+ 
+          
+          <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
             <strong><h1>Datos del vehiculo</h1></strong>
           </div>
 
@@ -374,13 +474,8 @@
             <strong> Soat </strong>
           </ion-title>
           <ion-item>
-            <ion-label position="floating">Soat vencimiento</ion-label>
-            <ion-input [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx"></ion-input>
-          </ion-item>
-
-
-
-          <div (click)="getSoat1()" class="container-upload">
+      
+         <div (click)="getSoat1()" class="container-upload">
             <ion-img
               *ngIf="apiSoat1.webviewPath"
               [src]="apiSoat1.webviewPath"
@@ -388,15 +483,13 @@
             <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
           </div>
 
+         <ion-label position="floating">Soat vencimiento</ion-label>
+           <ion-input type="date" [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx"></ion-input>
+         </ion-item>
+
           <ion-title class="ml-4 p-4">
             <strong> Tecnomecanica </strong>
           </ion-title>
-
-          <ion-item>
-            <ion-label position="floating">TecnoMecanica vencimiento</ion-label>
-            <ion-input [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox"></ion-input>
-          </ion-item>
-
 
           <div (click)="getTecno()" class="container-upload">
             <ion-img
@@ -406,10 +499,15 @@
             <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
           </div>
 
+          <ion-item>
+            <ion-label position="floating">TecnoMecanica vencimiento</ion-label>
+            <ion-input type="date" [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox"></ion-input>
+          </ion-item>
+
           <div class="mt-5 p-4">
-            <ion-button expand="block" type="bottom" (click)="datosVehiculo()"
-              >Guardar</ion-button
-            >
+            <ion-button expand="block" type="bottom" (click)="datosVehiculo()">
+              Guardar
+            </ion-button>
           </div>
         </ion-content>
       </ng-template>
