@@ -1,0 +1,504 @@
+[1mdiff --git a/src/app/api/auth.service.ts b/src/app/api/auth.service.ts[m
+[1mindex 9ccea19..17e4704 100644[m
+[1m--- a/src/app/api/auth.service.ts[m
+[1m+++ b/src/app/api/auth.service.ts[m
+[36m@@ -7,6 +7,8 @@[m [mimport { CookieService } from "ngx-cookie-service";[m
+ import { User } from "../models/user.model";[m
+ import { MenuController } from '@ionic/angular';[m
+ [m
+[32m+[m
+[32m+[m
+ @Injectable({[m
+   providedIn: 'root'[m
+ })[m
+[36m@@ -24,15 +26,15 @@[m [mexport class AuthService {[m
+ [m
+   getUser(): Observable<any>{[m
+     // console.log(localStorage.getItem("placa"));[m
+[31m-  [m
+[32m+[m
+     const params = new HttpParams({[m
+       fromString: 'placa='+localStorage.getItem("placa")[m
+     });[m
+ [m
+     const headers = new HttpHeaders({[m
+       'Content-Type':'application/json; charset=utf-8',[m
+[31m-      'user':'jlaiton',[m
+[31m-      'password':'Jhoan1309'[m
+[32m+[m[32m      'user':'USUSEGINT',[m
+[32m+[m[32m      'password':'12249'[m
+     });[m
+ [m
+   const requestOptions = { headers: headers, params: params };[m
+[1mdiff --git a/src/app/api/user.service.ts b/src/app/api/user.service.ts[m
+[1mindex 052d9a1..16c11df 100644[m
+[1m--- a/src/app/api/user.service.ts[m
+[1m+++ b/src/app/api/user.service.ts[m
+[36m@@ -22,17 +22,21 @@[m [mexport class UserService {[m
+       return this.http.post("http://api.aldialogistica.com/api/auth/login-external", user);[m
+     }[m
+ [m
+[32m+[m[32m    getPlaca() {[m
+[32m+[m[32m      return localStorage.getItem("placa");[m
+[32m+[m[32m    }[m
+[32m+[m
+     getUser(): Observable<any>{[m
+[31m-      // console.log(localStorage.getItem("placa"));[m
+[31m-    [m
+[32m+[m
+[32m+[m
+       const params = new HttpParams({[m
+         fromString: 'placa='+localStorage.getItem("placa")[m
+       });[m
+ [m
+       const headers = new HttpHeaders({[m
+         'Content-Type':'application/json; charset=utf-8',[m
+[31m-        'user':'jlaiton',[m
+[31m-        'password':'Jhoan1309'[m
+[32m+[m[32m         'user':'USUSEGINT',[m
+[32m+[m[32m        'password':'12249'[m
+       });[m
+ [m
+     const requestOptions = { headers: headers, params: params };[m
+[36m@@ -42,8 +46,8 @@[m [mexport class UserService {[m
+ [m
+     getConductor():Observable<any>{[m
+ [m
+[31m-      console.log(localStorage.getItem("conductor"));[m
+[31m-      [m
+[32m+[m
+[32m+[m
+ [m
+       const params = new HttpParams({[m
+         fromString: 'documento='+localStorage.getItem("conductor")[m
+[36m@@ -51,8 +55,8 @@[m [mexport class UserService {[m
+ [m
+       const headers = new HttpHeaders({[m
+         'Content-Type':'application/json; charset=utf-8',[m
+[31m-        'user':'jlaiton',[m
+[31m-        'password':'Jhoan1309'[m
+[32m+[m[32m        'user':'USUSEGINT',[m
+[32m+[m[32m        'passwor':'12249'[m
+       });[m
+       const requestOptions = { headers: headers, params: params };[m
+ [m
+[36m@@ -61,39 +65,52 @@[m [mexport class UserService {[m
+     }[m
+ [m
+ [m
+[31m-    registroApiAldia(params: any):Observable<any> {[m
+[32m+[m[32m    getTercero3sL():Observable<any> {[m
+[32m+[m
+[32m+[m[32m      const params = new HttpParams({[m
+[32m+[m[32m        fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")[m
+[32m+[m[32m      });[m
+[32m+[m
+       const headers = new HttpHeaders({[m
+         'Content-Type':'application/json; charset=utf-8',[m
+[31m-        'user':'jlaiton',[m
+[31m-        'password':'Jhoan1309'[m
+[32m+[m[32m        'user':'USUSEGINT',[m
+[32m+[m[32m        'password':'12249'[m
+[32m+[m[32m      });[m
+[32m+[m[32m      const requestOptions = { headers: headers, params: params };[m
+[32m+[m
+[32m+[m[32m      return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    registroApiAldia(params: any):Observable<any> {[m
+[32m+[m[32m      const headers = new HttpHeaders({[m
+[32m+[m[32m        'Content-Type':'application/json'[m
+       });[m
+ [m
+       const requestOptions = { headers: headers };[m
+       // const url = 'http://api.aldialogistica.com/api/pruebas';[m
+[31m-      const url = 'https://3slogistica.com/tr_panel/wsr_aldia/ingresoApp';[m
+[32m+[m[32m      const url = 'https://api.3slogistica.com/api/ingresos';[m
+ [m
+       return this.http.post(url, params, requestOptions)[m
+[31m-    } [m
+[32m+[m[32m    }[m
+ [m
+     cargaDocumentos(params: any):Observable<any> {[m
+       const headers = new HttpHeaders({[m
+         'Content-Type':'application/json; charset=utf-8',[m
+[31m-        'user':'jlaiton',[m
+[31m-        'password':'Jhoan1309'[m
+[32m+[m[32m        'user':'USUSEGINT',[m
+[32m+[m[32m        'password':'12249'[m
+       });[m
+ [m
+       const requestOptions = { headers: headers };[m
+ [m
+       return this.http.post("http://api.aldialogistica.com/api/documento", params, requestOptions)[m
+[31m-    } [m
+[32m+[m[32m    }[m
+[32m+[m
+ [m
+[31m-    [m
+     registroApi(params: any):Observable<any>{[m
+ [m
+       const headers = new HttpHeaders({[m
+[31m-        'Content-Type':'application/json; charset=utf-8',[m
+[31m-        'emailxUsuariox':'jhoan.laiton@aldialogistica.com',[m
+[31m-        'clavexUsuariox':'Jhoan1309'[m
+[32m+[m[32m        'Content-Type':'application/json'[m
+       });[m
+ [m
+       const requestOptions = { headers: headers };[m
+[36m@@ -121,19 +138,19 @@[m [mexport class UserService {[m
+       "ciudad_destino3": destino3,[m
+       "desacorasado": desacorasa,[m
+       "ciudad_origen": ciudadOrigen,[m
+[31m-      "estado_trailer": trailer [m
+[31m-    } [m
+[32m+[m[32m      "estado_trailer": trailer[m
+[32m+[m[32m    }[m
+    };[m
+ [m
+      const headers = new HttpHeaders({[m
+       'Content-Type':'application/json; charset=utf-8',[m
+[31m-      'user': 'WSTERCEROS',[m
+[31m-      'password':'aldia2019'[m
+[32m+[m[32m      'user':'USUSEGINT',[m
+[32m+[m[32m      'password':'12249'[m
+      });[m
+ [m
+      const requestOptions = { headers: headers };[m
+ [m
+[31m-     return this.http.post("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)   [m
+[32m+[m[32m     return this.http.post("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)[m
+     }[m
+ [m
+     getTurnoUser()[m
+[36m@@ -143,21 +160,23 @@[m [mexport class UserService {[m
+ [m
+       const headers = new HttpHeaders({[m
+       'Content-Type':'application/json; charset=utf-8',[m
+[31m-      'user': 'WSTERCEROS',[m
+[31m-      'password':'aldia2019'[m
+[32m+[m[32m      'user':'USUSEGINT',[m
+[32m+[m[32m      'password':'12249'[m
+       });[m
+ [m
+      const params = new HttpParams({[m
+[31m-      fromString: 'view=enturnamiento/' + placa[m
+[32m+[m[32m      fromString: 'placa=' + placa[m
+      });[m
+[31m- [m
+[32m+[m
+      const requestOptions = { headers: headers, params: params };[m
+ [m
+ [m
+[31m-     return this.http.get("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , requestOptions)   [m
+[32m+[m[32m     return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)[m
+ [m
+     }[m
+ [m
+[32m+[m
+[32m+[m
+     setToken(token: String) {[m
+       localStorage.setItem("token", "auth-"+ token);[m
+     }[m
+[36m@@ -181,4 +200,25 @@[m [mexport class UserService {[m
+     {[m
+       return this.onLoginChange.asObservable();[m
+     }[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    postPreoperacionalData(params: any):Observable<any> {[m
+[32m+[m[32m      const headers = new HttpHeaders({[m
+[32m+[m[32m        'Content-Type':'application/json; charset=utf-8',[m
+[32m+[m[32m        'user':'USUSEGINT',[m
+[32m+[m[32m        'password':'12249'[m
+[32m+[m[32m      });[m
+[32m+[m
+[32m+[m
+[32m+[m[32m      const requestOptions = { headers: headers };[m
+[32m+[m[32m      const url = 'http://siat.aldialogistica.com:8000/api/maestros/preoperacional';[m
+[32m+[m
+[32m+[m[32m      return this.http.post(url,params,requestOptions)[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+ }[m
+[1mdiff --git a/src/app/app.component.html b/src/app/app.component.html[m
+[1mindex d3ecc2e..914022e 100644[m
+[1m--- a/src/app/app.component.html[m
+[1m+++ b/src/app/app.component.html[m
+[36m@@ -7,23 +7,21 @@[m
+             <img class="" src="https://aldialogistica.com/wp-content/uploads/2019/04/cropped-favicon-1.png" class="bi pe-none me-2 text-center" width=[m
+             "30">[m
+           </a>[m
+[31m-          <!-- [m
+[32m+[m[32m          <!--[m
+           <ion-list-header>Viaja con Aldia</ion-list-header> -->[m
+           <!-- <ion-note>hi@ionicframework.com</ion-note> -->[m
+           <!-- <a href="#" class="d-flex ml-4 mt-3 align-items-center pb-3 mb-1 link-dark text-decoration-none collapsed" data-bs-toggle="collapse" data-bs-target="#user-collapse" aria-expanded="true">[m
+[31m-            <img src="https://github.com/mdo.png" alt="" width="90" height="90" class="rounded-circle me-2">[m
+[32m+[m[32m          <img src="https://github.com/mdo.png" alt="" width="90" height="90" class="rounded-circle me-2">[m
+           </a> -->[m
+           <ion-item>[m
+             <ion-avatar  [style.width]="'110px'" [style.height]="'110px'" slot="start">[m
+[31m-              <img alt="person"  class="rounded-circle me-2" src="https://github.com/mdo.png" />[m
+[32m+[m[32m              <img alt="persons"  class="rounded-circle me-2" src="https://aldialogistica.com/wp-content/uploads/2019/04/cropped-favicon-1.png"/>[m
+             </ion-avatar>[m
+             <ul class="list-unstyled ps-0 ml-3">[m
+               <li class="mb-1">[m
+                 <h2><strong id="nameUser">{{ nombre }}</strong></h2>[m
+               </li>[m
+ [m
+[31m-            [m
+[31m-  [m
+               <li class="mb-1">[m
+                 <span class="{{clase_estado}}">{{estado}}</span>[m
+               </li>[m
+[36m@@ -31,12 +29,12 @@[m
+               <li class="mt-2">[m
+                 <h3>{{ placa }}</h3>[m
+               </li>[m
+[31m-  [m
+[32m+[m
+               </ul>[m
+           </ion-item>[m
+ [m
+         </ion-toolbar>[m
+[31m-        [m
+[32m+[m
+         <ion-list id="inbox-list">[m
+           <ion-menu-toggle auto-hide="false" *ngFor="let p of appPages; let i = index" >[m
+             <ion-item *ngIf="statusLogin()"  routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">[m
+[36m@@ -60,7 +58,7 @@[m
+             <ion-label>{{ label }}</ion-label>[m
+           </ion-item>[m
+         </ion-list> -->[m
+[31m-        [m
+[32m+[m
+        <!-- <ion-fab slot="fixed" vertical="bottom" horizontal="end">[m
+          <ion-fab-button>[m
+            <ion-icon name="chevron-up-circle"></ion-icon>[m
+[36m@@ -76,7 +74,7 @@[m
+              <ion-icon name="globe"></ion-icon>[m
+            </ion-fab-button>[m
+          </ion-fab-list>[m
+[31m-     [m
+[32m+[m
+        </ion-fab> -->[m
+ [m
+ [m
+[36m@@ -84,7 +82,7 @@[m
+     </ion-menu>[m
+ [m
+     <ion-router-outlet id="main-content"></ion-router-outlet>[m
+[31m-    [m
+[32m+[m
+   </ion-split-pane>[m
+ [m
+ [m
+[1mdiff --git a/src/app/datos/datos.page.html b/src/app/datos/datos.page.html[m
+[1mindex a076fa1..8457dfd 100644[m
+[1m--- a/src/app/datos/datos.page.html[m
+[1m+++ b/src/app/datos/datos.page.html[m
+[36m@@ -8,389 +8,411 @@[m
+ </ion-header>[m
+ [m
+ <ion-content class="ion-user">[m
+[32m+[m[32m  <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">[m
+[32m+[m[32m    <div class="container panel-user">[m
+[32m+[m[32m      <div class="row p-3">[m
+[32m+[m[32m        <div[m
+[32m+[m[32m          class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <ion-avatar[m
+[32m+[m[32m            [style.width]="'130px'"[m
+[32m+[m[32m            [style.height]="'130px'"[m
+[32m+[m[32m            slot="start"[m
+[32m+[m[32m          >[m
+[32m+[m[32m            <ion-img[m
+[32m+[m[32m              alt="person"[m
+[32m+[m[32m              *ngIf="fotoUser"[m
+[32m+[m[32m              class="rounded-circle me-2"[m
+[32m+[m[32m              [src]="fotoUser"[m
+[32m+[m[32m            ></ion-img>[m
+[32m+[m[32m            <ion-img[m
+[32m+[m[32m              alt="person"[m
+[32m+[m[32m              *ngIf="!fotoUser"[m
+[32m+[m[32m              class="rounded-circle me-2"[m
+[32m+[m[32m              src="http://54.176.177.178/checklist/userDefault.png"[m
+[32m+[m[32m            ></ion-img>[m
+[32m+[m[32m          </ion-avatar>[m
+[32m+[m[32m        </div>[m
+ [m
+[31m-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">[m
+[31m-[m
+[31m-[m
+[31m-        <!-- <ion-item class="col-md-12 item-form" color="tertiary" > -->[m
+[31m-[m
+[32m+[m[32m        <div class="col col-12 text-center">[m
+[32m+[m[32m          <ul class="list-unstyled ps-0 ml-3">[m
+[32m+[m[32m            <li class="mb-1">[m
+[32m+[m[32m              <h2 class="text-white">[m
+[32m+[m[32m                <strong id="nameUser">{{ nombre }} {{ apellidos }}</strong>[m
+[32m+[m[32m              </h2>[m
+[32m+[m[32m            </li>[m
+[32m+[m
+[32m+[m[32m            <li class="mb-1">[m
+[32m+[m[32m              <span class="{{clase_estado}}">{{estado}}</span>[m
+[32m+[m[32m            </li>[m
+[32m+[m[32m          </ul>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m      <div class="row mt-1">[m
+[32m+[m[32m        <div class="col col-12"></div>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    </div>[m
+[32m+[m
+[32m+[m[32m    <div class="p-2">[m
+[32m+[m[32m      <ion-list>[m
+[32m+[m[32m        <ion-item[m
+[32m+[m[32m          id="{{p.tag}}"[m
+[32m+[m[32m          *ngFor="let p of modulos; let i = index"[m
+[32m+[m[32m          class="ion-activatable ripple-parent circle"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <ion-thumbnail class="icon-select" slot="start">[m
+[32m+[m[32m            <img alt="{{p.nombre}}" src="{{p.icon}}" />[m
+[32m+[m[32m          </ion-thumbnail>[m
+[32m+[m
+[32m+[m[32m          <ion-label>[m
+[32m+[m[32m            <h2>{{p.nombre}}</h2>[m
+[32m+[m[32m            <p>{{p.desc}}</p>[m
+[32m+[m[32m          </ion-label>[m
+[32m+[m
+[32m+[m[32m          <span slot="end" class="dataCorrect">[m
+[32m+[m[32m            <img src="{{p.status}}" alt="" />[m
+[32m+[m[32m          </span>[m
+[32m+[m
+[32m+[m[32m          <ion-ripple-effect></ion-ripple-effect>[m
+[32m+[m[32m        </ion-item>[m
+[32m+[m[32m      </ion-list>[m
+[32m+[m
+[32m+[m[32m      <div class="mt-5 p-4">[m
+[32m+[m[32m        <ion-button expand="block" type="submit">Guardar</ion-button>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    </div>[m
+[32m+[m
+[32m+[m[32m    <ion-modal #modal1 trigger="personal-data">[m
+[32m+[m[32m      <ng-template>[m
+[32m+[m[32m        <ion-header>[m
+[32m+[m[32m          <ion-toolbar>[m
+[32m+[m[32m            <ion-buttons slot="start">[m
+[32m+[m[32m              <ion-button color="medium" (click)="modal1.dismiss()"[m
+[32m+[m[32m                >Cancelar</ion-button[m
+[32m+[m[32m              >[m
+[32m+[m[32m            </ion-buttons>[m
+[32m+[m[32m            <ion-title class="ml-3">Ajustes</ion-title>[m
+[32m+[m[32m            <ion-buttons slot="end">[m
+[32m+[m[32m              <ion-button (click)="modal1.dismiss()" [strong]="true"[m
+[32m+[m[32m                >Confirmar</ion-button[m
+[32m+[m[32m              >[m
+[32m+[m[32m            </ion-buttons>[m
+[32m+[m[32m          </ion-toolbar>[m
+[32m+[m[32m        </ion-header>[m
+[32m+[m[32m        <ion-content>[m
+           <div class="container panel-user">[m
+[31m-[m
+             <div class="row p-3">[m
+[31m-[m
+[31m-              <div class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3">[m
+[31m-                <ion-avatar  [style.width]="'130px'" [style.height]="'130px'" slot="start">[m
+[31m-                  <ion-img alt="person" *ngIf="fotoUser" class="rounded-circle me-2" [src]="fotoUser"></ion-img>[m
+[31m-                  <ion-img alt="person" *ngIf="!fotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"></ion-img>[m
+[32m+[m[32m              <div[m
+[32m+[m[32m                class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"[m
+[32m+[m[32m              >[m
+[32m+[m[32m                <ion-avatar[m
+[32m+[m[32m                  [style.width]="'130px'"[m
+[32m+[m[32m                  [style.height]="'130px'"[m
+[32m+[m[32m                  slot="start"[m
+[32m+[m[32m                >[m
+[32m+[m[32m                  <ion-img[m
+[32m+[m[32m                    alt="person"[m
+[32m+[m[32m                    *ngIf="dataFotoUser"[m
+[32m+[m[32m                    class="rounded-circle me-2"[m
+[32m+[m[32m                    [src]="dataFotoUser.webviewPath"[m
+[32m+[m[32m                  ></ion-img>[m
+[32m+[m[32m                  <ion-img[m
+[32m+[m[32m                    alt="person"[m
+[32m+[m[32m                    *ngIf="!dataFotoUser"[m
+[32m+[m[32m                    class="rounded-circle me-2"[m
+[32m+[m[32m                    src="http://54.176.177.178/checklist/userDefault.png"[m
+[32m+[m[32m                  ></ion-img>[m
+                 </ion-avatar>[m
+[32m+[m[32m                <span id="changePhoto" (click)="loadProfile()">[m
+[32m+[m[32m                  <img[m
+[32m+[m[32m                    src="http://54.176.177.178/checklist/camara_min.png"[m
+[32m+[m[32m                    alt=""[m
+[32m+[m[32m                  />[m
+[32m+[m[32m                </span>[m
+               </div>[m
+[31m-              [m
+[32m+[m
+               <div class="col col-12 text-center">[m
+                 <ul class="list-unstyled ps-0 ml-3">[m
+                   <li class="mb-1">[m
+[31m-                    <h2 class="text-white"><strong id="nameUser">{{ nombre }} {{ apellidos }}</strong></h2>[m
+[32m+[m[32m                    <h2 class="text-white">[m
+[32m+[m[32m                      <strong id="nameUser"[m
+[32m+[m[32m                        >{{ nombre }} {{ apellidos }}</strong[m
+[32m+[m[32m                      >[m
+[32m+[m[32m                    </h2>[m
+                   </li>[m
+[31m-                  [m
+[32m+[m
+                   <li class="mb-1">[m
+[31m-                    <span class="{{clase_estado}}">{{estado}}</span>[m
+[31m-                  </li>   [m
+[32m+[m[32m                    <h2 class="text-white">[m
+[32m+[m[32m                      <strong id="nameUser">CC. {{ cedula }}</strong>[m
+[32m+[m[32m                    </h2>[m
+[32m+[m[32m                  </li>[m
+                 </ul>[m
+               </div>[m
+[31m-[m
+             </div>[m
+[31m-            <div class="row mt-1">[m
+[31m-[m
+[31m-              <div class="col col-12">[m
+[31m-[m
+[31m-[m
+[31m-[m
+[31m-              </div>[m
+[31m-[m
+           </div>[m
+ [m
+[31m-        </div>[m
+[31m-[m
+[31m-[m
+[31m-        <!-- </ion-item> -->[m
+[31m-      [m
+[31m-      [m
+[31m-      <!-- <ion-item class="d-flex justify-content-center">[m
+[31m-[m
+[31m-        <ion-avatar>[m
+[31m-          <img alt="Silhouette of a person's head" src="https://github.com/mdo.png"  width="100" />[m
+[31m-        </ion-avatar>[m
+[31m-        [m
+[31m-      </ion-item> -->[m
+[31m-[m
+[31m-      <div class="p-2">[m
+[31m-[m
+[31m-        <ion-list>[m
+[31m-            <ion-item id="{{p.tag}}" *ngFor="let p of modulos; let i = index" class="ion-activatable ripple-parent circle">[m
+[31m-              <ion-thumbnail class="icon-select" slot="start">[m
+[31m-                <img alt="{{p.nombre}}" src="{{p.icon}}" />[m
+[31m-              </ion-thumbnail>[m
+[31m-              [m
+[31m-              [m
+[31m-              <ion-label>[m
+[31m-                <h2>{{p.nombre}}</h2>[m
+[31m-  

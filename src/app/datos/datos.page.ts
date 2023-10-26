@@ -12,6 +12,7 @@ import { MenuController } from '@ionic/angular';
 import { PhotoService } from '../api/photo.service';
 import { log } from 'console';
 import { Foto } from '../models/photo.interface';
+import * as e from 'cors';
 
 @Component({
   selector: 'app-datos',
@@ -22,8 +23,10 @@ export class DatosPage implements OnInit {
   @ViewChild('modal1') modal1!: ModalController;
   @ViewChild('modal2') modal2!: ModalController;
   @ViewChild('modal3') modal3!: ModalController;
+  @ViewChild('modal4') modal4!: ModalController;
 
   dataForm: any = FormGroup;
+  dataChange: any = FormGroup;
   dataTercero: any;
   cedula: any;
   nombres: any;
@@ -70,6 +73,14 @@ export class DatosPage implements OnInit {
   fechaxTecnicox:any;
   fechaxSoatxxxx:any;
   fechaxLicencia:any;
+  searchTerm:any;
+  placaChange:any;
+  claseNewVh:any;
+  marcaVeh:any;
+  carroceVeh:any;
+  isDisabled:any = false;
+  isDisabled1:any = false;
+  isDisabled2:any = false;
 
 
 
@@ -99,7 +110,7 @@ export class DatosPage implements OnInit {
       nombre: 'Vehiculo',
       icon: 'http://54.176.177.178/checklist/vehicle.png',
       desc: 'Placa, Marca, Clase, Carroceria',
-      status: this.dataInCorrect,
+      status: this.dataCorrect,
     },
   ];
 
@@ -118,6 +129,7 @@ export class DatosPage implements OnInit {
   }
 
   ngOnInit() {
+    
     this.userService.getConductor().subscribe((data) => {
       this.dataTercero = data.data[0];
       this.cedula = this.dataTercero.documento;
@@ -133,13 +145,16 @@ export class DatosPage implements OnInit {
       if (this.dataTercero.foto) {
         this.fotoUser = this.dataTercero.foto;
       }
-    });
+     },
+     (err) => {
+      this.modulos[0].status = this.dataInCorrect
+     });
 
     this.userService.getTercero3sL().subscribe(
       (data) => {
         console.log(data['data']);
 
-        const dataUser = data['data'];
+        const dataUser = data['data'][0];
         this.dataUser = data['data'];
         console.log(dataUser);
 
@@ -161,7 +176,9 @@ export class DatosPage implements OnInit {
         this.fechaxLicencia = dataUser.fechaxLicencia;
 
       },
-      (err) => {}
+      (err) => {
+        this.modulos[1].status = this.dataInCorrect
+      }
     );
 
     this.userService.getUser().subscribe((data) => {
@@ -227,8 +244,8 @@ export class DatosPage implements OnInit {
       nombreReferen1: '',
       movilxReferen1: '',
       empresReferen1: '',
-      fechaxTecnicox: '',
-      fechaxSoatxxxx: '',
+      fechaxTecnicox: this.fechaxTecnicox,
+      fechaxSoatxxxx: this.fechaxSoatxxxx,
       indicaProptene: '',
       numeroEstadoxx: '',
       estadoSiatxx: '',
@@ -259,11 +276,26 @@ export class DatosPage implements OnInit {
       usuariApruebax: '',
       fechaxApruebax: '',
       indicaSatelital: '',
+      fechaxLicencia: this.fechaxLicencia,
+      nombreTercerox: this.nombre,
+      apell1Tercerox: this.apellidos,
+      apell2Tercerox: '',
+      codigoCiudadxx: '',
+      movilxTercerox: this.celular,
+      emailxTercerox: this.correo,
+      numeroModeloxx: '',
+      numeroRepotenc: '',
+      fechaxTecnimec: this.fechaxTecnicox,
+      codigoVehmarca: '',
+      codigoVehlinea: '',
+      codigoVehclase: '',
+      codigoVehcolor: '',
+      codigoVehcarro: '',
+      sateliFechaxxx: '',
     };
 
 
-
-    console.log(datparams2);
+    // console.log(datparams2);
 
     this.userService.registroApiAldia(datparams2).subscribe(
       (data) => {
@@ -330,6 +362,12 @@ export class DatosPage implements OnInit {
   }
 
   saveDocumentos() {
+
+    const dataSubmit = this.dataForm.value;
+
+
+    this.fechaxLicencia = dataSubmit.fechaxLicencia;
+
     this.jsonDocs = {
       files: [],
     };
@@ -406,6 +444,13 @@ export class DatosPage implements OnInit {
   }
 
   datosVehiculo() {
+
+    const dataSubmit = this.dataForm.value;
+
+    this.fechaxSoatxxxx = dataSubmit.fechaxSoatxxxx;
+    this.fechaxTecnicox = dataSubmit.fechaxTecnicox;
+    
+
     this.jsonDocs = {
       files: [],
     };
@@ -453,6 +498,95 @@ export class DatosPage implements OnInit {
         console.log(this.jsonDocs);
       }
     );
+  }
+
+  upperPlaca($event: any) {
+    this.searchTerm = $event.detail.value.toUpperCase();
+  }
+
+  changeVehicle() {
+
+    this.dataChange = this.formBuilder.group({
+      clase_vehiculo : ['', [Validators.required]],
+      marca : ['', [Validators.required]],
+      carroceria : ['', [Validators.required]]
+    });
+
+    var cedulaConductor = this.userService.getCedula();
+
+    const placa =  document.getElementById("placa") as HTMLInputElement | null;
+    const placaText = placa?.value
+
+    if (placaText?.length  && placaText?.length > 5) {
+
+      this.placaChange = placaText;
+
+      this.claseNewVh = "";
+      this.marcaVeh = "";
+      this.carroceVeh = "";
+      this.isDisabled = false;
+      this.isDisabled1 = false;
+      this.isDisabled2 = false;
+      
+
+    this.userService.get3SLbyplaca(placaText).subscribe(
+      data => {
+
+        console.log(data);
+        
+
+        var status = data.status;
+        if (status) {
+
+          var cedula =  data.data[0].codigoTercerox;
+          if (cedula != cedulaConductor) {
+            this.presentAlert("Alerta", "", "La placa que intenta registrar esta asociada a otro conductor.", "Cerrar")
+          }
+          
+        }
+
+      }
+    )
+
+    this.userService.getVehiculoByPlaca(placaText).subscribe(
+      data => {
+
+        const dataApi = data.view.data[0];
+        
+        if (dataApi.clase_vehiculo.length > 3) {
+          this.claseNewVh = dataApi.clase_vehiculo;
+          this.isDisabled = true;
+        }
+
+        if (dataApi.marca.length > 3) {
+          this.marcaVeh = dataApi.marca;
+          this.isDisabled1 = true;
+        }
+
+        if (dataApi.carroceria.length > 3) {
+          this.carroceVeh = dataApi.carroceria;
+          this.isDisabled2 = true;
+        }
+      
+      }, 
+      err => {
+        this.presentAlert("Alerta", "", "No registran datos para esa placa", "Cerrar")
+        this.claseNewVh = "";
+        this.marcaVeh = "";
+        this.carroceVeh = "";
+      }
+
+    )
+
+  }
+    
+   
+
+  }
+
+  onChange() {
+    const dataForm = this.dataChange.value;
+    console.log(dataForm)
   }
 
   cargaDatosfinal(params: any) {}

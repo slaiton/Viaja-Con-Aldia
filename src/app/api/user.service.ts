@@ -26,8 +26,11 @@ export class UserService {
       return localStorage.getItem("placa");
     }
 
-    getUser(): Observable<any>{
+    getCedula() {
+      return localStorage.getItem("conductor");
+    }
 
+    getUser(): Observable<any>{
 
       const params = new HttpParams({
         fromString: 'placa='+localStorage.getItem("placa")
@@ -46,9 +49,6 @@ export class UserService {
 
     getConductor():Observable<any>{
 
-
-
-
       const params = new HttpParams({
         fromString: 'documento='+localStorage.getItem("conductor")
       });
@@ -56,12 +56,29 @@ export class UserService {
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
         'user':'USUSEGINT',
-        'passwor':'12249'
+        'password':'12249'
       });
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("http://api.aldialogistica.com/api/datos/terceros", requestOptions)
+    }
 
+
+    getVehiculoByPlaca(placa: any):Observable<any> {
+
+      const params = new HttpParams({
+        fromString: 'placa='+placa
+      });
+
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8',
+         'user':'USUSEGINT',
+        'password':'12249'
+      });
+
+    const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
     }
 
 
@@ -75,6 +92,19 @@ export class UserService {
         'Content-Type':'application/json; charset=utf-8',
         'user':'USUSEGINT',
         'password':'12249'
+      });
+      const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
+    }
+
+    get3SLbyplaca(placa:any):Observable<any> {
+      const params = new HttpParams({
+        fromString: 'placa=' + placa
+      });
+
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8'
       });
       const requestOptions = { headers: headers, params: params };
 
