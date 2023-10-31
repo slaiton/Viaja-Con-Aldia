@@ -236,8 +236,8 @@ export class UserService {
     postPreoperacionalData(params: any):Observable<any> {
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'USUSEGINT',
-        'password':'12249'
+        'usuario':'USUSEGINT',
+        'clave':'12249'
       });
 
 
@@ -246,9 +246,6 @@ export class UserService {
 
       return this.http.post(url,params,requestOptions)
     }
-
-
-
 
 
 }

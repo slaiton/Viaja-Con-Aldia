@@ -15,7 +15,17 @@ export class PhotoService {
 
   constructor() { }
 
+public async addNewToCamera(name:any ) {
+  const capturedPhoto = await Camera.getPhoto({
+    resultType: CameraResultType.Uri,
+    source: CameraSource.Camera,
+    quality: 100
+  });
+  const savedImageFile = await this.savePicture(capturedPhoto,name);
+  this.fotos.unshift(savedImageFile);
 
+  return savedImageFile;
+}
 
   public async addNewToGallery(name:any) {
     // Take a photo

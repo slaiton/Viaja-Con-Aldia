@@ -6,6 +6,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertController, IonModal, ModalController } from '@ionic/angular';
 import { GeodataService } from '../api/geodata.service';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
+import { AppComponent } from '../app.component';
+
 
 @Component({
   selector: 'app-home',
@@ -23,7 +25,8 @@ export class HomePage implements OnInit {
     private formBuilder: FormBuilder,
     private geolocation: Geolocation,
     private geodata: GeodataService,
-    private alert: AlertController
+    private alert: AlertController,
+    private app:AppComponent
   ) {}
 
   turnoExistente: boolean = false;
@@ -61,6 +64,7 @@ export class HomePage implements OnInit {
   user: any;
   tipoRemolque: any;
   tiempoRestante: any;
+  viewTurno:any;
 
   get f() {
     return this.turnoForm.controls;
@@ -95,6 +99,9 @@ export class HomePage implements OnInit {
     if (localStorage.getItem('token') == null) {
       this.router.navigate(['/login']);
     }
+    
+
+    this.app.ngOnInit();
 
     this.userService.getUser().subscribe(
       (data) => {
@@ -223,6 +230,8 @@ export class HomePage implements OnInit {
         .catch((error) => {
           console.log('Error getting location', error);
         });
+
+      this.modalTurno.present();
 
       this.loadForm(data);
     });

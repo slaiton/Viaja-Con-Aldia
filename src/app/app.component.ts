@@ -39,6 +39,7 @@ export class AppComponent {
   clase_vehiculo:any;
   clase_estado:any;
   token:any;
+  fotoUser:any;
   
 
 
@@ -57,16 +58,17 @@ export class AppComponent {
 
       }else{
 
-      this.userService.getUser().subscribe(data => {
-      data = data.view.data[0];
-      this.conductor = data.conductor.toLowerCase();
+      this.userService.getUser3sL().subscribe(data => {
+      data = data.data[0];
+      this.conductor = data.nombre_completo.toLowerCase();
       this.nombre = this.conductor.split(' ')[0];
-      this.estado = data.estado;
-      this.placa = data.placa;
-      this.carroceria = data.carroceria;
-      this.marca = data.marca;
-      this.clase_vehiculo = data.clase_vehiculo;
-      this.estado = data.estado;
+      // this.estado = data.estado;
+      this.placa = data.numeroPlacaxxx;
+      // this.carroceria = data.carroceria;
+      // this.marca = data.marca;
+      // this.clase_vehiculo = data.clase_vehiculo;
+      this.estado = data.estadoSiatxx;
+      this.fotoUser = data.apiFotoConductor;
 
       this.placa = this.placa.substr(0,3)+" - "+this.placa.substr(3,5);
       

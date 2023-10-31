@@ -21,7 +21,7 @@
 
       <div class="col col-6">
         <ion-button
-          id="{{idModal}}"
+          id="open-modal"
           class="botontiemporestante"
           (click)="turnoExistente ? getTurno():nuevoTurno()"
           expand="block"
@@ -45,7 +45,7 @@
     </div>
   </div>
 
-  <div class="container container-ticket">
+  <div *ngIf="turnoExistente" class="container container-ticket">
     <div class="ticket">
       <img
         src="http://temp.aldialogistica.com/tester/images/tiket.png"
@@ -96,7 +96,7 @@
     </ion-button>
   </div>
 
-  <ion-modal
+ <ion-modal
     #modalTurno
     trigger="open-modal"
     [initialBreakpoint]="0.50"
@@ -228,7 +228,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal
+<!-- <ion-modal
     #modalTurno2
     trigger="open-modal2"
     [initialBreakpoint]="0.50"
@@ -358,5 +358,7 @@
         </div>
       </ion-content>
     </ng-template>
-  </ion-modal>
+  </ion-modal> -->
+
+
 </ion-content>

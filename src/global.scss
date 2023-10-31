@@ -516,7 +516,7 @@ ion-button[type="submit"] span {
 
 .container-ticket{
 
-height: 40vh;
+height: auto;
 width: 100%;
 display: grid;
 grid-template-columns: 1fr 1fr 1fr;
@@ -539,7 +539,7 @@ font-weight: bold;
   width: 100%;
   position: absolute;
   left: 0;
-  top: 27%;
+  top: 35%;
   color: #ffffff;
   font-size: 30px;
   text-align: center;

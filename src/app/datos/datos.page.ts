@@ -634,7 +634,7 @@ export class DatosPage implements OnInit {
   }
 
   loadProfile() {
-    this.photo.addNewToGallery('profile').then((da) => {
+    this.photo.addNewToCamera('profile').then((da) => {
       this.dataFotoUser = da;
     });
   }
