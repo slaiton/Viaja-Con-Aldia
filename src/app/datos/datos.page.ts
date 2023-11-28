@@ -584,6 +584,19 @@ export class DatosPage implements OnInit {
 
   }
 
+
+  checkPropietario(e:any) {
+
+    console.log(e.target.checked);
+    
+  }
+
+  checkTenedor(e:any) {
+
+    console.log(e.target.checked);
+    
+  }
+
   onChange() {
     const dataForm = this.dataChange.value;
     console.log(dataForm)

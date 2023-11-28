@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <!-- <ion-toolbar>
     <ion-title class="ml-3">Inicio de Sesion</ion-title>
-  </ion-toolbar>
+  </ion-toolbar> -->
 </ion-header>
 
 <ion-content class="container-fluid p-3">
@@ -41,8 +41,11 @@
           <label for="floatingPassword">Placa</label>
         </div>
 
-        <ion-button type="submit">Iniciar Sesion</ion-button>
-        <p class="mt-5 mb-3 text-muted">Viaja Con Aldia &copy;2022</p>
+        <button class="btn btn-primary" type="submit">Iniciar Sesion</button>
+        <div class="registro mt-2">
+          <a href="/registro" class="link">Registrarse</a>
+        </div>
+        <p class="mt-5 mb-3 text-muted">Viaja Con Aldia &copy;{{ fechaActual }}</p>
       </form>
     </main>
   </div>

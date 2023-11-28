@@ -161,10 +161,28 @@
           </div>
 
           <div
-            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
-          >
+            class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
             <strong><h1>Datos Personales</h1></strong>
           </div>
+          
+
+          <ion-grid>
+            <ion-row>
+              <ion-col>
+                <ion-item class="tercero-cont">
+                  <ion-toggle (ionChange)="checkPropietario($event)">  </ion-toggle>
+                  <span> Soy el propietario </span>
+                </ion-item>
+              </ion-col>
+              <ion-col>
+                <ion-item class="tercero-cont">
+                  <ion-toggle (ionChange)="checkTenedor($event)">  </ion-toggle>
+                  <span> Soy el tenedor </span>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+              
 
           <ion-item>
             <ion-label position="floating">Correo</ion-label>
@@ -210,7 +228,7 @@
           <div
             class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form"
           >
-            <strong><h1>Contacto de Emergencia</h1></strong>
+            <strong><h1> Contacto de Emergencia </h1></strong>
           </div>
 
           <ion-item>

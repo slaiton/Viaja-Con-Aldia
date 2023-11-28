@@ -18,6 +18,10 @@ const routes: Routes = [
     loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
   },
   {
+    path: 'registro',
+    loadChildren: () => import('./registro/registro.module').then( m => m.RegistroPageModule),
+  },
+  {
     path: 'turnos',
     loadChildren: () => import('./turnos/turnos.module').then( m => m.TurnosPageModule),
     canActivate: [LoginGuard]
@@ -32,6 +36,7 @@ const routes: Routes = [
     loadChildren: () => import('./preform/preform.module').then( m => m.PreformPageModule),
     canActivate: [LoginGuard]
   }
+
 ];
 
 @NgModule({

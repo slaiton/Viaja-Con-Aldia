@@ -33,6 +33,16 @@ export class HomePage implements OnInit {
   posicionTurno1: any;
   posicionTurno2: any;
   posicionTurno3: any;
+  dataTercero: any;
+  dataInCorrect:any;
+  cedula: any;
+  nombres: any;
+  apellidos: any;
+  correo: any;
+  celular: any;
+  direccion: any;
+  fecha: any;
+  ciudad: any;
   listTurnos: any = [];
   conductor: any;
   estado: any;
@@ -65,6 +75,9 @@ export class HomePage implements OnInit {
   tipoRemolque: any;
   tiempoRestante: any;
   viewTurno:any;
+  fotoUser:any;
+  modulos:any; 
+  clase_estado:any;
 
   get f() {
     return this.turnoForm.controls;
@@ -103,6 +116,41 @@ export class HomePage implements OnInit {
 
     this.app.ngOnInit();
 
+
+    this.userService.getConductor().subscribe((data) => {
+      this.dataTercero = data.data[0];
+      this.cedula = this.dataTercero.documento;
+      this.nombres = this.dataTercero.nombre;
+      this.apellidos = this.dataTercero.apellido;
+      this.correo = this.dataTercero.email;
+      this.celular = this.dataTercero.telefono_1;
+      this.direccion = this.dataTercero.direccion;
+      this.fecha = this.dataTercero.fecha_nacimiento;
+      this.ciudad = this.dataTercero.ciudad_expedicion;
+
+
+      if (this.dataTercero.foto) {
+        this.fotoUser = this.dataTercero.foto;
+      }
+
+     },
+     (err) => {
+      this.modulos[0].status = this.dataInCorrect
+     });
+
+
+     
+
+    this.userService.getTercero3sL().subscribe(
+      (data) => {
+         this.fotoUser = data['data'][0].apiFotoConductor;
+      },
+      (err) => {
+        this.modulos[1].status = this.dataInCorrect
+      }
+    );
+
+
     this.userService.getUser().subscribe(
       (data) => {
         data = data.view.data[0];
@@ -113,6 +161,14 @@ export class HomePage implements OnInit {
         this.carroceria = data.carroceria;
         this.marca = data.marca;
         this.clase_vehiculo = data.clase_vehiculo;
+         this.estado = data.estado;
+
+
+        // if (this.estado == 'ACTIVO') {
+        //   this.clase_estado = 'badge text-bg-success';
+        // } else {
+        //   this.clase_estado = 'badge text-bg-danger';
+        // }
 
         this.placaLetras = this.placa.substr(0, 3);
         this.placaNum = this.placa.substr(3, 5);
@@ -125,24 +181,28 @@ export class HomePage implements OnInit {
     );
 
     this.userService.getTurnoUser().subscribe(
-      (data) => {
+      (data) => {          
+        this.clase_estado = 'color-green';
         this.listTurnos = data;
         // console.log(this.listTurnos);
         this.turnoExistente = true;
         this.idModal = 'open-modal2';
         this.destino1 = this.listTurnos.data.destino1;
+        this.destino1 = this.listTurnos.data.destino1;
         this.destino2 = this.listTurnos.data.destino2;
         this.destino3 = this.listTurnos.data.destino3;
+        this.origen = this.listTurnos.data.origen_nombre;
         this.posicionTurno1 = this.listTurnos.data.posicionDestino1;
         this.posicionTurno2 = this.listTurnos.data.posicionDestino2;
         this.posicionTurno3 = this.listTurnos.data.posicionDestino3;
       },
-      (err) => {
+      (err) => {          
+        this.clase_estado = 'color-red';
         console.log(err);
         this.presentAlert(
           'Sin turnos',
           '',
-          'Puedes agregar un turno con el boton Rojo',
+          'Puedes agregar un turno en opcion',
           'Continuar'
         );
         this.idModal = 'open-modal';
@@ -185,6 +245,8 @@ export class HomePage implements OnInit {
     }
   }
   nuevoTurno() {
+    console.log('click');
+    
     this.turnoForm = this.formBuilder.group({
       origen: ['', [Validators.required]],
       destino1: ['', [Validators.required]],
@@ -209,7 +271,9 @@ export class HomePage implements OnInit {
   }
 
   getTurno() {
-    console.log('funcion que muestra modal con los turnos cargados');
+
+    // console.log('funcion que muestra modal con los turnos cargados');
+    
     this.turnoForm = this.formBuilder.group({
       origen: ['', [Validators.required]],
       destino1: ['', [Validators.required]],

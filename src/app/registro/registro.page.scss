@@ -1,0 +1,37 @@
+ion-content.color {
+    --background: linear-gradient(#5b8bdf, #f4f5f8);
+  }
+
+  .form-floating {
+    margin-bottom: 10px;
+  }
+  .form-floating > .form-control {
+    border-radius: 25px;
+  }
+
+  .icon {
+    position: absolute;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+    right: 20px;
+    top: 20px;
+  }
+
+  .group-icons {
+
+    position: absolute; 
+    right: 20px;
+    top: 20px; 
+
+  }
+
+  .icon-a{
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+  }
+
+  .write h2, .write h1, .write h3 {
+   color:#FFF;
+  }

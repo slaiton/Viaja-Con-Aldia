@@ -8,7 +8,130 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="container panel-home">
+
+  <!-- <ion-fab class="move-fab" vertical="top" horizontal="end">
+    <ion-fab-button>
+      <ion-icon name="refresh-circle"></ion-icon>
+    </ion-fab-button>
+  </ion-fab> -->
+
+  <div class="container panel-user-home">
+    <div class="row p-3">
+      <div class="containerPhoto col col-12 p-2 d-flex justify-content-center">
+        <ion-avatar
+          [style.width]="'130px'"
+          [style.height]="'130px'"
+          slot="start"
+        >
+          <ion-img
+            alt="person"
+            *ngIf="fotoUser"
+            class="rounded-circle me-2"
+            [src]="fotoUser"
+          ></ion-img>
+          <ion-img
+            alt="person"
+            *ngIf="!fotoUser"
+            class="rounded-circle me-2"
+            src="http://54.176.177.178/checklist/userDefault.png"
+          ></ion-img>
+        </ion-avatar>
+      </div>
+
+      <div class="col col-12 d-flex justify-content-center" style="text-align:center; align-items: center;">
+        <ul class="list-unstyled ps-0 ml-3">
+
+          <li class="mb-1">
+            <h2 class="text-white">
+              <strong id="nameUser"> {{ nombres }} </strong>
+            </h2>
+          </li>
+
+          <li class="mb-1">
+            <h2 class="text-white">
+              {{placaLetras}} - {{placaNum}}
+            </h2>
+          </li>
+
+          <!-- <li class="mb-1">
+            <span class="{{clase_estado}}">{{ turnoExistente ? 'Enturnado' : 'Sin Turno' }}</span>
+          </li> -->
+
+
+          <!-- <li class="mb-1">
+            <ion-button
+              id="open-modal"
+              class="botontiemporestante"
+              (click)="turnoExistente ? getTurno():nuevoTurno()"
+              expand="block"
+              fill="solid"
+              size="large"
+              [color]="turnoExistente ? 'success' : 'danger'">
+            <span class="ml-2 mb-0">
+             {{ turnoExistente ? 'Enturnado' : 'Sin Turno' }}
+            </span>
+          </ion-button>
+          </li> -->
+
+
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel-turnos d-flex justify-content-center">
+
+    <div>
+      <ul class="list-unstyled p-2 ps-0 ml-3">
+        <li style="text-align:center;">
+          <span class="{{clase_estado}}">
+            {{ turnoExistente ? 'Enturnado: ' + origen : 'Sin Turno' }}
+          </span>
+        </li>
+        <p class="tiemporestante mb-0">
+          {{ turnoExistente ? 'Reenturnarse en: ' +
+          listTurnos.data.tiemporestante : 'Enturnarse ahora' }}
+        </p>
+        <li>
+          <span>
+
+          </span>
+        </li>
+        <li class="mt-3 d-flex justify-content-center">
+           <ion-button
+           (click)="getTurno()"
+           id="open-modal"
+           class="botontiemporestante"
+           expand="block"
+           fill="solid"
+           size="large"
+           [color]="turnoExistente ? 'success' : 'danger'">
+           <span class="ml-2 mb-0">
+            {{ turnoExistente ? 'Reenturnarse' : 'Enturnarse' }}
+           </span>
+           </ion-button>
+        </li>
+      </ul>
+    </div>
+
+
+
+    <!-- <ion-button
+      id="open-modal"
+      class="botontiemporestante"
+      (click)="turnoExistente ? getTurno():nuevoTurno()"
+      expand="block"
+      fill="solid"
+      size="large"
+      [color]="turnoExistente ? 'success' : 'danger'">
+    <span class="ml-2 mb-0">
+     {{ turnoExistente ? 'Enturnado' : 'Sin Turno' }}
+    </span>
+    </ion-button> -->
+  </div>
+
+  <!-- <div class="container panel-home">
     <div class="row mt-4 p-3">
       <div class="col col-6">
         <h6 class="placa-min">
@@ -43,58 +166,100 @@
         </p>
       </div>
     </div>
+  </div> -->
+<!-- <div class="container data-turnos">
+  <div class="row">
+    
+    <div class="col col-4">    
+      <ion-card color="primary">
+        
+        <ion-card-header class="p-2">
+          <ion-card-title>Turno: {{posicionTurno1}}</ion-card-title>
+        </ion-card-header>
+        
+        <ion-card-content>{{destino1}}</ion-card-content>
+      </ion-card>
+  </div>
+  
+  <div class="col col-4">    
+    <ion-card color="secondary">
+      <ion-card-header class="p-2">
+        <ion-card-title>Turno: {{posicionTurno2}}</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>{{destino2}}</ion-card-content>
+    </ion-card>
+  </div>
+  
+  <div class="col col-4">    
+    <ion-card color="tertiary">
+      <ion-card-header class="p-2">
+        <ion-card-title>Turno: {{posicionTurno3}}</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>{{destino3}}</ion-card-content>
+    </ion-card>
+  </div>
+ 
+ </div>
+</div> -->
+  <div *ngIf="turnoExistente" class="container cont-turnos">
+    <div class="origen" style="text-align: center;"> <h1> Destinos </h1> </div>
+    <div class="container-ticket">
+
+      <div class="ticket">
+        <p>{{destino1}}</p>
+        <img
+        src="http://temp.aldialogistica.com/tester/images/tiket.png"
+        alt="ticket"
+        />
+        <span>{{posicionTurno1}}</span>
+      </div>
+
+      <div class="ticket">
+        <p>{{destino2}}</p>
+        <img
+          src="http://temp.aldialogistica.com/tester/images/tiket.png"
+          alt="ticket"
+        />
+        <span>{{posicionTurno2}}</span>
+      </div>
+
+      <div class="ticket">
+        <p>{{destino3}}</p>
+        <img
+        src="http://temp.aldialogistica.com/tester/images/tiket.png"
+        alt="ticket"
+          />
+        <span>{{posicionTurno3}}</span>
+      </div>
+
+    </div>
   </div>
 
-  <div *ngIf="turnoExistente" class="container container-ticket">
-    <div class="ticket">
-      <img
-        src="http://temp.aldialogistica.com/tester/images/tiket.png"
-        alt="ticket"
-      />
-      <p>{{destino1}}</p>
-      <span>{{posicionTurno1}}</span>
-    </div>
-    <div class="ticket">
-      <img
-        src="http://temp.aldialogistica.com/tester/images/tiket.png"
-        alt="ticket"
-      />
-      <p>{{destino2}}</p>
-      <span>{{posicionTurno2}}</span>
-    </div>
-    <div class="ticket">
-      <img
-        src="http://temp.aldialogistica.com/tester/images/tiket.png"
-        alt="ticket"
-      />
-      <p>{{destino3}}</p>
-      <span>{{posicionTurno3}}</span>
-    </div>
-  </div>
-
-  <div class="p-3">
-    <ion-button
+  <!-- <div class="p-3 mt-5">
+    <button
       expand="block"
       type="submit"
-      class="ion-no-margin"
+      class="btn btn-primary"
       (click)="redirect('turnos')"
     >
       <ion-icon slot="start" name="archive"></ion-icon>
       Turnos
-    </ion-button>
+    </button>
 
     <hr class="mt-3" />
 
-    <ion-button
+    <button
       expand="block"
       type="submit"
-      class="ion-no-margin"
+      class="btn btn-primary"
       (click)="redirect('datos')"
     >
       <ion-icon slot="start" name="person"></ion-icon>
       Mis datos
-    </ion-button>
-  </div>
+    </button>
+  </div> -->
 
  <ion-modal
     #modalTurno
@@ -111,7 +276,7 @@
               <div
                 class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white"
               >
-                <h3>Enturnamiento</h3>
+                <h3>Reenturnarse</h3>
               </div>
             </div>
 
@@ -359,6 +524,25 @@
       </ion-content>
     </ng-template>
   </ion-modal> -->
+
+
+
+  <!-- <ion-tabs>
+    <ion-tab-bar slot="bottom">
+      <ion-tab-button [routerLink]="['/turnos']">
+        <ion-icon name="archive-outline"></ion-icon>
+        Turnos
+      </ion-tab-button>
+      <ion-tab-button [routerLink]="['/datos']">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        Mis Datos
+      </ion-tab-button>
+      <ion-tab-button [routerLink]="['/preform']">
+        <ion-icon name="flashlight-outline"></ion-icon>
+        Pre-Operacional
+      </ion-tab-button>
+    </ion-tab-bar>
+  </ion-tabs> -->
 
 
 </ion-content>

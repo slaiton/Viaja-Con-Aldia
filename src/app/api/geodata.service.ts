@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs-compat/Observable";
 import { CookieService } from "ngx-cookie-service";
+import { environment } from 'src/environments/environment';
+
 
 
 
@@ -12,6 +14,8 @@ import { CookieService } from "ngx-cookie-service";
 })
 export class GeodataService {
 
+  
+
   complemento:any;
 
   constructor(private http: HttpClient) { }
@@ -20,7 +24,7 @@ export class GeodataService {
   getCityByLatLon(lat: Number,lon: Number): Observable<any> {
 
 
-    this.complemento = "latlng="+lat+","+lon+"&key=AIzaSyDNtDYuoSghCeJXR26AmZ8pdgiTcYXIKJA";
+    this.complemento = "latlng="+lat+","+lon+"&key=" + environment.maps.apikey;
 
 
      return this.http.get("https://maps.googleapis.com/maps/api/geocode/json?" +  this.complemento)
@@ -37,7 +41,7 @@ export class GeodataService {
     const requestOptions = { headers: headers };
 
     // const url = "http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php"
-    const url = "http://api.aldialogistica.com/api/enturnamiento"
+    const url = "https://api.aldialogistica.com/api/enturnamiento"
 
     return this.http.post(url, turno, requestOptions)
   }

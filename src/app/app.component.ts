@@ -52,11 +52,9 @@ export class AppComponent {
        }
      );
     
-    if (localStorage.getItem("token") == null) {
+    if (localStorage.getItem("token") != null) {
       
-      this.router.navigate(['/login']);
-
-      }else{
+      // this.router.navigate(['/login']);
 
       this.userService.getUser3sL().subscribe(data => {
       data = data.data[0];

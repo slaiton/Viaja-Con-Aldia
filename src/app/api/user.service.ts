@@ -19,7 +19,7 @@ export class UserService {
   constructor(private menu: MenuController, private http: HttpClient, private cookies: CookieService, private router: Router) { }
 
     login(user: User): Observable<any> {
-      return this.http.post("http://api.aldialogistica.com/api/auth/login-external", user);
+      return this.http.post("https://api.aldialogistica.com/api/auth/login-external", user);
     }
 
     getPlaca() {
@@ -33,7 +33,7 @@ export class UserService {
     getUser(): Observable<any>{
 
       const params = new HttpParams({
-        fromString: 'placa='+localStorage.getItem("placa")
+        fromString: 'placa='+localStorage.getItem("placa") + '&digitales=true'
       });
 
       const headers = new HttpHeaders({
@@ -44,7 +44,7 @@ export class UserService {
 
     const requestOptions = { headers: headers, params: params };
 
-      return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
+      return this.http.get("https://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
     }
 
     getConductor():Observable<any>{
@@ -60,7 +60,7 @@ export class UserService {
       });
       const requestOptions = { headers: headers, params: params };
 
-      return this.http.get("http://api.aldialogistica.com/api/datos/terceros", requestOptions)
+      return this.http.get("https://api.aldialogistica.com/api/datos/terceros", requestOptions)
     }
 
 
@@ -78,7 +78,23 @@ export class UserService {
 
     const requestOptions = { headers: headers, params: params };
 
-      return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
+      return this.http.get("https://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
+    }
+
+    getTerceroByCedula(cedula:any):Observable<any>
+    {
+      const params = new HttpParams({
+        fromString: 'documento='+cedula
+      });
+
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8',
+        'user':'USUSEGINT',
+        'password':'12249'
+      });
+      const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("https://api.aldialogistica.com/api/datos/terceros", requestOptions)
     }
 
 
@@ -111,6 +127,19 @@ export class UserService {
       return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
     }
 
+    get3SLbyCedula(cedula:any):Observable<any> {
+      const params = new HttpParams({
+        fromString: 'cedula=' + cedula
+      });
+
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8'
+      });
+      const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
+    }
+
 
     registroApiAldia(params: any):Observable<any> {
       const headers = new HttpHeaders({
@@ -118,7 +147,7 @@ export class UserService {
       });
 
       const requestOptions = { headers: headers };
-      // const url = 'http://api.aldialogistica.com/api/pruebas';
+      // const url = 'https://api.aldialogistica.com/api/pruebas';
       const url = 'https://api.3slogistica.com/api/ingresos';
 
       return this.http.post(url, params, requestOptions)
@@ -133,7 +162,7 @@ export class UserService {
 
       const requestOptions = { headers: headers };
 
-      return this.http.post("http://api.aldialogistica.com/api/documento", params, requestOptions)
+      return this.http.post("https://api.aldialogistica.com/api/documento", params, requestOptions)
     }
 
 
@@ -180,7 +209,7 @@ export class UserService {
 
      const requestOptions = { headers: headers };
 
-     return this.http.post("http://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)
+     return this.http.post("https://siat.aldialogistica.net/aldia/recursos/operacion_enturnamiento/index.php" , turno, requestOptions)
     }
 
     getTurnoUser()
@@ -201,7 +230,7 @@ export class UserService {
      const requestOptions = { headers: headers, params: params };
 
 
-     return this.http.get("http://api.aldialogistica.com/api/enturnamiento" , requestOptions)
+     return this.http.get("https://api.aldialogistica.com/api/enturnamiento" , requestOptions)
 
     }
 
@@ -242,7 +271,7 @@ export class UserService {
 
 
       const requestOptions = { headers: headers };
-      const url = 'http://siat.aldialogistica.com:8000/api/maestros/preoperacional';
+      const url = 'https://siat.aldialogistica.com:8000/api/maestros/preoperacional';
 
       return this.http.post(url,params,requestOptions)
     }

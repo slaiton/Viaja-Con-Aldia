@@ -1,0 +1,211 @@
+<ion-header>
+  <!-- <ion-toolbar>
+    <ion-title>Registro</ion-title>
+  </ion-toolbar> -->
+</ion-header>
+
+<ion-content class="color">
+
+  <div class="registro text-center">
+    <main class="form-signin w-100 m-auto p-2">
+      <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
+        <img
+          class="mb-4"
+          src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png"
+          alt=""
+          height="150"
+        />
+
+        <div class="mb-5">
+          <h1>Registro</h1>
+        </div>
+
+        <div class="form-floating">
+          <input
+            type="text"
+            formControlName="placa"
+            name="placa"
+            matInput
+            class="form-control"
+            id="placa"
+            placeholder="Placa"
+            maxlength="6"
+            (input)="searchVehicle($event)"
+            required
+          />
+          <ion-icon class="icon" *ngIf="newVehicle" name="add-circle" (click)="nuevoVehiculo()"></ion-icon>
+
+          <div *ngIf="checkVehicle" class="group-icons">
+            <ion-icon  class="icon-a" name="create" (click)="editVehiculo()"></ion-icon>
+            <ion-icon  class="icon-a" name="checkmark-circle"></ion-icon>
+          </div>
+
+          <ion-icon class="icon" *ngIf="alertVehiculo" name="close-circle"></ion-icon>
+
+          <label for="floatingInput">Vehiculo</label>
+        </div>
+        <div *ngIf="checkVehicle" class="form-floating">
+          <input
+            type="number"
+            formControlName="cedula"
+            name="cedula"
+            matInput
+            class="form-control"
+            id="cedula"
+            placeholder="Cedula"
+            (change)="searchConductor($event)"
+            required
+          />
+
+          <ion-icon class="icon" *ngIf="newTercero" name="add-circle" (click)="nuevoVehiculo()"></ion-icon>
+
+          <div *ngIf="checkTercero" class="group-icons">
+            <ion-icon  class="icon-a" name="create" (click)="editTercero()"></ion-icon>
+            <ion-icon  class="icon-a" name="checkmark-circle"></ion-icon>
+          </div>
+
+          <ion-icon class="icon" *ngIf="alertTercero" name="close-circle"></ion-icon>
+
+          <label for="floatingPassword">Cedula</label>
+        </div>
+
+        <div class="write" *ngIf="checkTercero">
+          <h2 class="ml-4 p-4">
+            <strong> Foto Perfil </strong>
+          </h2>
+
+        <div (click)="getFoto()" class="container-upload">
+          <ion-img
+          *ngIf="fotoPerfil.webviewPath"
+          [src]="fotoPerfil.webviewPath"
+          ></ion-img>
+          <div *ngIf="!fotoPerfil.webviewPath" class="camera"></div>
+        </div>
+      </div>
+
+      <!-- Aceptacion de terminos y condiciones -->
+
+      <ion-button class="mt-5" *ngIf="checkImagen" expand="block" type="bottom">
+        Guardar
+      </ion-button>
+        
+      </form>
+
+    </main>
+  </div>
+
+
+  <ion-modal #modal [isOpen]="isModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Datos Vechiculo</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="setOpenVeh(false)">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content color="light" class="ion-padding">
+
+        <form [formGroup]="formNewVehicle" (ngSubmit)="onSubmitNewVehicle()" method="post">
+
+          <ion-list [inset]="true">
+
+        <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+          <strong><h1>Datos del vehiculo</h1></strong>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Clase vehiculo</ion-label>
+          <ion-input
+            [ngModel]="clase_vehiculo"
+            id="fecha"
+            formControlName="clase_vehiculo"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Marca</ion-label>
+          <ion-input [ngModel]="marca" formControlName="marca"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Carroceria</ion-label>
+          <ion-input
+            [ngModel]="carroceria"
+            formControlName="carroceria"
+          ></ion-input>
+        </ion-item>
+
+  
+        
+        <ion-item>
+            <label class="p-3" for=""><h2>Soat</h2></label>
+          <div (click)="getSoat1()" class="container-upload mb-3">
+            <ion-img
+              *ngIf="apiSoat1.webviewPath"
+              [src]="apiSoat1.webviewPath"
+            ></ion-img>
+            <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
+          </div>
+        <!-- </ion-item>
+
+      <ion-item> -->
+       <ion-label position="floating">Soat vencimiento</ion-label>
+         <ion-input type="date" [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx"></ion-input>
+      </ion-item>
+
+      <ion-item>
+      <label class="p-3" for=""><h2>Tecno Mecanica</h2></label>
+        <div (click)="getTecno()" class="container-upload mb-3">
+          <ion-img
+            *ngIf="apiTecno1.webviewPath"
+            [src]="apiTecno1.webviewPath"
+          ></ion-img>
+          <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
+        </div>
+      <!-- </ion-item>
+
+
+        <ion-item> -->
+          <ion-label position="floating">TecnoMecanica vencimiento</ion-label>
+          <ion-input type="date" [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox"></ion-input>
+        </ion-item>
+
+        <div class="mt-5 p-4">
+          <ion-button expand="block" type="submit">
+            Guardar
+          </ion-button>
+        </div>
+
+      </ion-list>
+
+        </form>
+
+
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+
+  <ion-modal [isOpen]="isModalOpen2">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Datos Tercero</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="setOpenTer(false)">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content color="light" class="ion-padding">
+        <form [formGroup]="formNewDriver" (ngSubmit)="onSubmitNewDriver()" method="post">
+          
+
+
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

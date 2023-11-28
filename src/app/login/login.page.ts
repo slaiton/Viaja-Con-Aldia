@@ -22,6 +22,7 @@ import { AppComponent } from '../app.component';
 })
 export class LoginPage implements OnInit {
   loginForm: any = FormGroup;
+  fechaActual:any;
 
   constructor(
     private app: AppComponent,
@@ -76,6 +77,8 @@ export class LoginPage implements OnInit {
     if (localStorage.getItem('placa') != null) {
       this.router.navigate(['/home']);
     }
+
+    this.fechaActual = new Date().getFullYear();
 
     this.loginForm = this.formBuilder.group({
       username: ['', [Validators.required]],
