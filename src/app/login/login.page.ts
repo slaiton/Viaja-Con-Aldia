@@ -8,12 +8,15 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 // import { UserService } from "../api/user.service";
 import { CookieService } from 'ngx-cookie-service';
-import { AlertController } from '@ionic/angular';
+import { AlertController, Platform } from '@ionic/angular';
 import { HomePage } from '../home/home.page';
 import { MenuController } from '@ionic/angular';
 import { AuthService } from '../api/auth.service';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { AppComponent } from '../app.component';
+
+import { App } from '@capacitor/app';
+
 
 @Component({
   selector: 'app-login',
@@ -31,7 +34,8 @@ export class LoginPage implements OnInit {
     private formBuilder: FormBuilder,
     private userService: AuthService,
     private cookies: CookieService,
-    private router: Router
+    private router: Router,
+    private platform: Platform
   ) {}
   get f() {
     return this.loginForm.controls;
@@ -77,6 +81,11 @@ export class LoginPage implements OnInit {
     if (localStorage.getItem('placa') != null) {
       this.router.navigate(['/home']);
     }
+    
+
+    this.platform.backButton.subscribeWithPriority(10, () => {
+      App.exitApp();
+    });
 
     this.fechaActual = new Date().getFullYear();
 

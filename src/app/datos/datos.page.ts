@@ -81,6 +81,8 @@ export class DatosPage implements OnInit {
   isDisabled:any = false;
   isDisabled1:any = false;
   isDisabled2:any = false;
+  aplicaPropietario:any;
+  aplicaTenedro:any;
 
 
 

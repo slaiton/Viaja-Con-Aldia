@@ -563,10 +563,10 @@ ion-button[type="submit"] span {
   color:#0ee773;
 }
 
-.cont-turnos{
+.cont-turnos {
   height: auto;
   width: 100%;
-  margin-top: 35%;
+  margin-top: 5%;
 }
 
 .container-ticket{
@@ -606,15 +606,66 @@ font-weight: bold;
   width: 80%;
   height: auto;
   background-color:#FFFFFF;
-  position: absolute;
+  position: relative;
   left: 10%;
   border-radius: 20px;
-  top: 30%;
+  top: -15px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3)
 }
 
 .data-turnos {
   height: 60vh;
   margin-top: 35%;
+}
+
+.autocomplete-container {
+  border: none;
+  box-shadow: none !important;
+}
+
+.input-container {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  width: 100%;
+  // padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  border-radius: 30px;
+}
+
+.input-container:focus {
+  border-radius: 30px;
+  border: 2px solid rgb(18, 99, 211) !important;
+}
+
+.autocomplete-container .input-container input {
+  border-radius: 30px;
+}
+
+
+.autocomplete-container .input-container input:focus { 
+  border: 2px solid rgb(18, 99, 211) !important;
+}
+
+.input-registro {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  border-radius: 30px;
+  background-color: #FFFFFF;
+  height: 40px;
+  padding: 0 15px;
+}
+
+.input-registro:focus {
+  border: 2px solid rgb(18, 99, 211) !important;
 }
 

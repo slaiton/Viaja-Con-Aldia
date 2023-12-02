@@ -5,6 +5,8 @@
 </ion-header>
 
 <ion-content class="color">
+  <!-- <ion-action-sheet trigger="open-action-sheet" header="Actions" [buttons]="actionSheetButtons"></ion-action-sheet> -->
+
 
   <div class="registro text-center">
     <main class="form-signin w-100 m-auto p-2">
@@ -20,31 +22,8 @@
           <h1>Registro</h1>
         </div>
 
-        <div class="form-floating">
-          <input
-            type="text"
-            formControlName="placa"
-            name="placa"
-            matInput
-            class="form-control"
-            id="placa"
-            placeholder="Placa"
-            maxlength="6"
-            (input)="searchVehicle($event)"
-            required
-          />
-          <ion-icon class="icon" *ngIf="newVehicle" name="add-circle" (click)="nuevoVehiculo()"></ion-icon>
 
-          <div *ngIf="checkVehicle" class="group-icons">
-            <ion-icon  class="icon-a" name="create" (click)="editVehiculo()"></ion-icon>
-            <ion-icon  class="icon-a" name="checkmark-circle"></ion-icon>
-          </div>
-
-          <ion-icon class="icon" *ngIf="alertVehiculo" name="close-circle"></ion-icon>
-
-          <label for="floatingInput">Vehiculo</label>
-        </div>
-        <div *ngIf="checkVehicle" class="form-floating">
+        <div  class="form-floating">
           <input
             type="number"
             formControlName="cedula"
@@ -69,7 +48,32 @@
           <label for="floatingPassword">Cedula</label>
         </div>
 
-        <div class="write" *ngIf="checkTercero">
+        <div *ngIf="checkTercero" class="form-floating">
+          <input
+            type="text"
+            formControlName="placa"
+            name="placa"
+            matInput
+            class="form-control"
+            id="placa"
+            placeholder="Placa"
+            maxlength="6"
+            (input)="searchVehicle($event)"
+            required
+          />
+          <ion-icon class="icon" *ngIf="newVehicle" name="add-circle" (click)="nuevoVehiculo()"></ion-icon>
+
+          <div *ngIf="checkVehicle" class="group-icons">
+            <ion-icon  class="icon-a" name="create" (click)="editVehiculo()"></ion-icon>
+            <ion-icon  class="icon-a" name="checkmark-circle"></ion-icon>
+          </div>
+
+          <ion-icon class="icon" *ngIf="alertVehiculo" name="close-circle"></ion-icon>
+
+          <label for="floatingInput">Vehiculo</label>
+        </div>
+
+        <div class="write" *ngIf="checkVehicle">
           <h2 class="ml-4 p-4">
             <strong> Foto Perfil </strong>
           </h2>
@@ -81,6 +85,8 @@
           ></ion-img>
           <div *ngIf="!fotoPerfil.webviewPath" class="camera"></div>
         </div>
+
+        
       </div>
 
       <!-- Aceptacion de terminos y condiciones -->
@@ -99,7 +105,7 @@
     <ng-template>
       <ion-header>
         <ion-toolbar>
-          <ion-title>Datos Vechiculo</ion-title>
+          <ion-title class="ml-2">Datos Vechiculo</ion-title>
           <ion-buttons slot="end">
             <ion-button (click)="setOpenVeh(false)">Cerrar</ion-button>
           </ion-buttons>
@@ -109,75 +115,302 @@
 
         <form [formGroup]="formNewVehicle" (ngSubmit)="onSubmitNewVehicle()" method="post">
 
-          <ion-list [inset]="true">
+          <ion-list class="p-2" [inset]="true">
+            <ion-grid>
+              <!-- <ion-row> -->
 
-        <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
-          <strong><h1>Datos del vehiculo</h1></strong>
-        </div>
+                
+                <ion-col>
+                  <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+                    <strong><h1>Datos del vehiculo</h1></strong>
+                  </div>
+                </ion-col>
+                
+                
+                <!-- <ion-input
+                  [ngModel]="clase_vehiculo"
+                    id="clase_vehiculo"
+                    formControlName="clase_vehiculo"
+                    ></ion-input> -->
 
-        <ion-item>
-          <ion-label position="floating">Clase vehiculo</ion-label>
-          <ion-input
-            [ngModel]="clase_vehiculo"
-            id="fecha"
-            formControlName="clase_vehiculo"
-          ></ion-input>
-        </ion-item>
+                    <ion-row>
+                      <ion-col>
+              
+                      <div class="autocomplete-container2 mb-4 col-md-12">
+                        <ion-label position="floating">Clase Vehiculo</ion-label>
+                        
+                        <ng-autocomplete 
+                        formControlName="clase_vehiculo"
+                        [ngModel]="clase_vehiculo"
+                        [data]="dataClases"
+                        [searchKeyword]="keyword"
+                        placeholder=""
+                        (selected)='selectEvent($event)'
+                        (inputChanged)='onChangeSearch($event)'
+                        (inputFocused)='onFocused($event)'
+                        [itemTemplate]="itemTemplate"
+                        [notFoundTemplate]="notFoundTemplate">                                 
+                      </ng-autocomplete>
+    
+                     </div>
 
-        <ion-item>
-          <ion-label position="floating">Marca</ion-label>
-          <ion-input [ngModel]="marca" formControlName="marca"></ion-input>
-        </ion-item>
+                   </ion-col>
+                  </ion-row>
 
-        <ion-item>
-          <ion-label position="floating">Carroceria</ion-label>
-          <ion-input
-            [ngModel]="carroceria"
-            formControlName="carroceria"
-          ></ion-input>
-        </ion-item>
+                   <ion-row>
+                      <ion-col>
 
-  
+                       <div class="autocomplete-container2 mb-4 col-md-12">  
+                       <ion-label position="floating">Marca</ion-label>
+                       
+                         <ng-autocomplete 
+                         formControlName="marca"
+                         [ngModel]="marca"
+                         [data]="dataMarcas"
+                         [searchKeyword]="keyword"
+                         placeholder=""
+                         (selected)='selectMarca($event)'
+                         (inputChanged)='onChangeMarca($event)'
+                         (inputFocused)='onFocusedMarca($event)'
+                         [itemTemplate]="itemTemplate"
+                         [notFoundTemplate]="notFoundTemplate">                                 
+                         </ng-autocomplete>
+                       </div>
+                
+                     </ion-col>
+                  </ion-row>
+
+
+                   <ion-row>
+                     <ion-col>
+       
+                       <div class="autocomplete-container2 mb-4 col-md-12">    
+                         <ion-label position="floating">Carroceria</ion-label>
+                         
+                         <ng-autocomplete 
+                         formControlName="carroceria"
+                         [ngModel]="carroceria"
+                         [data]="dataCarroc"
+                         [searchKeyword]="keyword"
+                         placeholder=""
+                         (selected)='selectCarroceria($event)'
+                         (inputChanged)='onChangeCarroceria($event)'
+                         (inputFocused)='onFocusedCarroceria($event)'
+                         [itemTemplate]="itemTemplate"
+                         [notFoundTemplate]="notFoundTemplate">                                 
+                       </ng-autocomplete>
+                     </div>
+       
+                    </ion-col>
+                   </ion-row>
+            
+            <ng-template #itemTemplate let-item>
+              <a [innerHTML]="item.name"></a>
+            </ng-template>
+            
+            <ng-template #notFoundTemplate let-notFound>
+                <div [innerHTML]="notFound"></div>
+              </ng-template>
+
+              <ion-col>
+                <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+                  <strong><h1>Documentos</h1></strong>
+                </div>
+              </ion-col>
+
+              <ion-accordion-group>
+                <ion-accordion value="first">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Tarjeta de propiedad</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+                    <ion-row>
+                      <ion-col>
+                       <!-- <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>Tarjeta Propiedad Vehiculo</h1></strong>
+                       </div> -->
+                       
+                       <ion-item>
+                         
+                         <div (click)="getTarPr()" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="tarjePro.webviewPath"
+                             [src]="tarjePro.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!tarjePro.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+                         
+                       </ion-col>
+                     </ion-row> 
+
+
+                  </div>
+                </ion-accordion>
+                <ion-accordion value="second">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Soat</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+                    
+                     <ion-row>
+                       <ion-col>
+                        
+                        <!-- <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                          <strong><h1>SOAT</h1></strong>
+                        </div> -->
+                        <ion-item>
+                          <div (click)="getSoat1()" class="container-upload mb-3">
+                            <ion-img
+                            *ngIf="apiSoat1.webviewPath"
+                            [src]="apiSoat1.webviewPath"
+                            ></ion-img>
+                            <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
+                          </div>
+                        </ion-item>
+          
+                        </ion-col>
+                      </ion-row>
+
+                      <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                        <strong><h3>Fecha Vencimiento SOAT</h3></strong>
+                      </div>
+                                
+                      <ion-row>
+                        <ion-col class="d-flex justify-content-center">
+                         <ion-item>
+                           <ion-datetime [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx" presentation="date"></ion-datetime>
+                         </ion-item>
+                    
+                        </ion-col>
+                      </ion-row> 
+
+
+                  </div>
+                </ion-accordion>
+                <ion-accordion value="third">
+                  <ion-item slot="header" color="light">
+                    <ion-label>TecnoMecanica</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+                    <ion-row>
+                      <ion-col>
+                       <!-- <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>TecnoMecanica</h1></strong>
+                       </div> -->
+                       
+                       <ion-item>
+                         
+                         <div (click)="getTecno()" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="apiTecno1.webviewPath"
+                             [src]="apiTecno1.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+                         
+                       </ion-col>
+                     </ion-row> 
+         
+         
+                          <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h3>Fecha Vencimiento TecnoMecanica</h3></strong>
+                         </div>
+         
+                     <ion-row>
+                      <ion-col class="d-flex justify-content-center">
+                    
+                         
+                         <ion-item>
+                           <ion-datetime [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox" presentation="date" locale="es-ES"></ion-datetime>
+                         </ion-item>
+                       </ion-col>
+                     </ion-row>
+
+                  </div>
+                </ion-accordion>
+                <ion-accordion *ngIf="articulado" value="four">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Remolque</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+
+
+                    <ion-row *ngIf="articulado">
+                      <ion-col>
+                        <label for="">Placa Remolque</label>
+                        <input type="text" [ngModel]="remolque" formControlName="remolque" class="input-registro">
         
-        <ion-item>
-            <label class="p-3" for=""><h2>Soat</h2></label>
-          <div (click)="getSoat1()" class="container-upload mb-3">
-            <ion-img
-              *ngIf="apiSoat1.webviewPath"
-              [src]="apiSoat1.webviewPath"
-            ></ion-img>
-            <div *ngIf="!apiSoat1.webviewPath" class="camera"></div>
-          </div>
-        <!-- </ion-item>
+                      </ion-col>
+                    </ion-row>
+        
+        
+                    <ion-row *ngIf="articulado">
+                      <ion-col>
+                       
+                       <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>Foto Remolque</h1></strong>
+                       </div>
+                       <ion-item>
+                         <div (click)="getfotoRemolque()" class="container-upload mb-3">
+                           <ion-img
+                           *ngIf="fotoremol.webviewPath"
+                           [src]="fotoremol.webviewPath"
+                           ></ion-img>
+                           <div *ngIf="!fotoremol.webviewPath" class="camera"></div>
+                         </div>
+                       </ion-item>
+          
+                       </ion-col>
+                     </ion-row>
+          
+                     <ion-row *ngIf="articulado">
+                      <ion-col>
+                       
+                       <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>Tarjeta de propiedad</h1></strong>
+                       </div>
+                       <ion-item>
+                         <div (click)="getfotoTarPror()" class="container-upload mb-3">
+                           <ion-img
+                           *ngIf="tarjePror.webviewPath"
+                           [src]="tarjePror.webviewPath"
+                           ></ion-img>
+                           <div *ngIf="!tarjePror.webviewPath" class="camera"></div>
+                         </div>
+                       </ion-item>
+          
+                       </ion-col>
+                     </ion-row>
 
-      <ion-item> -->
-       <ion-label position="floating">Soat vencimiento</ion-label>
-         <ion-input type="date" [ngModel]="fechaxSoatxxxx" formControlName="fechaxSoatxxxx"></ion-input>
-      </ion-item>
+                  </div>
+                </ion-accordion>
 
-      <ion-item>
-      <label class="p-3" for=""><h2>Tecno Mecanica</h2></label>
-        <div (click)="getTecno()" class="container-upload mb-3">
-          <ion-img
-            *ngIf="apiTecno1.webviewPath"
-            [src]="apiTecno1.webviewPath"
-          ></ion-img>
-          <div *ngIf="!apiTecno1.webviewPath" class="camera"></div>
-        </div>
-      <!-- </ion-item>
+              </ion-accordion-group>
 
 
-        <ion-item> -->
-          <ion-label position="floating">TecnoMecanica vencimiento</ion-label>
-          <ion-input type="date" [ngModel]="fechaxTecnicox" formControlName="fechaxTecnicox"></ion-input>
-        </ion-item>
 
-        <div class="mt-5 p-4">
-          <ion-button expand="block" type="submit">
-            Guardar
-          </ion-button>
-        </div>
 
+
+       
+
+           
+
+           
+                
+                <div class="mt-5 p-4">
+                <ion-button expand="block" type="submit">
+                  Guardar
+                </ion-button>
+              </div>
+              
+          <!-- </ion-row> -->
+        </ion-grid>
       </ion-list>
 
         </form>
@@ -192,18 +425,109 @@
     <ng-template>
       <ion-header>
         <ion-toolbar>
-          <ion-title>Datos Tercero</ion-title>
+          <ion-title class="ml-2">Datos Conductor</ion-title>
           <ion-buttons slot="end">
             <ion-button (click)="setOpenTer(false)">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
       <ion-content color="light" class="ion-padding">
+
+      <ion-list class="p-2" [inset]="true">
         <form [formGroup]="formNewDriver" (ngSubmit)="onSubmitNewDriver()" method="post">
+
+          <ion-grid>
+            
+            <ion-col>
+              <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+                <strong><h1>Datos Personales</h1></strong>
+              </div>
+            </ion-col>
+            
+            <ion-row class="mb-4">
+              <ion-col>
+                <label for="">Correo</label>
+                <input type="text" [ngModel]="correo" formControlName="correo" class="input-registro">
+
+              </ion-col>
+            </ion-row>
           
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Celular</label>
+              <input type="text" [ngModel]="celular" formControlName="celular" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Direccion</label>
+              <input type="text" [ngModel]="direccion" formControlName="direccion" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Fecha nacimeinto</label>
+              <input type="text" [ngModel]="fecha_nacimeinto" formControlName="fecha_nacimeinto" class="input-registro">
+            </ion-col>
+          </ion-row>
+
+          <ion-col>
+            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+              <strong><h1>Datos Referencia</h1></strong>
+            </div>
+          </ion-col>
+
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Nombre contacto</label>
+              <input type="text" [ngModel]="nombre_contacto" formControlName="nombre_contacto" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Celular contacto</label>
+              <input type="text" [ngModel]="celular_contacto" formControlName="celular_contacto" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Parentesco</label>
+              <input type="text" [ngModel]="parentesco" formControlName="parentesco" class="input-registro">
+            </ion-col>
+          </ion-row>
+
+          <ion-accordion-group>
+
+            <ion-accordion value="first">
+              <ion-item slot="header" color="light">
+                <ion-label>Cedula de Ciudadania</ion-label>
+              </ion-item>
+              <div class="ion-padding" slot="content">
+
+              </div>
+            </ion-accordion>
+            
+            <ion-accordion value="second">
+              <ion-item slot="header" color="light">
+                <ion-label>Licencia de conduccion</ion-label>
+              </ion-item>
+              <div class="ion-padding" slot="content">
+
+              </div>
+            </ion-accordion>
+
+          </ion-accordion-group>
+
+
+
+
+        </ion-grid>
+
+      
 
 
         </form>
+      </ion-list>
       </ion-content>
     </ng-template>
   </ion-modal>

@@ -4,7 +4,7 @@ import { CookieService } from "ngx-cookie-service";
 import { Subject } from 'rxjs';
 import { tap, takeUntil } from 'rxjs/operators';
 import { AuthService } from './api/auth.service';
-
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
 
 
 
@@ -28,7 +28,9 @@ export class AppComponent {
     // { title: 'Spam', url: '/folder/Spam', icon: 'warning' },
   ];
   // public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-  constructor(private userService: AuthService,private router: Router, private cookies: CookieService) {}
+  constructor(private userService: AuthService,private router: Router, private cookies: CookieService) {
+    defineCustomElements(window)
+  }
 
   conductor:any;
   nombre:any;
