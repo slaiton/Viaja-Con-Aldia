@@ -10,6 +10,8 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { DatosPage } from './datos/datos.page';
 import { AuthService } from './api/auth.service';
 import { CookieService } from 'ngx-cookie-service';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { TipoDocumentoDirective } from './directives/tipo-documento.directive';
 
 
 
@@ -17,7 +19,7 @@ import { CookieService } from 'ngx-cookie-service';
 
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective],
   imports: [
     BrowserModule, 
     IonicModule.forRoot(), 

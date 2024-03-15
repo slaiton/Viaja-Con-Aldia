@@ -7,6 +7,11 @@ import { IonicModule } from '@ionic/angular';
 import { DatosPageRoutingModule } from './datos-routing.module';
 
 import { DatosPage } from './datos.page';
+import { AutocompleteLibModule } from 'angular-ng-autocomplete';
+import { DocumentosComponent } from '../documentos/documentos.component';
+
+
+
 
 @NgModule({
   imports: [
@@ -14,8 +19,9 @@ import { DatosPage } from './datos.page';
     FormsModule,
     IonicModule,
     DatosPageRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AutocompleteLibModule
   ],
-  declarations: [DatosPage]
+  declarations: [DatosPage, DocumentosComponent]
 })
 export class DatosPageModule {}

@@ -15,7 +15,8 @@
           </a> -->
           <ion-item>
             <ion-avatar  [style.width]="'110px'" [style.height]="'110px'" slot="start">
-              <img alt="persons"  class="rounded-circle me-2" src="{{fotoUser}}"/>
+              <img alt="persons" *ngIf="fotoUser" class="rounded-circle me-2" src="{{fotoUser}}"/>
+              <img alt="persons" *ngIf="!fotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"/>
             </ion-avatar>
             <ul class="list-unstyled ps-0 ml-3">
               <li class="mb-1">
@@ -37,7 +38,7 @@
 
         <ion-list id="inbox-list">
           <ion-menu-toggle auto-hide="false" *ngFor="let p of appPages; let i = index" >
-            <ion-item *ngIf="statusLogin()"  routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
+            <ion-item *ngIf="statusLogin() && !p.hidden"  routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
               <ion-icon slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
               <ion-label class="ml-2">{{ p.title }}</ion-label>
             </ion-item>

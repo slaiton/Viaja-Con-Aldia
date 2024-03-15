@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { LoginGuard } from './guard/login.guard';
+import { DashboardComponent } from './dashboard/dashboard.component';
+
 
 const routes: Routes = [
   {
@@ -34,6 +36,11 @@ const routes: Routes = [
   {
     path: 'preform',
     loadChildren: () => import('./preform/preform.module').then( m => m.PreformPageModule),
+    canActivate: [LoginGuard]
+  },
+  {
+    path: 'pruebas',
+    component: DashboardComponent,
     canActivate: [LoginGuard]
   }
 

@@ -538,12 +538,9 @@ ion-button[type="submit"] span {
 /* Agrega las clases CSS personalizadas para el botón y el tiempo restante */
 .botontiemporestante {
   font-family: 'Raleway', sans-serif;
-  /* Reemplaza 'TuFuentePersonalizada' con la fuente deseada */
-  font-size: 12px;
-  width: 70%;
-  // margin-left: 15%;
-  /* Tamaño de fuente deseado */
-  /* Color deseado para el botón */
+  font-size: 20px;
+  width: auto;
+
 }
 
 .tiemporestante {
@@ -665,7 +662,22 @@ font-weight: bold;
   padding: 0 15px;
 }
 
+
+.input-registro[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  border-radius: 50%;
+  padding: 4px;
+}
+
 .input-registro:focus {
   border: 2px solid rgb(18, 99, 211) !important;
 }
+
+.btn-submit {
+  width: 80%;
+  padding: 0.5rem;
+  border-radius: 15px;
+  font-size: 1.3rem;
+}
+
 

@@ -1,0 +1,165 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons class="ml-1" slot="start">
+      <ion-back-button (click)="backdata()"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="ml-3">Documentos Conductor</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <div class="registro text-center">
+    <main class="form-signin w-100 m-auto">
+
+      <ion-grid>
+
+        <!-- <div class="mb-5">
+          <h1>Documentos Requeridos</h1>
+        </div> -->
+        <ion-text class="p-2">
+          <h1>Estas a pocos pasos</h1>
+          <p>Carga la siguientes imagenes para continuar con el registro</p>
+        </ion-text>
+
+        <ion-row style="">
+
+          <!-- <ion-list class="full-list">
+            <ion-item class="ion-activatable ripple-parent rectangle" *ngFor="let a of documents; let i = index" (click)="selectDocument(i)" id="modal-document">
+              <ion-ripple-effect></ion-ripple-effect>
+
+              <ion-label> 
+                <h1>
+                  {{a.nombre}} 
+                </h1>
+
+                <p>
+                  <ion-text *ngFor="let b of a.docs">
+                    <span class="ml-3">
+                      {{b.nombre}}
+                    </span> -
+                  </ion-text >
+                </p>
+              </ion-label>
+              <p  class="{{a.status ? 'confirm' : 'pending'}}"> {{a.status ? 'En revision': 'Pendiente'}}  </p>
+
+            </ion-item>
+          </ion-list> -->
+
+          <ion-card class="w-100 ion-activatable ripple-parent rectangle" *ngFor="let a of documents; let i = index" (click)="selectDocument(i)">
+              <ion-card-header>
+                <ion-card-title>{{a.nombre}}</ion-card-title>
+                <ion-card-subtitle>
+                  <ion-text *ngFor="let b of a.docs">
+                    <span class="ml-3">
+                      {{b.nombre}}
+                    </span> -
+                  </ion-text >
+
+                </ion-card-subtitle>
+              </ion-card-header>
+              
+              <ion-card-content class="{{a.status ? 'confirm' : 'pending'}}"> {{a.status ? 'En revision': 'Pendiente'}} </ion-card-content>
+          </ion-card>
+          
+        </ion-row>
+
+        <ion-row>
+
+        </ion-row>
+
+      </ion-grid>
+
+      <div class="mt-1 mb-3 p-2 d-flex justify-content-center">
+        <!-- <button class="btn btn-primary btn-submit" type="submit" (click)="documentValidate()">
+          Guardar
+        </button> -->
+        <ion-button expand="block" type="submit" (click)="documentValidate()">
+          Guardar
+        </ion-button>
+      
+      </div>
+
+      <!-- <ion-footer>
+              
+      </ion-footer> -->
+
+    </main>
+  </div>
+
+  <ion-modal #modal1 [isOpen]="isModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title class="ml-3">Carga documentos</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+
+        <ion-grid *ngIf="documentActive.type == 'doc'">
+
+          <ion-row *ngFor="let c of documentActive.docs">
+            <ion-col>
+             
+             <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+               <strong><h1>{{ c.nombre }}</h1></strong>
+             </div>
+             <ion-item>
+               <div  *ngIf="documentActive.capture == 'camera'" (click)="addToCamera(c.codigo)" class="container-upload mb-3">
+                   <ion-img
+                   *ngIf="getImagen(c.codigo)"
+                   [src]="getImagen(c.codigo)"
+                   ></ion-img>
+                   <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
+                </div>
+                <div *ngIf="documentActive.capture == 'galery'" (click)="addToGalery(c.codigo)" class="container-upload mb-3">
+                    <ion-img
+                   *ngIf="getImagen(c.codigo)"
+                   [src]="getImagen(c.codigo)"
+                   ></ion-img>
+                   <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
+                </div>
+             </ion-item>
+
+             </ion-col>
+
+           </ion-row>
+
+           <div *ngIf="documentActive.fecha" class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+            <strong><h3>{{documentActive.fechaTitle}}</h3></strong>
+          </div>
+                   
+        
+           <ion-row *ngIf="documentActive.fecha">
+             <ion-col class="d-flex justify-content-center">
+
+              
+              <input type="date" value="{{fechaL[documentActive.fechaTag]}}" id="{{documentActive.fechaTag}}" class="input-registro">
+    
+            </ion-col>
+           </ion-row>
+
+           
+          </ion-grid>
+          
+        </ion-content>
+          
+        
+        <ion-footer>
+            
+            <ion-button class="mb-4" expand="block" type="submit" (click)="checkDocument()">
+              Confirmar Fotos
+            </ion-button>
+
+            <ion-button class="mb-4" expand="block" type="submit" (click)="resetFotos()">
+              Cambiar fotos
+            </ion-button>
+            
+          </ion-footer>
+
+
+    </ng-template>
+  </ion-modal>
+
+
+
+</ion-content>
+

@@ -19,10 +19,10 @@ export class AppComponent {
   usserLogged: any;
   
   public appPages = [
-    { title: 'Inicio', url: '/home', icon: 'home' },
-    { title: 'Mis datos', url: '/datos', icon: 'person-circle' },
-    { title: 'Turnos', url: '/turnos', icon: 'archive' },
-    { title: 'Pre - Operacional', url: '/preform', icon: 'flashlight' },
+    { title: 'Inicio', url: '/home', icon: 'home', hidden: false },
+    { title: 'Mis datos', url: '/datos', icon: 'person-circle', hidden: false },
+    { title: 'Turnos', url: '/turnos', icon: 'archive', hidden: false },
+    { title: 'Pruebas', url: '/pruebas', icon: 'flashlight' },
     // { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
     // { title: 'Trash', url: '/folder/Trash', icon: 'trash' },
     // { title: 'Spam', url: '/folder/Spam', icon: 'warning' },
@@ -41,7 +41,7 @@ export class AppComponent {
   clase_vehiculo:any;
   clase_estado:any;
   token:any;
-  fotoUser:any;
+  fotoUser:any = false;
   
 
 
@@ -58,17 +58,19 @@ export class AppComponent {
       
       // this.router.navigate(['/login']);
 
-      this.userService.getUser3sL().subscribe(data => {
-      data = data.data[0];
-      this.conductor = data.nombre_completo.toLowerCase();
+      this.userService.getUser3sL(this.token).subscribe(data => {
+        
+        const datos = data.data[0];
+        console.log(datos);
+      this.conductor = datos.nombreTercerox.toLowerCase();
       this.nombre = this.conductor.split(' ')[0];
-      // this.estado = data.estado;
-      this.placa = data.numeroPlacaxxx;
-      // this.carroceria = data.carroceria;
-      // this.marca = data.marca;
-      // this.clase_vehiculo = data.clase_vehiculo;
-      this.estado = data.estadoSiatxx;
-      this.fotoUser = data.apiFotoConductor;
+      // this.estado = datos.estado;
+      this.placa = datos.numeroPlacaxxx;
+      // this.carroceria = datos.carroceria;
+      // this.marca = datos.marca;
+      // this.clase_vehiculo = datos.clase_vehiculo;
+      this.estado = datos.estadoSiatxx;
+      this.fotoUser = datos.apiFotoConductor;
 
       this.placa = this.placa.substr(0,3)+" - "+this.placa.substr(3,5);
       
@@ -77,6 +79,7 @@ export class AppComponent {
          this.clase_estado = "badge text-bg-success";
       }else{
          this.clase_estado = "badge text-bg-danger";
+         this.appPages[2].hidden = true;
       }
       // console.log(data)       
 

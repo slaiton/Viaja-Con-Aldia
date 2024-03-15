@@ -43,8 +43,8 @@ export class LoginPage implements OnInit {
 
   onLogin() {
     const user = {
-      username: this.loginForm.value.password.toUpperCase(),
-      password: this.loginForm.value.username,
+      numeroPlacaxxx: this.loginForm.value.password.toUpperCase(),
+      codigoTercerox: this.loginForm.value.username,
     };
 
     this.userService.login(user).subscribe(
@@ -55,12 +55,15 @@ export class LoginPage implements OnInit {
           'App de ChecList',
           'Continuar'
         );
+
         localStorage.setItem(
           'placa',
           this.loginForm.value.password.toUpperCase()
         );
+
+        this.userService.setToken(data.access_token);
+        
         localStorage.setItem('conductor', this.loginForm.value.username);
-        this.userService.setToken(data.token);
         this.menu.enable(true);
         this.userService.onLoginChange.next(data.token);
         this.app.ngOnInit();
@@ -78,8 +81,24 @@ export class LoginPage implements OnInit {
   }
 
   ngOnInit() {
-    if (localStorage.getItem('placa') != null) {
-      this.router.navigate(['/home']);
+    if (localStorage.getItem('placa') != null && localStorage.getItem('token')) {
+
+      const token = this.userService.getToken();
+
+      const json = {
+        'token' : token
+      }
+
+      this.userService.tokenValidate(json).subscribe(
+        data => {
+          this.router.navigate(['/home']);
+        },
+        err => {
+          this.userService.logout();
+        }
+      )
+
+
     }
     
 

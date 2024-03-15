@@ -20,8 +20,8 @@ export class AuthService {
   constructor(private menu: MenuController, private http: HttpClient, private cookies: CookieService, private router: Router) { }
 
 
-  login(user: User): Observable<any> {
-    return this.http.post("http://api.aldialogistica.com/api/auth/login-external", user);
+  login(user: any): Observable<any> {
+    return this.http.post("https://api.3slogistica.com/api/auth/driver", user);
   }
 
   getUser(): Observable<any>{
@@ -42,7 +42,7 @@ export class AuthService {
     return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
   }
 
-  getUser3sL():Observable<any> {
+  getUser3sL(token:any):Observable<any> {
 
     const params = new HttpParams({
       fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
@@ -50,27 +50,55 @@ export class AuthService {
 
     const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user':'USUSEGINT',
-      'password':'12249'
+      'Accept': 'application/json',
+      'Authorization': 'Bearer ' + token
     });
     const requestOptions = { headers: headers, params: params };
 
     return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
   }
 
-
-  setToken(token: String) {
-    localStorage.setItem("token", "auth-"+ token);
+  setToken(token: any) {
+    localStorage.setItem("token", token);
   }
+
   getToken() {
     return localStorage.getItem("token");
   }
 
+tokenValidate(jsonToken:any) :Observable<any> {
+  return this.http.post("https://api.3slogistica.com/api/auth/token", jsonToken)
+}
+
+delToken(jsonToken:any) :Observable<any> 
+{
+  const options = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    body:jsonToken,
+  };
+
+  return this.http.delete("https://api.3slogistica.com/api/auth/token", options)
+}
+
   logout(){
-    localStorage.removeItem("token");
-    localStorage.removeItem("placa");
-    this.router.navigate(['/login']);
-    this.menu.enable(false);
+    
+    const token =  this.getToken()
+    const jsontoken = {
+      'token' : token
+    };
+    this.delToken(jsontoken).subscribe(
+      (data:any) => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("placa");
+        this.menu.enable(false);
+        this.router.navigate(['/login']);
+      },
+      err => {
+        throw err;
+      }
+    )
   }
 
 
