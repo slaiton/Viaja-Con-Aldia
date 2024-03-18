@@ -5,3 +5,32 @@
 .tercero-cont span {
     margin-left: 10px;
 }
+
+.col-n {
+    flex: revert-layer !important;
+  }
+
+.container-prop {
+    position: relative;
+    height: 150px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .prop-flotante {
+    position: absolute;
+    width: 100%;
+    top: 0;
+  }
+
+  .select-card {
+    background-color: #0094DA;
+    color:#FFFFFF;
+  }
+
+  .fondo-vehiculo {
+    width: 100%;
+    height: 150px;
+    background-size: cover;
+    background-position: center;
+  }

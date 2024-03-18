@@ -13,6 +13,168 @@ import { MenuController } from '@ionic/angular';
   providedIn: 'root'
 })
 export class UserService {
+  documents_conductor:any = [
+    {
+      nombre: 'Cedula Ciudadania',
+      position: 1,
+      status: false,
+      type: 'doc',
+      capture: 'camera',
+      tag: 'cedula',
+      fecha:false,
+      docs: [
+        {
+          nombre:'Cara frontal',
+          codigo:'cedula1'
+        },
+        {
+          nombre:'Cara posterior',
+          codigo:'cedula2'
+        }
+      ]
+    },
+    {
+      nombre: 'Licencia Conduccion',
+      position: 2,
+      status: false,
+      tag: 'licencia',
+      type: 'doc',
+      fecha :true,
+      capture: 'camera',
+      fechaTag:'fechaLicencia',
+      fechaTitle: 'Vencimiento Licencia',
+      docs: [
+        {
+          nombre:'Cara frontal',
+          codigo:'licencia1'
+        },
+        {
+          nombre:'Cara posterior',
+          codigo:'licencia2'
+        }
+      ]
+    },
+    {
+      nombre: 'Seguridad Social',
+      position: 3,
+      status: false,
+      tag: 'seguridad',
+      type: 'doc',
+      capture: 'galery',
+      fecha:false,
+      docs: [
+        {
+          nombre: 'Cara Frontal',
+          codigo: 'seguridadsocial'
+        }
+      ]
+    } 
+  ]
+
+  documents_vehiculo:any = [
+    {
+      nombre: 'Tarjeta Propiedad Vehiculo',
+      position: 1,
+      status: false,
+      type: 'doc',
+      capture: 'camera',
+      tag: 'tarjePro',
+      fecha:false,
+      docs: [
+        {
+          nombre:'Cara frontal',
+          codigo:'tarjePro1'
+        },
+        {
+          nombre:'Cara posterior',
+          codigo:'tarjePro2'
+        }
+      ]
+    },
+    {
+      nombre: 'Soat',
+      position: 2,
+      status: false,
+      type: 'doc',
+      capture: 'galery',
+      tag: 'soat',
+      fecha:true,
+      fechaTag:'fechaSoat',
+      fechaTitle: 'Vencimiento Soat',
+      docs: [
+        {
+          nombre:'Cara frontal',
+          codigo:'soat1'
+        }
+      ]
+    },
+    {
+      nombre: 'Tecnomecanica',
+      position: 3,
+      status: false,
+      type: 'doc',
+      capture: 'galery',
+      tag: 'tarjePro',
+      fecha:true,
+      fechaTag:'fechaTecno',
+      fechaTitle: 'Vencimiento Tecnomecanica',
+      docs: [
+        {
+          nombre:'Cara frontal',
+          codigo:'tecnomecanica'
+        }
+      ]
+    },
+    {
+      nombre: 'Remolque',
+      position: 4,
+      status: false,
+      type: 'doc',
+      capture: 'camera',
+      tag: 'tarjePro',
+      fecha:false,
+      articulado:true,
+      docs: [
+        {
+          nombre:'Foto romolque',
+          codigo:'fotoremol'
+        },
+        {
+          nombre:'Tarjeta de propiedad remolque',
+          codigo:'tarjePror'
+        }
+      ]
+    },
+    {
+      nombre: 'Fotos Vehiculo',
+      position: 5,
+      status: false,
+      type: 'doc',
+      capture: 'camera',
+      tag: 'tarjePro',
+      fecha:false,
+      articulado:true,
+      docs: [
+        {
+          nombre:'Foto Frontal',
+          codigo:'fotovehi1'
+        },
+        {
+          nombre:'Foto Lateral',
+          codigo:'fotovehi2'
+        },
+        {
+          nombre:'Foto Motor',
+          codigo:'fotovehi3'
+        },
+        {
+          nombre:'Foto Posterior',
+          codigo:'fotovehi4'
+        }
+      ]
+    }
+    
+  ]
 
   public onLoginChange = new Subject();
 
@@ -98,7 +260,7 @@ export class UserService {
     }
 
 
-    getTercero3sL():Observable<any> {
+    getTercero3sL(token:any):Observable<any> {
 
       const params = new HttpParams({
         fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
@@ -106,44 +268,61 @@ export class UserService {
 
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
-        'user':'USUSEGINT',
-        'password':'12249'
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
       });
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
     }
 
-    get3SLbyplaca(placa:any):Observable<any> {
+    get3SLbyplaca(placa:any, token:any):Observable<any> {
       const params = new HttpParams({
         fromString: 'placa=' + placa
       });
 
       const headers = new HttpHeaders({
-        'Content-Type':'application/json; charset=utf-8'
+        'Content-Type':'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
       });
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
     }
 
-    get3SLbyCedula(cedula:any):Observable<any> {
+    get3SLbyCedula(cedula:any, token:any):Observable<any> {
       const params = new HttpParams({
         fromString: 'cedula=' + cedula
       });
 
       const headers = new HttpHeaders({
-        'Content-Type':'application/json; charset=utf-8'
+        'Content-Type':'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
       });
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
     }
 
-
-    registroApiAldia(params: any):Observable<any> {
+    obtenerInformacionIP(token:any):Observable<any> {
       const headers = new HttpHeaders({
-        'Content-Type':'application/json'
+        'Content-Type':'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
+      });
+      const requestOptions = { headers: headers};
+
+    return   this.http.get('https://api.3slogistica.com/api/ip', requestOptions)
+    }
+
+
+    registroApiAldia(params: any, token:any):Observable<any> {
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
       });
 
       const requestOptions = { headers: headers };
@@ -166,16 +345,65 @@ export class UserService {
     }
 
 
-    registroApi(params: any):Observable<any>{
+    // registroApi(params: any):Observable<any>{
+
+    //   const headers = new HttpHeaders({
+    //     'Content-Type':'application/json'
+    //   });
+
+    //   const requestOptions = { headers: headers };
+
+    //   return this.http.post("https://3slogistica.com/tr_panel/wsr_aldia/ingresoApp", params, requestOptions)
+    // }
+
+    getFirma(e:any, tipo:any, token:any):Observable<any>
+    {
+      
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
+        });
+  
+       const params = new HttpParams({
+        fromString: 'cedula=' + e + '&contrato=' + tipo
+       });
+  
+       const requestOptions = { headers: headers, params: params };
+      return   this.http.get('https://api.3slogistica.com/api/firma', requestOptions)
+    }
+
+
+    firmaContrato(tipo:any, cedula:any, placa:any, token:any):Promise<any>
+    {
 
       const headers = new HttpHeaders({
-        'Content-Type':'application/json'
+        'Content-Type':'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
       });
 
       const requestOptions = { headers: headers };
 
-      return this.http.post("https://3slogistica.com/tr_panel/wsr_aldia/ingresoApp", params, requestOptions)
+      var json = {
+        "codigoContrato": tipo,
+        "codigoTercerox": cedula,
+        "numeroPlacaxxx": placa,
+        "agenteUsuarioxx": "",
+      } 
+
+      try {
+        const response = this.http.post("https://api.3slogistica.com/api/firma", json, requestOptions).toPromise()
+        return response
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+
+
     }
+
+
 
 
 
@@ -234,11 +462,10 @@ export class UserService {
 
     }
 
-
-
-    setToken(token: String) {
-      localStorage.setItem("token", "auth-"+ token);
+    setToken(token: any) {
+      localStorage.setItem("token", token);
     }
+
     getToken() {
       return localStorage.getItem("token");
     }
@@ -258,6 +485,25 @@ export class UserService {
     getSession()
     {
       return this.onLoginChange.asObservable();
+    }
+
+
+    getTemporalToken(cedula:any, placa:any) {
+      
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json',
+        'Accept': 'application/json'
+      });
+
+      const requestOptions = { headers: headers };
+
+      var json = {
+        "user":cedula,
+        "pass":placa
+    }
+
+
+      return this.http.post("https://api.3slogistica.com/api/auth/login", json, requestOptions)
     }
 
 

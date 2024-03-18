@@ -18,6 +18,15 @@ ion-content.color {
     top: 20px;
   }
 
+  .icon-calendar {
+    position: absolute;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+    right: 20px;
+    top: 30px;
+  }
+
   .group-icons {
 
     position: absolute; 
@@ -38,8 +47,54 @@ ion-content.color {
   .autocomplete-container2 {
     position: relative;
   }
+  .col-n {
+    flex: revert-layer !important;
+  }
 
 
+  .container-prop {
+    position: relative;
+    height: 150px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .prop-flotante {
+    position: absolute;
+    width: 100%;
+    top: 0;
+  }
+
+  .select-card {
+    background-color: #0094DA;
+    color:#FFFFFF;
+  }
+
+  .term-contain {
+    position: relative;
+    width: 80%;
+    left: 10%;
+  }
+
+  .scroll {
+    height: 50vh;
+    overflow-x: scroll;
+  }
+
+  .success-btn {
+    width: 85%;
+  }
+
+ app-documentos > ion-footer {
+    position: absolute;
+    bottom: 0px;
+  }
+
+  app-documentos {
+    width: 100%;
+    height: 97%;
+    position: absolute;
+  }
 
   
 

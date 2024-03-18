@@ -139,9 +139,11 @@ export class TurnosPage implements OnInit {
 
   ngOnInit() {
 
-    if (localStorage.getItem('token') == null) {
+    this.token = this.userService.getToken();
+
+    if (this.userService.getToken() == null) {
       this.router.navigate(['/login']);
-   }
+    }
     
     this.geolocation.getCurrentPosition().then((resp) => {
       
@@ -226,13 +228,46 @@ export class TurnosPage implements OnInit {
           const origenLabel = document.getElementById('origenLabel') as HTMLInputElement | null;
 
           if (origenLabel != null) {
-            origenLabel.innerHTML = "<ion-icon name='location'> </ion-icon> <strong>" + this.nombre + "</strong>";
+
+            this.getZona(this.nombre).then(
+              (data:any) => {
+                if (data.status) {
+                  console.log(data.data.ciudad_oigen_entrada);
+                  this.nombre = data.data.ciudad_oigen_final
+                  origenLabel.innerHTML =
+                  "<ion-icon name='location'> </ion-icon> <strong>" +
+                  this.nombre +
+                  '</strong>';
+                }else{
+                  console.log('ERROR');
+                  console.log(data.data.ciudad_oigen_final);
+                }
+              }
+            )
+            
           }else{
             this.presentAlert("Error GPS", "", this.nombre, "Cerrar");
           }
 
       });
   
+  }
+
+  async getZona(nombre:any)
+  {
+
+    try {
+
+      
+      const data = await this.geodata.getGeoZona(nombre, '', '', this.token).toPromise()
+
+      return data
+
+      
+    } catch (error) {
+      throw error
+    }
+
   }
 
 

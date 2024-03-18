@@ -30,6 +30,22 @@ export class GeodataService {
      return this.http.get("https://maps.googleapis.com/maps/api/geocode/json?" +  this.complemento)
   }
 
+  getGeoZona(nombre:any, lat:any, lon:any, token:any) {
+    const headers = new HttpHeaders({
+      'Content-Type':'application/json; charset=utf-8',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer ' + token
+      });
+
+     const params = new HttpParams({
+      fromString: 'nombreOrigen=' + nombre
+     });
+
+     const requestOptions = { headers: headers, params: params };
+    return   this.http.get('https://api.3slogistica.com/api/zonas', requestOptions)
+  }
+  
+
   turnoCreacion(turno: any)
   {
     const headers = new HttpHeaders({

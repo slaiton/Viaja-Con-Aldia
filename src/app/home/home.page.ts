@@ -78,6 +78,7 @@ export class HomePage implements OnInit {
   fotoUser:any;
   modulos:any; 
   clase_estado:any;
+  token:any;
 
   get f() {
     return this.turnoForm.controls;
@@ -109,76 +110,41 @@ export class HomePage implements OnInit {
   ];
 
   ngOnInit() {
-    if (localStorage.getItem('token') == null) {
+
+    this.token = this.userService.getToken();
+
+    if (this.userService.getToken() == null) {
       this.router.navigate(['/login']);
     }
-    
-
     this.app.ngOnInit();
 
-
-    this.userService.getConductor().subscribe((data) => {
-      this.dataTercero = data.data[0];
-      this.cedula = this.dataTercero.documento;
-      this.nombres = this.dataTercero.nombre;
-      this.apellidos = this.dataTercero.apellido;
-      this.correo = this.dataTercero.email;
-      this.celular = this.dataTercero.telefono_1;
-      this.direccion = this.dataTercero.direccion;
-      this.fecha = this.dataTercero.fecha_nacimiento;
-      this.ciudad = this.dataTercero.ciudad_expedicion;
-
-
-      if (this.dataTercero.foto) {
-        this.fotoUser = this.dataTercero.foto;
-      }
-
-     },
-     (err) => {
-      this.modulos[0].status = this.dataInCorrect
-     });
-
-
+    // console.log(this.userService.getToken());
      
+    this.placa = this.userService.getPlaca();
+    this.placaLetras = this.placa.substr(0, 3);
+    this.placaNum = this.placa.substr(3, 5);
 
-    this.userService.getTercero3sL().subscribe(
+    this.userService.getTercero3sL(this.token).subscribe(
       (data) => {
-         this.fotoUser = data['data'][0].apiFotoConductor;
+        const datos = data['data'][0];
+         this.fotoUser = datos.apiFotoConductor;
+         this.cedula = datos.codigoTercerox
+         this.nombres = datos.nombreTercerox
+         this.apellidos = datos.apell1Tercerox + ' ' + datos.apell2Tercerox
+         this.correo = datos.emailxTercerox
+         this.celular = datos.movilxTercerox
+         this.direccion = datos.direccTercerox
+         this.fecha = datos.fechaxNacimien
+         this.ciudad = datos.ciudadCreacion
       },
       (err) => {
-        this.modulos[1].status = this.dataInCorrect
+        if (err.status == 401) {
+          this.userService.logout();
+        }
+        
       }
     );
 
-
-    this.userService.getUser().subscribe(
-      (data) => {
-        data = data.view.data[0];
-
-        this.conductor = data.conductor.toLowerCase();
-        this.estado = data.estado;
-        this.placa = data.placa;
-        this.carroceria = data.carroceria;
-        this.marca = data.marca;
-        this.clase_vehiculo = data.clase_vehiculo;
-         this.estado = data.estado;
-
-
-        // if (this.estado == 'ACTIVO') {
-        //   this.clase_estado = 'badge text-bg-success';
-        // } else {
-        //   this.clase_estado = 'badge text-bg-danger';
-        // }
-
-        this.placaLetras = this.placa.substr(0, 3);
-        this.placaNum = this.placa.substr(3, 5);
-      },
-      (err) => {
-        console.log(err);
-
-        this.presentAlert('Error al Consultar', '', err.message, 'Continuar');
-      }
-    );
 
     this.userService.getTurnoUser().subscribe(
       (data) => {          
@@ -329,10 +295,22 @@ export class HomePage implements OnInit {
       ) as HTMLInputElement | null;
 
       if (origenLabel != null) {
-        origenLabel.innerHTML =
-          "<ion-icon name='location'> </ion-icon> <strong>" +
-          this.nombre +
-          '</strong>';
+
+        this.getZona(this.nombre).then(
+          (data:any) => {
+            if (data.status) {
+              console.log(data.data.ciudad_oigen_entrada);
+              this.nombre = data.data.ciudad_oigen_final
+              origenLabel.innerHTML =
+              "<ion-icon name='location'> </ion-icon> <strong>" +
+              this.nombre +
+              '</strong>';
+            }else{
+              console.log('ERROR');
+              console.log(data.data.ciudad_oigen_final);
+            }
+          }
+        )
       } else {
         this.presentAlert('Error GPS', '', this.nombre, 'Cerrar');
       }
@@ -354,6 +332,24 @@ export class HomePage implements OnInit {
 
     await alert.present();
   }
+
+  async getZona(nombre:any)
+  {
+
+    try {
+
+      
+      const data = await this.geodata.getGeoZona(nombre, '', '', this.token).toPromise()
+
+      return data
+
+      
+    } catch (error) {
+      throw error
+    }
+
+  }
+
 
   loadForm(data: any) {
     this.turnoForm.patchValue({
