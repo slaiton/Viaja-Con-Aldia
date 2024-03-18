@@ -22,6 +22,6 @@ import { DocumentosComponent } from '../documentos/documentos.component';
     ReactiveFormsModule,
     AutocompleteLibModule
   ],
-  declarations: [DatosPage]
+  declarations: [DatosPage, DocumentosComponent]
 })
 export class DatosPageModule {}

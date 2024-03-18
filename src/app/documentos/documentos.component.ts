@@ -7,6 +7,10 @@ import { PhotoService } from '../api/photo.service';
 import { UserService } from '../api/user.service';
 import { log } from 'console';
 import { Photo } from '@capacitor/camera';
+<<<<<<< HEAD
+=======
+import { RegistroService } from '../api/registro.service';
+>>>>>>> 2278acceefcc0264ef80f5cc75f02c340afe2f9a
 
 
 @Component({
@@ -39,6 +43,10 @@ export class DocumentosComponent  implements OnInit {
     private photo: PhotoService,
     private alertController: AlertController,
     private user: UserService,
+<<<<<<< HEAD
+=======
+    private regi: RegistroService,
+>>>>>>> 2278acceefcc0264ef80f5cc75f02c340afe2f9a
     private loading: LoadingController  ) 
   {    
   }
