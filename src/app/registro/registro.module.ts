@@ -5,7 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { RegistroPageRoutingModule } from './registro-routing.module';
 import { RegistroPage } from './registro.page';
 import {AutocompleteLibModule} from 'angular-ng-autocomplete';
-import { DocumentosComponent } from '../documentos/documentos.component';
+import { DocumentosComponent } from './documentos/documentos.component';
 
 @NgModule({
   imports: [
