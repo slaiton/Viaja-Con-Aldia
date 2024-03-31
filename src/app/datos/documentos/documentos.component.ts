@@ -2,20 +2,20 @@ import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsu
 import { Router } from '@angular/router';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
-import { RegistroPage } from '../../registro/registro.page';
 import { PhotoService } from '../../api/photo.service';
 import { UserService } from '../../api/user.service';
 import { log } from 'console';
 import { Photo } from '@capacitor/camera';
+import { DatosPage } from '../datos.page';
 
 
 @Component({
-  selector: 'app-documentos',
+  selector: 'app-documentos-data',
   templateUrl: './documentos.component.html',
   styleUrls: ['./documentos.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom
 })
-export class DocumentosComponent  implements OnInit {
+export class Documentos2Component  implements OnInit {
 
 
   // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
@@ -26,7 +26,6 @@ export class DocumentosComponent  implements OnInit {
   documentActive:any;
   articulado:any = true;
   loadingData:any;
-  cambiosDocs:any;
 
 
 
@@ -36,32 +35,26 @@ export class DocumentosComponent  implements OnInit {
 
 
   constructor(
-    private reg: RegistroPage,
+    private datos: DatosPage,
     private photo: PhotoService,
     private alertController: AlertController,
     private user: UserService,
-    private loading: LoadingController,
-    private platform: Platform,
-    private router: Router  )
+    private loading: LoadingController  )
   {
   }
 
 
   ngOnInit() {
 
-    this.platform.backButton.subscribeWithPriority(10, () => {
-      this.reg.openDocs = false;
-    });
-
     console.log(this.dataTercero);
     // console.log(this.active);
     // this.active = false;
     var validate = true;
     var doc = ''
+    var tipoRegistro = '';
     var mensaje = '';
-    var tipoRegistro = ''
 
-    if (this.dataTercero.docs.length > 0) {
+    if (this.dataTercero.docs) {
       this.documents = this.dataTercero.docs;
 
       if (this.dataTercero.cedula) {
@@ -75,52 +68,53 @@ export class DocumentosComponent  implements OnInit {
         tipoRegistro = 'vehiculo'
       //   this.jsonDriverApi['placa'] = this.dataTercero.placa;
 
-      if (!this.dataTercero.articulado) {
-        this.documents[3].hidden = true;
-      }else{
-        this.documents[3].hidden = false;
       }
+
+      if (this.dataTercero.articulado) {
+        this.documents.pop()
+      }
+
     }
 
-      if (this.documents) {
-        for (let a = 0; a < this.documents.length; a++) {
-          // const element = this.documents[a];
-          for (let b = 0; b < this.documents[a].docs.length; b++) {
-            // //   const element = this.documentActive.docs[b];
-            const code = this.documents[a].docs[b].codigo;
+    if (this.documents) {
+      for (let a = 0; a < this.documents.length; a++) {
+        // const element = this.documents[a];
+        for (let b = 0; b < this.documents[a].docs.length; b++) {
+          // //   const element = this.documentActive.docs[b];
+          const code = this.documents[a].docs[b].codigo;
 
-            this.getDocument(doc, code, tipoRegistro).then(
-              (doc:any) => {
-                if (doc['code'] !== '204') {
-                  this.reg.hubImag[code].webviewPath = doc['data'][code];
-                  this.documents[a].docs[b].imagen = doc['data'][code];
-                  // this.documents[a].status = true;
-                }else{
+          this.getDocument(doc, code, tipoRegistro).then(
+                (doc:any) => {
+                     if (doc['code'] !== '204') {
+                       this.datos.hubImag[code].webviewPath = doc['data'];
+                       this.documents[a].docs[b].imagen = doc['data'];
+                       // this.documents[a].status = true;
+                      }else{
                         // this.documents[a].status = false;
                         validate = false;
                         mensaje += '<li>' + this.documents[a].docs[b].nombre + '</li>'
                       }
-                    }
-                    )
+                  }
+                  )
                   // console.log(code);
-                }
 
+                }
                 if (this.documents[a].fecha && this.dataTercero.cedula) {
-                  this.fechaL[this.documents[a].fechaTag] = this.reg.conductor[this.documents[a].fechaTag]
+                  this.fechaL[this.documents[a].fechaTag] = this.datos.conductor[this.documents[a].fechaTag]
                 }
                 if (this.documents[a].fecha && this.dataTercero.placa) {
-                  this.fechaL[this.documents[a].fechaTag] = this.reg.vehiculo[this.documents[a].fechaTag]
+                  this.fechaL[this.documents[a].fechaTag] = this.datos.vehiculo[this.documents[a].fechaTag]
                 }
               }
 
-              // console.log(this.reg.hubImag);
-            }
-          }
+              // console.log(this.datos.hubImag);
+
+       }
   }
 
   backdata()
   {
-    this.reg.openDocs = false;
+    this.datos.openDocs = false;
   }
 
   setModal(isOpen:any)
@@ -131,22 +125,22 @@ export class DocumentosComponent  implements OnInit {
   selectDocument(a:any) {
     this.isModalOpen = true;
     this.documentActive = this.documents[a];
-    this.cambiosDocs = false;
 
 
     const tag  = this.documents[a].fechaTag
 
     // if (this.dataTercero.cedula) {
-    //   this.fechaL[tag] = this.reg.conductor[tag]
+    //   this.fechaL[tag] = this.datos.conductor[tag]
     // }
 
     // if (this.dataTercero.placa) {
-    //   this.fechaL[tag] = this.reg.vehiculo[tag]
+    //   this.fechaL[tag] = this.datos.vehiculo[tag]
     // }
 
   }
 
  async addToGalery(name:any) {
+
 
   this.loadingData = await this.loading.create({
     message: 'Guradando Foto..'
@@ -156,7 +150,6 @@ export class DocumentosComponent  implements OnInit {
     this.photo.addNewToGallery(name).then((da) => {
       this.loadingData.present();
       this.processImage(da,name);
-      this.cambiosDocs = true;
     });
   }
 
@@ -170,7 +163,6 @@ export class DocumentosComponent  implements OnInit {
       this.loadingData.present();
       this.processImage(da,name);
       // loading.dismiss()
-      this.cambiosDocs = true;
     });
 
   }
@@ -207,7 +199,7 @@ export class DocumentosComponent  implements OnInit {
       da.webviewPath = processedImageDataUrl;
       da.base64 = await this.photo.readAsBase64(dataPhoto2)
 
-      this.reg.hubImag[name] = da;
+      this.datos.hubImag[name] = da;
 
       this.loadingData.dismiss();
 
@@ -218,7 +210,7 @@ export class DocumentosComponent  implements OnInit {
 
   async documentValidate()
   {
-    this.reg.openDocs = false;
+    this.datos.openDocs = false;
     const data = this.documents
     var doc = ''
     var tipo = ''
@@ -260,13 +252,13 @@ export class DocumentosComponent  implements OnInit {
 
         }else{
 
-          if (this.dataTercero.cedula) {
-            this.reg.refreshDataDriver();
-          }
+          // if (this.dataTercero.cedula) {
+          //   this.datos.refreshDataDriver();
+          // }
 
-          if (this.dataTercero.placa) {
-            this.reg.refreshDataVehicule();
-          }
+          // if (this.dataTercero.placa) {
+          //   this.datos.refreshDataVehicule();
+          // }
 
         }
            // this.getDriverApi(cedula, false);
@@ -285,37 +277,26 @@ export class DocumentosComponent  implements OnInit {
       message: 'Guradando Fotos..'
     });
 
-    if (!this.cambiosDocs) {
-      this.isModalOpen = false;
-      this.documentActive.status = true;
-      return;
-    }
-
-    loading.present();
-
     var validate = true;
     var mensaje = '<ul>';
     var doc = false
-    var tipoRegistro = ''
 
     if (this.dataTercero.cedula) {
       doc = this.dataTercero.cedula
-      tipoRegistro = 'conductor'
     }
 
     if (this.dataTercero.placa) {
       doc = this.dataTercero.placa
-      tipoRegistro = 'vehiculo'
     }
 
     const data = this.documentActive.docs;
     for (let a = 0; a < data.length; a++) {
       const element = data[a];
-      if (!this.reg.hubImag[element.codigo].webviewPath) {
+      if (!this.datos.hubImag[element.codigo].webviewPath) {
        validate = false;
        mensaje += '<li>'+ this.documentActive.nombre + element.nombre + '</li>'
       }else{
-        element.imagen = this.reg.hubImag[element.codigo].webviewPath
+        element.imagen = this.datos.hubImag[element.codigo].webviewPath
       }
     }
 
@@ -324,11 +305,11 @@ export class DocumentosComponent  implements OnInit {
      if (fecha.value) {
 
       if (this.dataTercero.cedula) {
-        this.reg.conductor[this.documentActive.fechaTag] = fecha.value;
+        this.datos.conductor[this.documentActive.fechaTag] = fecha.value;
       }
 
       if (this.dataTercero.placa) {
-        this.reg.vehiculo[this.documentActive.fechaTag] = fecha.value;
+        this.datos.vehiculo[this.documentActive.fechaTag] = fecha.value;
       }
 
       }else{
@@ -346,18 +327,17 @@ export class DocumentosComponent  implements OnInit {
       if (doc) {
 
            var jsonDocs:any = {
-            tipoRegistro: tipoRegistro,
              files: [],
            };
 
              for (let b = 0; b < data.length; b++) {
-               const doctipe = data[b];
+               const doctipe = data.docs[b];
 
-               if (this.reg.hubImag[doctipe.codigo].base64) {
+               if (this.datos.hubImag[doctipe.codigo].base64) {
                  const dataDoc:any = {
                    codigo: doc,
                    tipo: doctipe.codigo,
-                   data64: this.reg.hubImag[doctipe.codigo].base64,
+                   data64: this.datos.hubImag[doctipe.codigo].base64,
                  }
 
                  jsonDocs.files.push(dataDoc);
@@ -371,7 +351,7 @@ export class DocumentosComponent  implements OnInit {
                for (let a = 0; a < jsonDocs.length; a++) {
                  const element = jsonDocs[a];
                  if (files[element.tipo]) {
-                   this.reg.hubImag[element.tipo].webviewPath = files[element.tipo];
+                   this.datos.hubImag[element.tipo].webviewPath = files[element.tipo];
                  }
                }
 
@@ -401,7 +381,7 @@ export class DocumentosComponent  implements OnInit {
     const data = this.documentActive.docs;
     for (let a = 0; a < data.length; a++) {
       const element = data[a];
-      this.reg.hubImag[element.codigo].webviewPath = '';
+      this.datos.hubImag[element.codigo].webviewPath = '';
     }
 
   }
@@ -409,7 +389,7 @@ export class DocumentosComponent  implements OnInit {
   async getDocument(codigo:any, tipo:any, tipoRegistro:any): Promise<any>
   {
     try {
-      const resp:any = await this.photo.getFotoTercero(codigo, tipo, tipoRegistro).toPromise()
+      const resp:any = await this.photo.getFotoTercero(codigo,tipo,tipoRegistro).toPromise()
       return resp
     } catch (error) {
       throw error
@@ -418,7 +398,7 @@ export class DocumentosComponent  implements OnInit {
 
   getImagen(code:any)
   {
-    return this.reg.hubImag[code].webviewPath;
+    return this.datos.hubImag[code].webviewPath;
   }
 
   async presentAlert(title: String, subheader: String, desc: String, botton: String ) {

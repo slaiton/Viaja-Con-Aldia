@@ -381,6 +381,59 @@ ul.list-unstyled li h3 {
    left: 55%;
   }
 
+
+  .veh-container {
+    width:70px !important;
+    height:50px !important;
+    position: absolute;
+    left: 5%;
+    top: 22%;
+  }
+
+  #vehiculos {
+    width:45px;
+    height:45px;
+    background-color: #FFF;
+   //  background-image: url('http://54.176.177.178/checklist/camara_min.png');
+   //  background-position:center;
+   //  background-repeat:no-repeat;
+   // background-size: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+   }
+
+   #vehiculos img {
+    width: 30px;
+   }
+
+  .doc-container {
+    width:70px !important;
+    height:50px !important;
+    position: absolute;
+    left: 80%;
+    top: 24%;
+  }
+
+  #documentos {
+    width:45px;
+    height:45px;
+    background-color: #FFF;
+   //  background-image: url('http://54.176.177.178/checklist/camara_min.png');
+   //  background-position:center;
+   //  background-repeat:no-repeat;
+   // background-size: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+   }
+
+   #documentos img {
+    width: 30px;
+   }
+
   #changePhoto img {
     width: 30px;
   }
@@ -643,7 +696,7 @@ font-weight: bold;
 }
 
 
-.autocomplete-container .input-container input:focus { 
+.autocomplete-container .input-container input:focus {
   border: 2px solid rgb(18, 99, 211) !important;
 }
 
@@ -680,4 +733,25 @@ font-weight: bold;
   font-size: 1.3rem;
 }
 
+.col-n {
+  flex: revert-layer !important;
+}
+
+.container-prop {
+  position: relative;
+  height: 150px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.prop-flotante {
+  position: absolute;
+  width: 100%;
+  top: 0;
+}
+
+.select-card {
+  background-color: #0094DA;
+  color:#FFFFFF;
+}
 

@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../api/user.service';
-import { AlertController, IonAccordionGroup, ModalController } from '@ionic/angular';
+import { AlertController, IonAccordionGroup, LoadingController, ModalController } from '@ionic/angular';
 import { MenuController } from '@ionic/angular';
 import { PhotoService } from '../api/photo.service';
 import { log } from 'console';
@@ -17,6 +17,7 @@ import { RegistroService } from '../api/registro.service';
 import {FaceApiService} from '../api/face-api.service';
 import {VideoPlayerService} from '../api/video-player.service';
 import { Photo } from '@capacitor/camera';
+import { forEach } from 'lodash';
 
 
 
@@ -27,7 +28,7 @@ import { Photo } from '@capacitor/camera';
   styleUrls: ['./datos.page.scss'],
 })
 export class DatosPage implements OnInit {
-  
+
   @ViewChild('modal1') modal1!: ModalController;
   @ViewChild('modal2') modal2!: ModalController;
   @ViewChild('modal3') modal3!: ModalController;
@@ -49,6 +50,7 @@ export class DatosPage implements OnInit {
 
 
   @ViewChild('accordionGroup', { static: true }) accordionGroup!: IonAccordionGroup;
+  @Input() dataTercero: any = [];
 
 
   dataForm: any = FormGroup;
@@ -76,8 +78,15 @@ export class DatosPage implements OnInit {
   checkVehicle:any = false;
   checkDatos:any = false;
   checkDocs:any = false;
-  openDocs:any;
-  dataTercero: any = [];
+  hiddenDocs:any = true;
+  numDocs:any;
+
+  public openDocs: boolean = false;
+  public editDataItem: any | undefined = undefined;
+  public isNew: boolean | undefined = undefined;
+
+  documents_conductor:any = [];
+  documents_vehiculo:any = [];
 
 
   propietario:any = {
@@ -100,10 +109,10 @@ export class DatosPage implements OnInit {
     correo: '',
     celular: '',
     direccion: '',
-    fechaNacimeinto: '',
+    fechaNacimiento: '',
     nombreContacto: '',
     celularContacto: '',
-    parentesco: '' 
+    parentesco: ''
   }
 
   vehiculo:any = {
@@ -135,7 +144,7 @@ export class DatosPage implements OnInit {
     correo:'',
     celular:'',
     direccion:'',
-    fechaNacimeinto:'',
+    fechaNacimiento:'',
     nombreContacto:'',
     celularContacto:'',
     parentesco:'',
@@ -156,7 +165,7 @@ export class DatosPage implements OnInit {
   codigoLinea:any;
   color:any;
   codigoColor:any;
-  
+
   modelo:any;
   licencia: any = [];
   licencia2: any = [];
@@ -198,26 +207,27 @@ export class DatosPage implements OnInit {
   aplicaTenedro:any;
   isPropietario:any = true
   isTenedor:any = true
-  
+
   nombresTene:any;
   apellidosTene:any;
   correoTene:any;
   celularTene:any;
   direccionTene:any;
-  fechaNacimeintoTene:any;
+  fechaNacimientoTene:any;
 
   nombresProp:any;
   apellidosProp:any;
   correoProp:any;
   celularProp:any;
   direccionProp:any;
-  fechaNacimeintoProp:any;
+  fechaNacimientoProp:any;
 
   dataClases:any = [];
   dataMarcas:any = [];
   dataCarroc:any = [];
   dataLineas:any = [];
   dataColores:any = [];
+  dataParentes:any = [];
   dataVehiculos:any = [];
 
   filteredData:any = [];
@@ -229,10 +239,8 @@ export class DatosPage implements OnInit {
   articulado:any =  false;
   token:any;
 
-  documents_vehiculo:any;
-  documents_conductor:any;
 
-  
+
   // Terminos
 
   terms:any = {
@@ -284,10 +292,10 @@ export class DatosPage implements OnInit {
     },
     {
       id: 2,
-      tag: 'document-data',
+      tag: false,
       nombre: 'Documentos',
       icon: 'http://54.176.177.178/checklist/document.png',
-      desc: 'Licencia de conduccion, Seguridad social',
+      desc: 'Cerdula, Licencia de conduccion, Seguridad social',
       img: this.dataCorrect,
       status: true
     },
@@ -316,9 +324,9 @@ export class DatosPage implements OnInit {
       icon: 'http://54.176.177.178/checklist/vehicle.png',
       desc: 'Placa, Marca, Clase, Carroceria',
       img: this.dataCorrect,
-      status: true
+      status: false
     }
-    
+
   ];
 
   constructor(
@@ -328,21 +336,22 @@ export class DatosPage implements OnInit {
     private userService: UserService,
     private router: Router,
     private photo: PhotoService,
-    private reg: RegistroService
-    
+    private reg: RegistroService,
+    private loading: LoadingController
+
 
   ) {
 
     this.formDriver = formBuilder.group({
       nombres: ['',[Validators.required]],
       apellidos: ['',[Validators.required]],
-      correo: ['',[Validators.required]], 
+      correo: ['',[Validators.required]],
       celular: ['',[Validators.required]],
       direccion: ['',[Validators.required]],
-      fechaNacimeinto: [''],
-      nombreContacto: [''],
-      celularContacto: [''],
-      parentesco: [''],
+      fechaNacimiento: ['', [Validators.required]],
+      nombreContacto: ['', [Validators.required]],
+      celularContacto: ['', [Validators.required]],
+      parentesco: ['', [Validators.required]],
      });
 
 
@@ -351,8 +360,8 @@ export class DatosPage implements OnInit {
       carroceria: ['', [Validators.required]],
       linea: ['', [Validators.required]],
       color: ['', [Validators.required]],
-      fechaSoat: ['', [Validators.required]],
-      fechaTecno: ['', [Validators.required]],
+      fechaSoat: [''],
+      fechaTecno: [''],
       marca: ['', [Validators.required]],
       modelo: ['', [Validators.required]],
       remolque: ['']
@@ -365,7 +374,7 @@ export class DatosPage implements OnInit {
       correo: ['', [Validators.required]],
       celular: ['', [Validators.required]],
       direccion: ['', [Validators.required]],
-      fechaNacimeinto: ['', [Validators.required]],
+      fechaNacimiento: ['', [Validators.required]],
       ciudad: ['', [Validators.required]],
       nombreContacto: ['', [Validators.required]],
       celularContacto: ['', [Validators.required]],
@@ -384,10 +393,10 @@ export class DatosPage implements OnInit {
       cedula: ['',[Validators.required]],
       nombres: ['',[Validators.required]],
       apellidos: ['',[Validators.required]],
-      correo: ['',[Validators.required]], 
+      correo: ['',[Validators.required]],
       celular: ['',[Validators.required]],
       direccion: ['',[Validators.required]],
-      fechaNacimeinto: [''],
+      fechaNacimiento: [''],
       nombreContacto: [''],
       celularContacto: [''],
       parentesco: [''],
@@ -398,7 +407,7 @@ export class DatosPage implements OnInit {
       cedula: ['',[Validators.required]],
       nombres: ['',[Validators.required]],
       apellidos: ['',[Validators.required]],
-      correo: ['',[Validators.required]], 
+      correo: ['',[Validators.required]],
       celular: ['',[Validators.required]],
       direccion: ['',[Validators.required]],
       fechaNacimiento: [''],
@@ -421,127 +430,285 @@ export class DatosPage implements OnInit {
     return this.dataForm.controls;
   }
 
-  ngOnInit() {
+  async ngOnInit() {
 
     this.token = this.userService.getToken();
+    this.conductor.cedula = this.userService.getCedula()
+    this.vehiculo.placa = this.userService.getPlaca();
 
     if (this.userService.getToken() == null) {
       this.router.navigate(['/login']);
     }
 
+    const loadingData = await this.loading.create({
+      message: 'Generando Datos...',
+    });
+
+    loadingData.present();
+
+
+
+      var validate = true;
+      var validateDocs = true;
+      var mensaje  = '<ul>';
+
+
+
+      this.reg.getDataTercero(this.conductor.cedula).subscribe(cc => {
+
+        this.getParentesco().then(
+          data => {
+            const objeto2 =  this.dataParentes.find((objeto2:any) => objeto2.name === cc.data[0].nombreParentes);
+            // console.log(objeto2);
+
+            if(objeto2 != undefined)
+            {
+              this.conductor.codigoParentesco = objeto2.id;
+              this.conductor.parentesco = objeto2.name
+
+            }else{
+              validate = false;
+              mensaje += '<li>Parentesco </li>'
+            }
+          }
+         )
+
+          const placa = cc.data[0].numeroPlacaxxx;
+
+          if (placa != this.vehiculo.placa) {
+
+
+            this.presentAlert("Alerta", "El vehiculo ha cambiado vuelva a iniciar sesion", "", "Cerrar");
+
+          }
+
+          if(cc.data[0].nombreTercerox) { this.conductor.nombres = cc.data[0].nombreTercerox}
+          else { validate = false; mensaje += '<li>Nombres</li>'}
+          if(cc.data[0].apell1Tercerox || cc.data[0].apell2Tercerox) { this.conductor.apellidos = cc.data[0].apell1Tercerox + ' ' +  cc.data[0].apell2Tercerox}
+          else { validate = false; mensaje += '<li>Apellidos</li>'}
+          if(cc.data[0].emailxTercerox) { this.conductor.correo = cc.data[0].emailxTercerox}
+          else { validate = false; mensaje += '<li>Correo</li>'}
+          if(cc.data[0].movilxContacto) { this.conductor.celular = cc.data[0].movilxContacto}
+          else { validate = false; mensaje += '<li>Celular </li>'}
+          if(cc.data[0].direccTercerox) { this.conductor.direccion = cc.data[0].direccTercerox}
+          else { validate = false; mensaje += '<li>Direccion </li>'}
+          if(cc.data[0].fechaxNacimien) { this.conductor.fechaNacimiento = cc.data[0].fechaxNacimien}
+          else { validate = false; mensaje += '<li>Fecha Nacoimiento </li>'}
+          if(cc.data[0].nombreContacto) { this.conductor.nombreContacto = cc.data[0].nombreContacto}
+          else { validate = false; mensaje += '<li>Nombre Contacto</li>'}
+          if(cc.data[0].movilxContacto) { this.conductor.celularContacto = cc.data[0].movilxContacto}
+          else { validate = false; mensaje += '<li>Celular Contacto</li>'}
+          if(cc.data[0].nombreParentes) { this.conductor.parentesco = cc.data[0].nombreParentes}
+          else { validate = false; mensaje += '<li>Parentesco</li>'}
+
+          if(cc.data[0].fechaxLicencia) { this.conductor.fechaLicencia = cc.data[0].fechaxLicencia}
+
+          if (cc.data[0].foto) { this.hubImag.fotoperfil['webviewPath'] = cc.data[0].foto }
+
+
+          this.terms['con_rec_pub'] = cc.data[0].AppConrecpub
+          this.terms['grd_pod_pub'] = cc.data[0].AppGrdpodpub
+          this.terms['rec_pub_gnr'] = cc.data[0].AppRecpubgnr
+          this.terms['vin_per_pub'] = cc.data[0].AppVinperpub
+          this.terms['per_tri_eco'] = cc.data[0].AppPertrieco
+          this.terms['gre_rec_pub'] = cc.data[0].AppGrerecpub
+          this.terms['gre_rec_pub_pro'] = cc.data[0].AppGrerecpubPro
+          this.terms['gre_rec_pub_ten'] = cc.data[0].AppGrerecpubTen
+
+          mensaje += "</ul>"
+
+
+    if (!validate) {
+
+      this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
+
+    }else{
+        this.numDocs = 0;
+        var tipos:any = [];
+
+          this.documents_conductor.forEach((documento:any) => {
+            documento.docs.forEach((doc:any) => {
+                tipos.push(doc.codigo);
+            });
+        });
+
+
+
+        var cadena = tipos.join(',');
+
+          this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
+            data =>{
+             if (data.code == '201') {
+               this.hiddenDocs = false;
+               this.checkDocs = false;
+
+               const entries = Object.entries(data.data);
+               entries.forEach(([key, value]) => {
+                 if (!value) {
+                  this.numDocs += 1;
+                 }
+               });
+
+              }else{
+                this.checkDocs = true;
+              }
+
+            tipos = []
+
+            this.documents_vehiculo.forEach((documento:any) => {
+              documento.docs.forEach((doc:any) => {
+                  tipos.push(doc.codigo);
+              });
+            });
+
+            var cadena = tipos.join(',');
+                 // this.getDriverApi(cedula, false);
+
+                 this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
+                  data =>{
+                  loadingData.dismiss()
+                   if (data.code == '201') {
+                    this.hiddenDocs = false;
+                    this.checkDocs = false;
+
+                     const entries = Object.entries(data.data);
+                     entries.forEach(([key, value]) => {
+                       if (!value) {
+                        this.numDocs += 1;
+                       }
+                     });
+                    }else{
+
+                      if(this.checkDocs)
+                      {
+                        this.hiddenDocs = true;
+                      }
+
+                    }
+                  });
+
+            });
+
+        }
+
+
+       },
+       err => {
+           this.presentAlert("ERROR", "Error en servicio", err, "Cerrar")
+       })
+
+
+
     // this.listenerEvents();
 
 
-    this.getClases();
-    this.getMarcas();
-    this.getColores();
 
 
-    this.userService.getTercero3sL(this.token).subscribe(
-      (data) => {
-        // console.log(data['data']);
+    // this.userService.getTercero3sL(this.token).subscribe(
+    //   (data) => {
+    //     // console.log(data['data']);
 
-        const dataUser = data['data'][0];
-        this.dataUser = data['data'];
-        // console.log(dataUser);
+    //     const dataUser = data['data'][0];
+    //     this.dataUser = data['data'];
+    //     // console.log(dataUser);
 
 
 
-        this.conductor.cedula = dataUser.codigoTercerox;
-        this.vehiculo.placa = dataUser.numeroPlacaxxx;
-        this.conductor.nombres = dataUser.nombreTercerox;
-        this.conductor.apellidos = dataUser.apell1Tercerox + ' ' + dataUser.apell2Tercerox
-        this.conductor.correo = dataUser.emailxTercerox
-        this.conductor.celular = dataUser.movilxTercerox
-        this.conductor.direccion = dataUser.direccTercerox
-        this.conductor.fechaNacimiento = dataUser.fechaxNacimien
-        this.conductor.ciudad = dataUser.ciudadCreacion
-        this.conductor.nombreContacto = dataUser.nombreContacto
-        this.conductor.celularContacto = dataUser.movilxContacto
-        this.conductor.parentesco = dataUser.parentContacto
-        this.vehiculo.modelo = dataUser.numeroModeloxx
-        this.hubImag.fotoperfil['webviewPath'] = dataUser.apiFotoConductor;
-        this.hubImag.soat1['webviewPath'] = dataUser.apiSoat1;
-        this.hubImag.fotoremol['webviewPath'] = dataUser.apiTrailer;
-        this.hubImag.tarjePro['webviewPath'] = dataUser.apiTarjeta1
-        this.hubImag.tecnomecanica['webviewPath'] = dataUser.apiTecnico1;
-        this.hubImag.cedula1['webviewPath'] = dataUser.apiCedula1;
-        this.hubImag.cedula2['webviewPath'] = dataUser.apiCedula2;
-        this.hubImag.licencia1['webviewPath'] = dataUser.apiLicencia1;
-        this.hubImag.licencia2['webviewPath'] = dataUser.apiLicencia2;
-        this.hubImag.fotovehi1['webviewPath'] = dataUser.apiFoto1;
-        this.hubImag.fotovehi2['webviewPath'] = dataUser.apiFoto2;
-        this.hubImag.fotovehi3['webviewPath'] = dataUser.apiFoto3;
-        this.hubImag.fotovehi4['webviewPath'] = dataUser.apiFoto4;
-        this.vehiculo.fechaTecno = dataUser.fechaxTecnimec;
-        this.vehiculo.fechaSoat  = dataUser.fechaxSoatxxxx;
-        this.vehiculo.fechaLicencia = dataUser.fechaxLicencia;
+    //     this.conductor.cedula = dataUser.codigoTercerox;
+    //     this.vehiculo.placa = dataUser.numeroPlacaxxx;
+    //     this.conductor.nombres = dataUser.nombreTercerox;
+    //     this.conductor.apellidos = dataUser.apell1Tercerox + ' ' + dataUser.apell2Tercerox
+    //     this.conductor.correo = dataUser.emailxTercerox
+    //     this.conductor.celular = dataUser.movilxTercerox
+    //     this.conductor.direccion = dataUser.direccTercerox
+    //     this.conductor.fechaNacimiento = dataUser.fechaxNacimien
+    //     this.conductor.ciudad = dataUser.ciudadCreacion
+    //     this.conductor.nombreContacto = dataUser.nombreContacto
+    //     this.conductor.celularContacto = dataUser.movilxContacto
+    //     this.conductor.parentesco = dataUser.parentContacto
+    //     this.vehiculo.modelo = dataUser.numeroModeloxx
+    //     // this.hubImag.fotoperfil['webviewPath'] = dataUser.apiFotoConductor;
+    //     // this.hubImag.soat1['webviewPath'] = dataUser.apiSoat1;
+    //     // this.hubImag.fotoremol['webviewPath'] = dataUser.apiTrailer;
+    //     // this.hubImag.tarjePro['webviewPath'] = dataUser.apiTarjeta1
+    //     // this.hubImag.tecnomecanica['webviewPath'] = dataUser.apiTecnico1;
+    //     // this.hubImag.cedula1['webviewPath'] = dataUser.apiCedula1;
+    //     // this.hubImag.cedula2['webviewPath'] = dataUser.apiCedula2;
+    //     // this.hubImag.licencia1['webviewPath'] = dataUser.apiLicencia1;
+    //     // this.hubImag.licencia2['webviewPath'] = dataUser.apiLicencia2;
+    //     // this.hubImag.fotovehi1['webviewPath'] = dataUser.apiFoto1;
+    //     // this.hubImag.fotovehi2['webviewPath'] = dataUser.apiFoto2;
+    //     // this.hubImag.fotovehi3['webviewPath'] = dataUser.apiFoto3;
+    //     // this.hubImag.fotovehi4['webviewPath'] = dataUser.apiFoto4;
+    //     this.vehiculo.fechaTecno = dataUser.fechaxTecnimec;
+    //     this.vehiculo.fechaSoat  = dataUser.fechaxSoatxxxx;
+    //     this.vehiculo.fechaLicencia = dataUser.fechaxLicencia;
 
-         this.vehiculo.codigoMarca = dataUser.codigoVehmarca
-         this.vehiculo.codigoLinea = dataUser.codigoVehlinea
-         this.vehiculo.codigoClase = dataUser.codigoVehclase
-         this.vehiculo.codigoColor = dataUser.codigoVehcolor
-         this.vehiculo.codigoCarroceria = dataUser.codigoVehcarro
-         this.vehiculo.marca = dataUser.nombreVehmarca
-         this.vehiculo.carroceria = dataUser.nombreVehcarro
-         this.vehiculo.claseVehiculo = dataUser.nombreSiatxxxx
-         this.vehiculo.linea = dataUser.nombreVehlinea
-         this.vehiculo.color = dataUser.nombreVehcolor
-         //  = dataUser.nombreVehcolor
+    //      this.vehiculo.codigoMarca = dataUser.codigoVehmarca
+    //      this.vehiculo.codigoLinea = dataUser.codigoVehlinea
+    //      this.vehiculo.codigoClase = dataUser.codigoVehclase
+    //      this.vehiculo.codigoColor = dataUser.codigoVehcolor
+    //      this.vehiculo.codigoCarroceria = dataUser.codigoVehcarro
+    //      this.vehiculo.marca = dataUser.nombreVehmarca
+    //      this.vehiculo.carroceria = dataUser.nombreVehcarro
+    //      this.vehiculo.claseVehiculo = dataUser.nombreSiatxxxx
+    //      this.vehiculo.linea = dataUser.nombreVehlinea
+    //      this.vehiculo.color = dataUser.nombreVehcolor
+    //      //  = dataUser.nombreVehcolor
 
-          if (dataUser.estadoSiatxx == 'ACTIVO')
-              {
-                this.clase_estado = 'badge text-bg-success';
-                this.estado = 'ACTIVO'
-              } else {
-                this.clase_estado = 'badge text-bg-danger';
-                this.estado = 'INACTIVO'
-              }
-          if(dataUser.codigoPropieta != null)
-          {
-            if (dataUser.codigoPropieta != this.cedula) {
-              this.isPropietario = false;
-              this.modulos[2].status = true;
-              this.propietario.cedula = dataUser.codigoPropieta;
-            }
-            // this.checkPropietario()
-          }
+    //       if (dataUser.estadoSiatxx == 'ACTIVO')
+    //           {
+    //             this.clase_estado = 'badge text-bg-success';
+    //             this.estado = 'ACTIVO'
+    //           } else {
+    //             this.clase_estado = 'badge text-bg-danger';
+    //             this.estado = 'INACTIVO'
+    //           }
+    //       if(dataUser.codigoPropieta != null)
+    //       {
+    //         if (dataUser.codigoPropieta != this.cedula) {
+    //           this.isPropietario = false;
+    //           this.modulos[2].status = true;
+    //           this.propietario.cedula = dataUser.codigoPropieta;
+    //         }
+    //         // this.checkPropietario()
+    //       }
 
-          if(dataUser.codigoTenedorx)
-          {
-            if (dataUser.codigoTenedorx != this.cedula) {
-                const a:any = {target:{value:dataUser.codigoTenedorx}};
-                a.target.value = dataUser.codigoTenedorx
-                this.isTenedor = false;
-                this.modulos[3].status = true;
-                this.tenedor.cedula = dataUser.codigoTenedorx
-                this.searchInfoTen(a);
-            }
-          }
+    //       if(dataUser.codigoTenedorx)
+    //       {
+    //         if (dataUser.codigoTenedorx != this.cedula) {
+    //             const a:any = {target:{value:dataUser.codigoTenedorx}};
+    //             a.target.value = dataUser.codigoTenedorx
+    //             this.isTenedor = false;
+    //             this.modulos[3].status = true;
+    //             this.tenedor.cedula = dataUser.codigoTenedorx
+    //             this.searchInfoTen(a);
+    //         }
+    //       }
 
-        this.getCarroc(dataUser.codigoVehclase);
-        this.getClaseLinea(dataUser.codigoVehlinea);
-        // this.loadDocuments();
-        this.getVehiculos(this.conductor.cedula).then(
-          (data:any) => {
-            if (data) {
+    //     this.getCarroc(dataUser.codigoVehclase);
+    //     this.getClaseLinea(dataUser.codigoVehlinea);
+    //     // this.loadDocuments();
+    //     this.getVehiculos(this.conductor.cedula).then(
+    //       (data:any) => {
+    //         if (data) {
 
-              console.log(this.dataVehiculos);
-              
-              
-            }else{
+    //           console.log(this.dataVehiculos);
 
-            }
-          }
-        )
 
-      },
-      (err) => {
-        if (err.status == 401) {
-          this.userService.logout();
-        }
-      }
-    );
+    //         }else{
+
+    //         }
+    //       }
+    //     )
+
+    //   },
+    //   (err) => {
+    //     if (err.status == 401) {
+    //       this.userService.logout();
+    //     }
+    //   }
+    // );
 
     // this.userService.getUser().subscribe((data) => {
     //   data = data.view.data[0];
@@ -559,7 +726,140 @@ export class DatosPage implements OnInit {
   }
 
 
-  
+  async loadVehicle()
+  {
+
+    var validate = true;
+    const loadingData = await this.loading.create({
+      message: 'Generando datos...',
+    });
+
+    loadingData.present();
+
+    this.reg.getDataVehiculo(this.vehiculo.placa).subscribe(
+      esl=> {
+        var mensaje  = '<ul>';
+        const datos = esl.data[0];
+        const cedulaTer = datos['codigoTercerox']
+
+          this.vehiculo.codigoMarca = datos.codigoVehmarca
+          this.vehiculo.codigoLinea = datos.codigoVehlinea
+          this.vehiculo.codigoClase = datos.codigoVehclase
+          this.vehiculo.codigoColor = datos.codigoVehcolor
+          this.vehiculo.codigoCarroceria = datos.codigoVehcarro
+          this.vehiculo.marca = datos.nombreVehmarca
+          this.vehiculo.carroceria = datos.nombreVehcarro
+          this.vehiculo.claseVehiculo = datos.nombreClaseVeh
+          this.vehiculo.linea = datos.nombreVehlinea
+          this.vehiculo.color = datos.nombreVehcolor
+          this.vehiculo.modelo = datos.numeroModeloxx
+
+
+          if(datos.numeroModeloxx) { this.vehiculo.modelo = datos.numeroModeloxx; }
+          else { validate = false; mensaje += '<li> Modelo </li>' }
+          if(datos.fechaxSoatxxxx) { this.vehiculo.fechaSoat = datos.fechaxSoatxxxx; }
+          if(datos.fechaxTecnimec) { this.vehiculo.fechaTecno = datos.fechaxTecnimec; }
+
+
+
+          if (datos.tipoxxVehiculo == "ARTICULADO")
+          {
+            this.vehiculo.articulado = true
+            this.dataTercero.articulado = true;
+
+          }else{
+            this.vehiculo.articulado = false;
+            this.dataTercero.articulado = false;
+          }
+
+
+          const dataClases = this.getClases();
+          const dataMarcas = this.getMarcas();
+          const dataColores = this.getColores();
+
+
+
+          Promise.all([dataClases, dataMarcas, dataColores]).then(
+                  ([doc1, doc2, doc3]) => {
+
+                    loadingData.dismiss();
+                    this.setOpenVehiculo(true)
+
+
+                    const objeto2 =  this.dataClases.find((objeto2:any) => objeto2.name === datos.nombreClaseVeh);
+                    // console.log(objeto2);
+
+                    if(objeto2 != undefined)
+                    {
+                      this.vehiculo.codigoClase = objeto2.id;
+                      this.vehiculo.claseVehiculo = objeto2.name
+
+                    this.getCarroc(objeto2.id);
+                    }else{
+                      validate = false;
+                      mensaje += '<li>Clase Vehiculo</li>'
+                    }
+
+
+                    const objeto1 =  this.dataMarcas.find((objeto1:any) => objeto1.name === datos.nombreVehmarca);
+                    // console.log(objeto1);
+
+                    if(objeto1 != undefined)
+                    {
+                      this.getClaseLinea(objeto1.id);
+                      this.vehiculo.codigoMarca = objeto1.id;
+                      this.vehiculo.marca = objeto1.name
+                    }else{
+                      validate = false;
+                      mensaje += '<li>Marca</li>'
+                       this.vehiculo.marca = ''
+                      this.vehiculo.codigoMarca = ''
+
+                    }
+
+                  })
+
+            }
+          )
+
+  }
+
+
+  async getParentesco() {
+    try {
+      const data = await this.reg.getParent(this.token).toPromise();
+      if (data.status) {
+        const dataArray = data.data;
+        for (let a = 0; a < dataArray.length; a++) {
+          const element = dataArray[a];
+
+          this.dataParentes.push({id:element.codigoParentes, name:element.nombreParentes});
+        }
+        // console.log(this.dataParentes);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+  saveDocs(e:any){
+
+  }
+  cancelDocs(){
+
+  }
+
+
+  loadDocs()
+  {
+
+
+  }
+
+
+
+
   openDocumentController(doc:any, tipo:any)
   {
 
@@ -570,16 +870,19 @@ export class DatosPage implements OnInit {
 
       this.openDocs = true;
 
-      
+
     }else if (tipo == 'placa' && doc != ''){
       this.dataTercero['placa'] = doc
       this.dataTercero['cedula'] = ''
       this.dataTercero['docs'] = this.documents_vehiculo
 
-   
+
       this.openDocs = true;
 
     }
+
+    console.log(this.openDocs);
+
 
   }
 
@@ -590,7 +893,7 @@ export class DatosPage implements OnInit {
 
     if (!this.hubImag.cedula1['webviewPath']) {
 
-      this.getDocument(this.conductor.cedula, 'cedula1').then(
+      this.getDocument(this.conductor.cedula, 'cedula1', 'conductor').then(
         (data:any) => {
           if(data['code'] !== '204')
           {
@@ -598,11 +901,11 @@ export class DatosPage implements OnInit {
           }
         }
       )
-      
+
     }
     if (!this.hubImag.cedula2['webviewPath']) {
 
-      this.getDocument(this.conductor.cedula, 'cedula2').then(
+      this.getDocument(this.conductor.cedula, 'cedula2', 'conductor').then(
         (data1:any) => {
           if(data1['code'] !== '204')
           {
@@ -610,11 +913,11 @@ export class DatosPage implements OnInit {
           }
         }
       )
-      
+
     }
     if (!this.hubImag.licencia1['webviewPath']) {
 
-      this.getDocument(this.conductor.cedula, 'licencia1').then(
+      this.getDocument(this.conductor.cedula, 'licencia1', 'conductor').then(
         (data2:any) => {
           if(data2['code'] !== '204')
           {
@@ -622,11 +925,11 @@ export class DatosPage implements OnInit {
           }
         }
       )
-      
+
     }
     if (!this.hubImag.licencia2['webviewPath']) {
 
-      this.getDocument(this.conductor.cedula, 'licencia2').then(
+      this.getDocument(this.conductor.cedula, 'licencia2', 'conductor').then(
         (data3:any) => {
           if(data3['code'] !== '204')
           {
@@ -634,11 +937,11 @@ export class DatosPage implements OnInit {
           }
         }
       )
-      
+
     }
     if (!this.hubImag.seguridadsocial['webviewPath']) {
 
-      this.getDocument(this.conductor.cedula, 'seguridadsocial').then(
+      this.getDocument(this.conductor.cedula, 'seguridadsocial', 'conductor').then(
         (data4:any) => {
           if(data4['code'] !== '204')
           {
@@ -646,13 +949,13 @@ export class DatosPage implements OnInit {
           }
         }
       )
-      
+
     }
 
 
     if (!this.hubImag.fotoperfil['webviewPath']) {
-    
-    this.getDocument(this.vehiculo.placa,'fotoperfil').then(
+
+    this.getDocument(this.vehiculo.placa,'fotoperfil', 'conductor').then(
       (data5:any) => {
         if (data5['code'] !== '204') {
           this.hubImag.fotoperfil['webviewPath'] = data5['data'];
@@ -661,10 +964,10 @@ export class DatosPage implements OnInit {
       )
     }
 
-     
+
     if (!this.hubImag.soat1['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'soat1').then(
+
+      this.getDocument(this.vehiculo.placa,'soat1', 'vehiculo').then(
          (data6:any) => {
            if (data6['code'] !== '204') {
              this.hubImag.soat1['webviewPath'] = data6['data'];
@@ -673,10 +976,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.fotoremol['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'fotoremol').then(
+
+      this.getDocument(this.vehiculo.placa,'fotoremol', 'vehiculo').then(
          (data7:any) => {
            if (data7['code'] !== '204') {
              this.hubImag.fotoremol['webviewPath'] = data7['data'];
@@ -685,10 +988,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.tarjePro['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'tarjePro').then(
+
+      this.getDocument(this.vehiculo.placa,'tarjePro', 'vehiculo').then(
          (data8:any) => {
            if (data8['code'] !== '204') {
              this.hubImag.tarjePro['webviewPath'] = data8['data'];
@@ -697,10 +1000,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.tecnomecanica['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'tecnomecanica').then(
+
+      this.getDocument(this.vehiculo.placa,'tecnomecanica', 'vehiculo').then(
          (data9:any) => {
            if (data9['code'] !== '204') {
              this.hubImag.tecnomecanica['webviewPath'] = data9['data'];
@@ -710,10 +1013,10 @@ export class DatosPage implements OnInit {
         }
 
 
-     
+
         if (!this.hubImag.fotovehi1['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'fotovehi1').then(
+
+      this.getDocument(this.vehiculo.placa,'fotovehi1', 'vehiculo').then(
          (data:any) => {
            if (data['code'] !== '204') {
              this.hubImag.fotovehi1['webviewPath'] = data['data'];
@@ -722,10 +1025,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.fotovehi2['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'fotovehi2').then(
+
+      this.getDocument(this.vehiculo.placa,'fotovehi2','vehiculo').then(
          (data:any) => {
            if (data['code'] !== '204') {
              this.hubImag.fotovehi2['webviewPath'] = data['data'];
@@ -734,10 +1037,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.fotovehi3['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'fotovehi3').then(
+
+      this.getDocument(this.vehiculo.placa,'fotovehi3', 'vehiculo').then(
          (data:any) => {
            if (data['code'] !== '204') {
              this.hubImag.fotovehi3['webviewPath'] = data['data'];
@@ -746,10 +1049,10 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
         if (!this.hubImag.fotovehi4['webviewPath']) {
-      
-      this.getDocument(this.vehiculo.placa,'fotovehi4').then(
+
+      this.getDocument(this.vehiculo.placa,'fotovehi4', 'vehiculo').then(
          (data:any) => {
            if (data['code'] !== '204') {
              this.hubImag.fotovehi4['webviewPath'] = data['data'];
@@ -758,13 +1061,13 @@ export class DatosPage implements OnInit {
           )
         }
 
-     
+
   }
 
   ngAfterViewInit() {
 
-
   }
+
 
   setOpenVehiculo(isOpen: boolean) {
     this.isModalOpen3 = isOpen;
@@ -780,15 +1083,15 @@ export class DatosPage implements OnInit {
   selectEvent(e:any) {
     this.formVehicle.patchValue({
       carroceria: ''
-    });    
+    });
 
     if (e.tipo == "ARTICULADO") {
-      this.articulado = true;
+      this.vehiculo.articulado = true;
     }else{
-      this.articulado = false;
+      this.vehiculo.articulado = false;
     }
     this.vehiculo.claseVehiculo = e.name;
-    this.codigoClase = e.id;
+    this.vehiculo.codigoClase = e.id;
     this.getCarroc(e.id);
   }
   onChangeSearch(e:any) {
@@ -858,46 +1161,67 @@ export class DatosPage implements OnInit {
 
   onEditVehicle()
   {
-    
+
+  }
+
+  selectParente(e:any)
+  {
+   this.conductor.parentesco = e.name
+   this.conductor.codigoParentesco = e.id
+  }
+
+  onChangeParente (e:any) {
+
+  }
+
+  onFocusedParente (e:any) {
+
   }
 
 
-  getClases() {
-    this.reg.getClasevehiculo(this.token).subscribe(
-      data => {
+
+  async getClases() {
+    try {
+    const data = await this.reg.getClasevehiculo(this.token).toPromise();
+
         if (data.status) {
           const dataArray = data.data;
         for (let a = 0; a < dataArray.length; a++) {
           const element = dataArray[a];
-
           this.dataClases.push({id:element.codigoVehclase, name:element.nombreSiatxxxx,tipo:element.tipoxxVehiculo});
         }
-        // console.log(this.dataClases);
        }
+
+      } catch (error) {
+        console.log(error);
       }
-    )
   }
 
-  getMarcas() {
-    this.reg.getMarcas(this.token).subscribe(
-      data => {
-        if (data.status) {
-          const dataArray = data.data;
+  async getMarcas() {
+    try {
+       const data = await this.reg.getMarcas(this.token).toPromise();
+
+      if (data.status) {
+        const dataArray = data.data;
         for (let a = 0; a < dataArray.length; a++) {
           const element = dataArray[a];
 
           this.dataMarcas.push({id:element.codigoVehmarca, name:element.nombreVehmarca});
         }
         // console.log(this.dataClases);
-       }
       }
-    )
+
+     } catch (error) {
+           console.log(error);
+     }
   }
 
-  getCarroc(id:any) {
+  async getCarroc(id:any) {
+    try {
+
     this.dataCarroc = []
-    this.reg.getCarrocerias(id, this.token).subscribe(
-      data => {
+    const data = await this.reg.getCarrocerias(id, this.token).toPromise();
+
         if (data.status) {
           const dataArray = data.data;
         for (let a = 0; a < dataArray.length; a++) {
@@ -905,16 +1229,18 @@ export class DatosPage implements OnInit {
 
           this.dataCarroc.push({id:element.codigoVehcarro, name:element.nombrevehcarcl});
         }
-        // console.log(this.dataCarroc);
+        // console.log(this.dataCarroc);+
        }
+
+      } catch (error) {
+        console.log(error);
       }
-    )
   }
 
   getClaseLinea(id:any) {
     this.dataLineas = []
     this.reg.getLineas(id,'', this.token).subscribe(
-      data => {        
+      data => {
         if (data.status) {
           const dataArray = data.data;
         for (let a = 0; a < dataArray.length; a++) {
@@ -929,69 +1255,23 @@ export class DatosPage implements OnInit {
   }
 
 
-  getColores() {
-    this.reg.getColores(this.token).subscribe(
-      data => {
-        if (data.status) {
-          const dataArray = data.data;
+  async getColores() {
+    try {
+      const data = await this.reg.getColores(this.token).toPromise();
+      if (data.status) {
+        const dataArray = data.data;
         for (let a = 0; a < dataArray.length; a++) {
           const element = dataArray[a];
 
           this.dataColores.push({id:element.codigoVehcolor, name:element.nombreVehcolor});
         }
         // console.log(this.dataClases);
-       }
       }
-    )
-  }
-
- async getVehiculos(cedula:any)
-  {
-    try {
-      var status = true;
-      const data = await this.reg.getVehiculos('', cedula, this.token).toPromise();
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-
-          if (dataArray[a].numeroPlacaxxx == this.vehiculo.placa) 
-          { dataArray[a].status = true } else { dataArray[a].status = false }
-
-          if(dataArray[a].hojaVidaApp) { dataArray[a].estado = 'En Uso'; dataArray[a].color = 'danger'; } 
-          else { dataArray[a].estado = 'Disponible'; dataArray[a].color = 'success'; }
-
-          this.getDocument(dataArray[a].numeroPlacaxxx, 'fotovehi1').then(
-            (data:any) => {
-
-              if (data.data) {
-                dataArray[a].foto = data.data;
-              }else{
-                dataArray[a].foto = false;
-              }
-
-            }
-          )
-
-          
-          this.dataVehiculos.push(dataArray[a]);
-        }
-        
-        
-      }else{
-        status = false;
-      }
-      
-      console.log(this.dataClases);
-
-
-      return status;
-      
     } catch (error) {
-      return error
+      console.log(error);
     }
-      
   }
+
 
   onSubmit() {
     this.presentAlert('Envio de datos a 3SL', '', '', 'Cerrar');
@@ -1101,29 +1381,29 @@ export class DatosPage implements OnInit {
  async onSubmitDriver()
   {
 
-    if (this.hubImag.fotoperfil.base64) { 
+    if (this.hubImag.fotoperfil.base64) {
       this.savePhoto();
     }
 
     var validate = true;
     var jsonApi:any = {};
-    
-     
+
+
     var text = "<ul>";
-    for (const campo in this.formDriver.controls) 
+    for (const campo in this.formDriver.controls)
     {
-      if (this.formDriver.controls[campo].invalid) 
+      if (this.formDriver.controls[campo].invalid)
       {
          validate = false;
          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
       }else{
         // if (campo == 'fechaSeguridad' || campo == 'fechaLicencia') {
-          // var fecha = new Date(this.formDriver.value[campo]); 
+          // var fecha = new Date(this.formDriver.value[campo]);
           // this.conductor[campo] = fecha.toISOString().split('T')[0];
           // jsonApi[campo] = fecha.toISOString().split('T')[0];
         // }else{
-          this.conductor[campo] =  this.formDriver.value[campo] 
-          jsonApi[campo] = this.formDriver.value[campo] 
+          this.conductor[campo] =  this.formDriver.value[campo]
+          jsonApi[campo] = this.formDriver.value[campo]
         // }
       }
 
@@ -1134,7 +1414,7 @@ export class DatosPage implements OnInit {
 
     if (!validate) {
       this.checkDatos = true;
-      
+
       this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
     }else{
       const data = await this.reg.sendDataTercero(jsonApi);
@@ -1153,21 +1433,17 @@ export class DatosPage implements OnInit {
 
     var text = "<ul>";
 
-    for (const campo in this.formVehicle.controls) 
+    for (const campo in this.formVehicle.controls)
     {
-      if (this.formVehicle.controls[campo].invalid) 
+      if (this.formVehicle.controls[campo].invalid)
       {
          validate = false;
          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
       }else{
-        if (campo == 'fechaSoat' || campo == 'fechaTecno') {
-          var fecha = new Date(this.formVehicle.value[campo]); 
-          this.vehiculo[campo] = fecha.toISOString().split('T')[0];
-          jsonApi[campo] = fecha.toISOString().split('T')[0];
-        }else{
-          this.vehiculo[campo] =  this.formVehicle.value[campo] 
-          jsonApi[campo] = this.formVehicle.value[campo] 
-        }
+
+          this.vehiculo[campo] =  this.formVehicle.value[campo]
+          jsonApi[campo] = this.formVehicle.value[campo]
+
       }
     }
 
@@ -1191,43 +1467,7 @@ export class DatosPage implements OnInit {
         text += "<li> Foto Remolque </li>";
       }
     }
-    
 
-    if (!this.hubImag.tarjePro.webviewPath) {
-      validate = false;
-      text += "<li> Terjeta de propiedad </li>";
-    }
-
-    if (!this.hubImag.soat1.webviewPath) {
-
-      validate = false;
-      text += "<li> Soat </li>";
-    }
-
-    if (!this.hubImag.tecnomecanica.webviewPath) {
-      validate = false;
-      text += "<li> Tecnomecanica </li>";
-    }
-
-    if (!this.hubImag.fotovehi1.webviewPath) {
-      validate = false;
-      text += "<li> Foto Frontal </li>";
-    }
-
-    if (!this.hubImag.fotovehi2.webviewPath) {
-      validate = false;
-      text += "<li> Foto Lateral </li>";
-    }
-
-    if (!this.hubImag.fotovehi3.webviewPath) {
-      validate = false;
-      text += "<li> Foto Motor </li>";
-    }
-
-    if (!this.hubImag.fotovehi4.webviewPath) {
-      validate = false;
-      text += "<li> Foto Posterior </li>";
-    }
 
     text += "</ul>";
 
@@ -1235,9 +1475,9 @@ export class DatosPage implements OnInit {
     if (validate) {
       const envio = await this.reg.sendDataVehiculo(jsonApi);
       this.checkVehicle = true;
-      this.saveDocumentVehicle();
+      this.setOpenVehiculo(false)
     }else{
-      this.checkVehicle = false;  
+      this.checkVehicle = false;
       this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
     }
 
@@ -1261,7 +1501,7 @@ export class DatosPage implements OnInit {
 
     }
 
-    
+
     if (this.hubImag.soat1.base64) {
       const dataDoc = {
         codigo:this.vehiculo.placa,
@@ -1272,7 +1512,7 @@ export class DatosPage implements OnInit {
       this.jsonDocs.files.push(dataDoc);
 
     }
-    
+
     if (this.hubImag.tecnomecanica.base64) {
       const dataDoc = {
         codigo:this.vehiculo.placa,
@@ -1351,7 +1591,7 @@ export class DatosPage implements OnInit {
     // console.log(this.jsonDocs);
 
 
-    
+
     this.userService.cargaDocumentos(this.jsonDocs).subscribe(
       (data) => {
         const files = data.data;
@@ -1367,35 +1607,35 @@ export class DatosPage implements OnInit {
        if (files.tarjePro) {
          this.hubImag.tarjePro.webviewPath = files.tarjePro;
        }
-       
+
        if (files.soat1) {
          this.hubImag.soat1.webviewPath = files.soat1;
        }
-       
+
        if (files.tecno) {
          this.hubImag.tecno.webviewPath = files.tecno;
        }
-       
+
        if (files.fotovehi1) {
          this.hubImag.fotovehi1.webviewPath = files.fotovehi1;
        }
-       
+
        if (files.fotovehi2) {
          this.hubImag.fotovehi2.webviewPath = files.fotovehi2;
        }
-       
+
        if (files.fotovehi3) {
          this.hubImag.fotovehi3.webviewPath = files.fotovehi3;
        }
-       
+
        if (files.fotovehi4) {
          this.hubImag.fotovehi4.webviewPath = files.fotovehi4;
        }
-       
+
        if (files.fotoremol) {
          this.hubImag.fotoremol.webviewPath = files.fotoremol;
        }
-       
+
        if (files.tarjePror) {
          this.hubImag.tarjePror.webviewPath = files.tarjePror;
        }
@@ -1409,7 +1649,7 @@ export class DatosPage implements OnInit {
         this.setOpenVehiculo(false);
       }
     )
-    
+
   }
 
 
@@ -1424,9 +1664,9 @@ export class DatosPage implements OnInit {
 
 
   checkTenedor() {
-    var item = document.getElementById('tenedor') as HTMLIonCardElement; 
+    var item = document.getElementById('tenedor') as HTMLIonCardElement;
 
-    if (!this.isTenedor) { 
+    if (!this.isTenedor) {
       item.classList.add('select-card');
       this.isTenedor = true;
       this.modulos[3].status = false;
@@ -1445,9 +1685,9 @@ export class DatosPage implements OnInit {
 
   checkPropietario() {
     var item = document.getElementById('propietario') as HTMLIonCardElement;
-    
 
-    if (!this.isPropietario) { 
+
+    if (!this.isPropietario) {
       item.classList.add('select-card');
       this.isPropietario = true;
       this.modulos[2].status = false;
@@ -1462,7 +1702,7 @@ export class DatosPage implements OnInit {
       this.modulos[2].status = true
       ;
     }
-    
+
   }
 
    async savePhoto() {
@@ -1480,17 +1720,17 @@ export class DatosPage implements OnInit {
       // const newHeight = 200; // Nuevo alto
       const desiredSizeX = 350;
       const desiredSizeY = 350;
-      
-  
+
+
       try {
-        
+
         const processedImageDataUrl = await this.photo.processAndCropImage(base64Image, desiredSizeX, desiredSizeY, 0);
         console.log('Imagen procesada:', processedImageDataUrl);
         this.hubImag.fotoperfil.webviewPath = processedImageDataUrl;
 
         const dataPhoto:Photo = {
-          webPath:processedImageDataUrl, 
-          format:'jpeg', 
+          webPath:processedImageDataUrl,
+          format:'jpeg',
           saved:false
         };
 
@@ -1505,9 +1745,9 @@ export class DatosPage implements OnInit {
             data64: this.hubImag.fotoperfil.base64,
           }],
         };
-        
+
         this.saveFotoApi(jsonPhoto)
-        
+
       } catch (error) {
         console.error('Error al procesar la imagen:', error);
       }
@@ -1548,13 +1788,13 @@ export class DatosPage implements OnInit {
     text += "<ul>";
 
     console.log(this.formDocumentDriver.controls);
-    for (const campo in this.formDocumentDriver.controls) 
+    for (const campo in this.formDocumentDriver.controls)
     {
-      if (this.formDocumentDriver.controls[campo].invalid) 
+      if (this.formDocumentDriver.controls[campo].invalid)
       {
          validate = false;
          console.log(campo);
-         
+
          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
       }else{
         this.conductor[campo] = this.formDocumentDriver.value[campo]
@@ -1668,7 +1908,7 @@ export class DatosPage implements OnInit {
 
     this.vehiculo.fechaSoat = dataSubmit.fechaSoat;
     this.vehiculo.fechaTecno = dataSubmit.fechaTecno;
-    
+
 
     this.jsonDocs = {
       files: [],
@@ -1746,13 +1986,13 @@ export class DatosPage implements OnInit {
       this.isDisabled = false;
       this.isDisabled1 = false;
       this.isDisabled2 = false;
-      
+
 
     this.userService.get3SLbyplaca(placaText, this.token).subscribe(
       data => {
 
         console.log(data);
-        
+
 
         var status = data.status;
         if (status) {
@@ -1761,7 +2001,7 @@ export class DatosPage implements OnInit {
           if (cedula != cedulaConductor) {
             this.presentAlert("Alerta", "", "La placa que intenta registrar esta asociada a otro conductor.", "Cerrar")
           }
-          
+
         }
 
       },
@@ -1776,7 +2016,7 @@ export class DatosPage implements OnInit {
       data => {
 
         const dataApi = data.view.data[0];
-        
+
         if (dataApi.clase_vehiculo.length > 3) {
           this.claseNewVh = dataApi.clase_vehiculo;
           this.isDisabled = true;
@@ -1791,8 +2031,8 @@ export class DatosPage implements OnInit {
           this.carroceVeh = dataApi.carroceria;
           this.isDisabled2 = true;
         }
-      
-      }, 
+
+      },
       err => {
         this.presentAlert("Alerta", "", "No registran datos para esa placa", "Cerrar")
         this.claseNewVh = "";
@@ -1810,7 +2050,7 @@ export class DatosPage implements OnInit {
 
     const objeto2 =  this.dataClases.find((objeto2:any) => objeto2.name === clase);
     this.codigoClase = objeto2?.id;
-    
+
     const objeto1 =  this.dataMarcas.find((objeto1:any) => objeto1.name === marca);
     this.codigoMarca = objeto1?.id;
 
@@ -1826,14 +2066,14 @@ export class DatosPage implements OnInit {
       })
 
     return false;
-      
+
     }else{
       this.codigoCarroceria = objeto?.id;
       this.carroceria = carropro;
     }
 
     return true;
-    
+
   }
 
   searchInfoTen(e:any)
@@ -1843,7 +2083,7 @@ export class DatosPage implements OnInit {
       this.userService.getTerceroByCedula(cedula).subscribe(
         data => {
           console.log(data);
-          
+
           const datos = data.data[0];
 
           this.tenedor.cedula = cedula;
@@ -1858,7 +2098,7 @@ export class DatosPage implements OnInit {
 
         }
       )
-      
+
     }
 
   }
@@ -1872,7 +2112,7 @@ export class DatosPage implements OnInit {
       this.userService.getTerceroByCedula(cedula).subscribe(
         data => {
           console.log(data);
-          
+
           const datos = data.data[0];
 
           this.propietario.cedula = cedula;
@@ -1902,7 +2142,7 @@ export class DatosPage implements OnInit {
 
         }
       )
-      
+
     }
 
   }
@@ -1911,15 +2151,15 @@ export class DatosPage implements OnInit {
   validateDocument(e:any){
 
       // this.accordionGroup.toggle(0)
-      
+
       // console.log(nativeEl);
-      
+
   }
 
 
-  async getDocument(codigo:any, tipo:any): Promise<any>
+  async getDocument(codigo:any, tipo:any, tipoRegistro:any): Promise<any>
   {
-    const resp:any = await this.photo.getFotoTercero(codigo,tipo).toPromise()
+    const resp:any = await this.photo.getFotoTercero(codigo,tipo,tipoRegistro).toPromise()
     return resp;
   }
 
@@ -1938,7 +2178,7 @@ export class DatosPage implements OnInit {
 
     fecha.type = type;
   }
-  
+
   addToGalery(name:any) {
     this.photo.addNewToGallery(name).then((da) => {
       this.hubImag[name] = da;

@@ -8,6 +8,8 @@ import { DatosPageRoutingModule } from './datos-routing.module';
 
 import { DatosPage } from './datos.page';
 import { AutocompleteLibModule } from 'angular-ng-autocomplete';
+import { Documentos2Component } from './documentos/documentos.component';
+
 
 
 
@@ -21,6 +23,6 @@ import { AutocompleteLibModule } from 'angular-ng-autocomplete';
     ReactiveFormsModule,
     AutocompleteLibModule
   ],
-  declarations: [DatosPage]
+  declarations: [DatosPage, Documentos2Component]
 })
 export class DatosPageModule {}

@@ -147,7 +147,7 @@
           <label for="floatingInput">Tenedor</label>
         </div>
 
-        
+
 
         <div class="write" *ngIf="checkVehicle && checkPropi && checkTened">
           <h2 class="ml-4 p-4">
@@ -162,7 +162,7 @@
           <div *ngIf="!hubImag.fotoperfil.webviewPath" class="camera"></div>
         </div>
 
-        
+
       </div>
 
       <!-- Aceptacion de terminos y condiciones -->
@@ -185,7 +185,7 @@
       <ion-button class="mt-5" *ngIf="completeData" expand="block" type="bottom">
         Guardar
       </ion-button>
-        
+
       </form>
 
     </main>
@@ -209,19 +209,19 @@
           <ion-list class="p-2" [inset]="true">
             <ion-grid>
               <!-- <ion-row> -->
-                
-              <div class="container-prop"> 
+
+              <div class="container-prop">
                 <div class="prop-flotante">
                   <ion-row class="mt-4">
-                    
+
                     <ion-col class="mr-2 col-n" size="6" (click)="checkPropietario()">
                       <ion-card class="{{isPropietario ? 'select-card' : '' }}" id="propietario">
                         <ion-card-content>
-                          
+
                           <div>
                             <span>Soy el Propietario</span>
                           </div>
-                          
+
                         </ion-card-content>
                       </ion-card>
                     </ion-col>
@@ -236,20 +236,20 @@
                          </ion-card-content>
                        </ion-card>
                      </ion-col>
-                
+
                   </ion-row>
-                </div>    
+                </div>
               </div>
 
 
-                
+
               <ion-col>
                 <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
                   <strong><h1>Datos del vehiculo</h1></strong>
                 </div>
               </ion-col>
-                
-                
+
+
                 <!-- <ion-input
                   [ngModel]="claseVehiculo"
                     id="claseVehiculo"
@@ -265,11 +265,11 @@
 
                   <ion-row>
                     <ion-col>
-            
+
                     <div class="autocomplete-container2 mb-4 col-md-12">
                       <ion-label position="floating">Clase Vehiculo</ion-label>
-                      
-                      <ng-autocomplete 
+
+                      <ng-autocomplete
                       formControlName="claseVehiculo"
                       [ngModel]="vehiculo.claseVehiculo"
                       [data]="dataClases"
@@ -279,9 +279,9 @@
                       (inputChanged)='onChangeSearch($event)'
                       (inputFocused)='onFocused($event)'
                       [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">                                 
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
-  
+
                    </div>
                  </ion-col>
                 </ion-row>
@@ -290,10 +290,10 @@
                 <ion-row>
                   <ion-col>
 
-                   <div class="autocomplete-container2 mb-4 col-md-12">  
+                   <div class="autocomplete-container2 mb-4 col-md-12">
                    <ion-label position="floating">Marca</ion-label>
-                   
-                     <ng-autocomplete 
+
+                     <ng-autocomplete
                      formControlName="marca"
                      [ngModel]="vehiculo.marca"
                      [data]="dataMarcas"
@@ -303,20 +303,20 @@
                      (inputChanged)='onChangeMarca($event)'
                      (inputFocused)='onFocusedMarca($event)'
                      [itemTemplate]="itemTemplate"
-                     [notFoundTemplate]="notFoundTemplate">                                 
+                     [notFoundTemplate]="notFoundTemplate">
                      </ng-autocomplete>
                    </div>
-            
+
                  </ion-col>
               </ion-row>
 
                 <ion-row>
                   <ion-col>
 
-                   <div class="autocomplete-container2 mb-4 col-md-12">  
+                   <div class="autocomplete-container2 mb-4 col-md-12">
                    <ion-label position="floating">Clase Linea</ion-label>
-                   
-                     <ng-autocomplete 
+
+                     <ng-autocomplete
                      formControlName="linea"
                      [ngModel]="vehiculo.linea"
                      [data]="dataLineas"
@@ -326,20 +326,20 @@
                      (inputChanged)='onChangeLinea($event)'
                      (inputFocused)='onFocusedLinea($event)'
                      [itemTemplate]="itemTemplate"
-                     [notFoundTemplate]="notFoundTemplate">                                 
+                     [notFoundTemplate]="notFoundTemplate">
                      </ng-autocomplete>
                    </div>
-            
+
                  </ion-col>
                 </ion-row>
 
                    <ion-row>
                      <ion-col>
-       
-                       <div class="autocomplete-container2 mb-4 col-md-12">    
+
+                       <div class="autocomplete-container2 mb-4 col-md-12">
                          <ion-label position="floating">Carroceria</ion-label>
-                         
-                         <ng-autocomplete 
+
+                         <ng-autocomplete
                          formControlName="carroceria"
                          [ngModel]="vehiculo.carroceria"
                          [data]="dataCarroc"
@@ -349,20 +349,20 @@
                          (inputChanged)='onChangeCarroceria($event)'
                          (inputFocused)='onFocusedCarroceria($event)'
                          [itemTemplate]="itemTemplate"
-                         [notFoundTemplate]="notFoundTemplate">                                 
+                         [notFoundTemplate]="notFoundTemplate">
                        </ng-autocomplete>
                      </div>
-       
+
                     </ion-col>
                    </ion-row>
 
                    <ion-row>
                     <ion-col>
-  
-                     <div class="autocomplete-container2 mb-4 col-md-12">  
+
+                     <div class="autocomplete-container2 mb-4 col-md-12">
                      <ion-label position="floating">Color </ion-label>
-                     
-                       <ng-autocomplete 
+
+                       <ng-autocomplete
                        formControlName="color"
                        [ngModel]="vehiculo.color"
                        [data]="dataColores"
@@ -372,10 +372,10 @@
                        (inputChanged)='onChangeColor($event)'
                        (inputFocused)='onFocusedColor($event)'
                        [itemTemplate]="itemTemplate"
-                       [notFoundTemplate]="notFoundTemplate">                                 
+                       [notFoundTemplate]="notFoundTemplate">
                        </ng-autocomplete>
                      </div>
-              
+
                    </ion-col>
                 </ion-row>
 
@@ -385,11 +385,11 @@
                   <input type="text" [ngModel]="vehiculo.remolque" formControlName="remolque" class="input-registro">
                  </ion-col>
                 </ion-row>
-            
+
             <ng-template #itemTemplate let-item>
               <a [innerHTML]="item.name"></a>
             </ng-template>
-            
+
             <ng-template #notFoundTemplate let-notFound>
                 <div [innerHTML]="notFound"></div>
               </ng-template>
@@ -400,13 +400,13 @@
                   <h3> Verficar Fotos </h3>
                 </ion-text>
               </div>
-     
+
               <div class="mt-1 p-2">
                 <button class="btn btn-primary btn-submit" type="submit">
                   Guardar
                 </button>
               </div>
-              
+
           <!-- </ion-row> -->
         </ion-grid>
       </ion-list>
@@ -437,7 +437,7 @@
           <ion-grid>
 
 
-            
+
             <ion-col>
               <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
                 <strong><h1>Datos Personales</h1></strong>
@@ -458,7 +458,7 @@
               </ion-col>
             </ion-row>
 
-            
+
             <ion-row class="mb-4">
               <ion-col>
                 <label for="">Correo</label>
@@ -466,7 +466,7 @@
 
               </ion-col>
             </ion-row>
-          
+
           <ion-row class="mb-4">
             <ion-col>
               <label for="">Celular</label>
@@ -507,14 +507,14 @@
               <input type="text" [ngModel]="conductor.celularContacto" formControlName="celularContacto" class="input-registro">
             </ion-col>
           </ion-row>
-          
+
           <ion-row>
             <ion-col>
 
-             <div class="autocomplete-container2 mb-4 col-md-12">  
+             <div class="autocomplete-container2 mb-4 col-md-12">
              <ion-label position="floating">Parentesco </ion-label>
-             
-               <ng-autocomplete 
+
+               <ng-autocomplete
                formControlName="parentesco"
                [ngModel]="conductor.parentesco"
                [data]="dataParentes"
@@ -524,18 +524,18 @@
                (inputChanged)='onChangeParente($event)'
                (inputFocused)='onFocusedParente($event)'
                [itemTemplate]="itemTemplate"
-               [notFoundTemplate]="notFoundTemplate">                                 
+               [notFoundTemplate]="notFoundTemplate">
                </ng-autocomplete>
              </div>
-      
+
            </ion-col>
         </ion-row>
 
-        
+
         <ng-template #itemTemplate let-item>
           <a [innerHTML]="item.name"></a>
         </ng-template>
-        
+
         <ng-template #notFoundTemplate let-notFound>
             <div [innerHTML]="notFound"></div>
           </ng-template>
@@ -561,12 +561,12 @@
           </div>
 
 
-         
+
 
 
         </ion-grid>
 
-    
+
         </form>
       </ion-list>
       </ion-content>
@@ -601,7 +601,7 @@
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="propietario.nombres" formControlName="nombres" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -610,18 +610,18 @@
                 <ion-col>
                   <label for="">Apellidos</label>
                   <input type="text" [ngModel]="propietario.apellidos" formControlName="apellidos" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-            
+
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="propietario.correo" formControlName="correo" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-            
+
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Celular</label>
@@ -639,7 +639,7 @@
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Fecha nacimeinto</label>
-                  <input type="text" [ngModel]="propietario.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
+                  <input type="date" [ngModel]="propietario.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
               </ion-row>
 
@@ -659,7 +659,7 @@
 
                     <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Frontal</h1></strong>
                        </div>
@@ -672,14 +672,14 @@
                            <div *ngIf="!hubImag.cedula_pro1.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
 
                      <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Posterior</h1></strong>
                        </div>
@@ -692,7 +692,7 @@
                            <div *ngIf="!hubImag.cedula_pro2.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
@@ -749,7 +749,7 @@
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="tenedor.nombres" formControlName="nombres" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -758,18 +758,18 @@
                 <ion-col>
                   <label for="">Apellidos</label>
                   <input type="text" [ngModel]="tenedor.apellidos" formControlName="apellidos" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-              
+
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="tenedor.correo" formControlName="correo" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-            
+
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Celular</label>
@@ -787,7 +787,7 @@
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Fecha nacimeinto</label>
-                  <input type="text" [ngModel]="tenedor.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
+                  <input type="date" [ngModel]="tenedor.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
               </ion-row>
 
@@ -807,7 +807,7 @@
 
                     <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Frontal</h1></strong>
                        </div>
@@ -820,14 +820,14 @@
                            <div *ngIf="!hubImag.cedula_ten1.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
 
                      <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Posterior</h1></strong>
                        </div>
@@ -840,7 +840,7 @@
                            <div *ngIf="!hubImag.cedula_ten2.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
@@ -880,7 +880,7 @@
 
         <ion-grid class="ion-text-center">
           <ion-row>
-            <ion-col> 
+            <ion-col>
               <img
               class="mb-4"
               src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png"
@@ -889,8 +889,8 @@
             </ion-col>
           </ion-row>
           <ion-row class="term-contain">
-            <ion-col> 
-              <h2>Viaja con aldia requiere autorizacion de su Politica de privacidad</h2> 
+            <ion-col>
+              <h2>Viaja con aldia requiere autorizacion de su Politica de privacidad</h2>
             </ion-col>
           </ion-row>
           <ion-row class="term-contain mt-3">
@@ -902,8 +902,8 @@
             <ion-col>
               <p>
                 AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES.
-                (GRUPO TRIANGULO S.A.S  y sus empresas filiales) ALDIA LOGISTICA., en adelante SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, comunica a sus grupos de interés la Política de Tratamiento de Datos Personales y que los datos consignados, serán incorporados adoptando el cumplimiento del régimen legal vigente contenido en la Ley Estatutaria 1581 de 2012, 1266 de 2008 y Decreto 1377 de 2013  en lo pertinente atendiendo a las finalidades especialmente para: 1.Registro del vehículo y conductores. 2. Registro propietario, tenedor 2. Realizar el proceso de enturnamiento de los vehículos 3. Capitaciones y actividades de promoción y prevención. 
-                Los datos personales en custodia de SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, en su condición de responsables y/o encargado según el caso, serán tratados cumpliendo los principios y regulaciones previstas en las leyes colombianas y las buenas prácticas aplicables al régimen de protección de datos personales. Para el ejercicio del Habeas Data, el titular del dato personal o quien demuestre un legítimo interés, conforme a lo señalado en la normatividad vigente, podrá hacerlo a través del siguiente correo electrónico: protecciondedatos@aldialogistica.com, o dirigiendo una comunicación a la siguiente dirección física: Calle 17ª No. 69 46 en la ciudad de Bogotá D.C., Quien ejerza el habeas data deberá suministrar con precisión los datos de contacto solicitados, para efecto de tramitar, atender y responder su solicitud. Recibida la solicitud de ejercicio de Habeas Data, SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, dará respuesta en los términos de ley. 
+                (GRUPO TRIANGULO S.A.S  y sus empresas filiales) ALDIA LOGISTICA., en adelante SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, comunica a sus grupos de interés la Política de Tratamiento de Datos Personales y que los datos consignados, serán incorporados adoptando el cumplimiento del régimen legal vigente contenido en la Ley Estatutaria 1581 de 2012, 1266 de 2008 y Decreto 1377 de 2013  en lo pertinente atendiendo a las finalidades especialmente para: 1.Registro del vehículo y conductores. 2. Registro propietario, tenedor 2. Realizar el proceso de enturnamiento de los vehículos 3. Capitaciones y actividades de promoción y prevención.
+                Los datos personales en custodia de SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, en su condición de responsables y/o encargado según el caso, serán tratados cumpliendo los principios y regulaciones previstas en las leyes colombianas y las buenas prácticas aplicables al régimen de protección de datos personales. Para el ejercicio del Habeas Data, el titular del dato personal o quien demuestre un legítimo interés, conforme a lo señalado en la normatividad vigente, podrá hacerlo a través del siguiente correo electrónico: protecciondedatos@aldialogistica.com, o dirigiendo una comunicación a la siguiente dirección física: Calle 17ª No. 69 46 en la ciudad de Bogotá D.C., Quien ejerza el habeas data deberá suministrar con precisión los datos de contacto solicitados, para efecto de tramitar, atender y responder su solicitud. Recibida la solicitud de ejercicio de Habeas Data, SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, dará respuesta en los términos de ley.
                 </p>
             </ion-col>
           </ion-row>
@@ -913,7 +913,7 @@
               <button class="btn btn-success success-btn" type="submit" (click)="acept()">
                 Aceptar
               </button>
-              
+
             </ion-col>
           </ion-row>
         </ion-grid>
@@ -937,7 +937,7 @@
 
         <ion-grid class="ion-text-center">
           <ion-row>
-            <ion-col> 
+            <ion-col>
               <img
               class="mb-4"
               src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png"
@@ -946,8 +946,8 @@
             </ion-col>
           </ion-row>
           <ion-row class="term-contain">
-            <ion-col> 
-              <h2>Viaja con aldia requiere aceptgacion de condiciones generales</h2> 
+            <ion-col>
+              <h2>Viaja con aldia requiere aceptgacion de condiciones generales</h2>
             </ion-col>
           </ion-row>
           <ion-row class="term-contain mt-3">
@@ -957,7 +957,7 @@
           </ion-row>
           <ion-row class="term-contain ion-text-justify scroll mt-3">
             <ion-col id="dataTerms">
-              <h5> 1.	DECLARACIÓN SOBRE ORIGEN DE FONDOS/ SISTEMA INTEGRAL PARA LA PREVENCION DEL LAVADO DE ACTIVOS Y LA FINANCIACION DEL TERRORISMO Y PROLIFERACION DE ARMAS DE DESTRUCCION MASIVA </h5><p>Conozco, entiendo y acepto de manera voluntaria e inequívoca el cumplimiento de la regulación vigente y de acuerdo a lo establecido en la circular 0170 de 2002 de la Dirección de Impuestos y Aduanas Nacionales (DIAN), Resolución 74854/2016, Decreto 1165 /2019 y  demás normas que lo modifiquen o adicionen, bajo gravedad de juramento que los recursos que entrego, no provienen de ninguna actividad ilícita de las contempladas en el código penal colombiano y no admitiré que terceros efectúen depósitos a mis productos con recursos provenientes de actividades ilícitas ni efectuare transacciones destinadas a tales actividades ni a favor de personas relacionadas con las mismas, declaro expresamente lo siguiente:</p><p>1.La información suministrada en el presente documento es veraz y verificable y la persona natural o jurídica se compromete a actualizarla anualmente. <br> 2. Los recursos que se deriven de la actividad, profesión u oficio de la persona natural o jurídica, no se destinarán a la financiación del terrorismo, grupos terroristas o actividades terroristas y a la proliferación de armas de destrucción masiva. <br> 3. Los recursos que posee la persona natural o jurídica provienen de su actividad, profesión u oficio y/o objeto social. <br> 4.Todos los pagos que realizo (realizamos) son directos, con recursos propios, no a través de terceros, ni con recursos de terceros. <br> 5. De manera irrevocable autorizo (autorizamos) a la compañía para solicitar, consultar, procesar, suministrar, reportar o divulgar a cualquier entidad válidamente autorizada para manejar o administrar bases de datos, incluidas las entidades gubernamentales, información contenida en este formulario y demás. </p><h5>2.	AUTORIZACION DE CONSULTA Y REPORTE ACENTRALES DE RIESGO</h5><p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes, durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar, trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio, debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y solicitar la indemnización de perjuicios correspondiente.</p><h5>3.	CONFIDENCIALIDAD</h5><p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes, durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar, trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio, debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y solicitar la indemnización de perjuicios correspondiente.</p><h5>4.	DECLARACION CONOCIMIENTO DEL PROGRMA DE ETICA Y TRASNPARENCIA EMPRESARIAL</h5><p>Como asociado de negocios declaro conocer el Programa de ética y transparencia empresarial el cual se encuentra publicado en la página web. www.aldialogistiica.com el cual tiene como premisas y objetivos: <br> 1.	Cumplir las reglas de la compañía y procedimientos <br> 2.	Cumplir la legislación aplicable a la organización <br> 3.	Nunca ofrecer o tomar un soborno <br> 4.	Evitar cualquier conflicto de interés <br> 5.	Mostrar respeto por los demás. <br> 6.	Evitar todo hecho, tentativa u omisión deliberada para obtener un beneficio para sí o para terceros en detrimento de los principios organizacionales. <br> 7.	Cumplir con las normas de salud, la seguridad y el medio ambiente. </p><h5>5.	ACEPTACIÓN ROLES Y RESPONSABILIDADES SGI / MANIFESTACION SUSCRITA</h5><p>-	Suministrar los documentos necesarios dentro del proceso de registro para ser avalado como conductor tercero. <br> -	Informar al área de registro de vehículos y tráfico el usuario y clave de su GPS (satelital) y activar el botón de pánico no solo en casos de emergencia sino cuando sea detenido por un retén policial o del ejército. <br> -	Cumplir las recomendaciones dadas por las áreas de gestión integral y trafico respetando las normas de seguridad establecidas por la organización. <br> -	Salir a ruta en la fecha y hora informada. Se PROHIBE llevar acompañantes dentro de los vehículos.  <br> -	Velar por el cuidado y seguridad de la mercancía transportada e informar al área de tráfico cualquier novedad como (faltantes, sobrantes, averías, entre otros). <br> -	No debe lavar, ni realizar arreglos al vehículo durante el tránsito, ni hacer diligencias personales o realizar detenciones o desvíos de ruta no autorizados. Pernoctar únicamente en los lugares autorizados. <br> -	El asociado de negocio debe verificar que su vehículo sea precintado por el cliente o la empresa transportadora, los números de los precintos y/o sellos deben coincidir con los relacionados en los documentos. Durante el transito debe revisar que los precintos o sellos no sean vulnerados para que la mercancía no sea afectada, en caso de observar alguna novedad debe informar al área de tráfico. Si por alguna razón las autoridades de carretera le rompen o cambian el precinto o sello, solicite que le pongan la nota en la REMESA TERRESTRE DE CARGA e informe al área de tráfico. <br> -	Entregar la mercancía únicamente en la dirección relacionada en la remesa, elaborada por el auxiliar de operaciones. Debe reportar e informar al área de tráfico Bogotá la entrega de la mercancía al cliente y cualquier novedad (faltantes, averías, sobrantes etc.) que se presente en la entrega. <br> -	Para retirar un contenedor del patio, presentar la orden de cargue expedida por el auxiliar de operaciones (Si aplica). <br> -	Conocer los riesgos de Seguridad y Salud en el Trabajo y los viales de acuerdo al rol de actor vial que aplique en sus actividades <br> -	Cumplir con la legislación de tránsito y transporte, así como de los lineamientos de seguridad vial internos de la organización.  <br> -	Dar cumplimiento a las instrucciones y normas para el transporte de mercancías peligrosas, portar siempre el kit para atención de emergencias, identificar el vehículo con rótulos y la placa UN (Naciones Unidas), exigir y portar la Tarjeta de Emergencias y Hojas de Seguridad. (Si aplica). <br> -	Disponer los residuos generados en las canecas destinadas para ello.  <br> -	Garantizar el buen estado del vehículo asignado, reportando oportunamente al área de mantenimiento cualquier tipo de daño o mejora que requiera el equipo automotor.  <br> -	Hacer el Preoperacional para garantizar su seguridad, la de todos los usuarios de la vía y el buen estado del vehículo asignado. <br> -	Hacer un buen uso de los equipos y herramientas entregadas por la empresa (Herramienta, extintor, botiquín, si transporta mercancías peligrosas el Kit para atención de emergencias) Cuando aplique. <br> -	Informar oportunamente a la empresa acerca de los peligros y riesgos latentes en su sitio de trabajo.  <br> -	La mercancía debe ser entregada únicamente en la dirección relacionada en la remesa, elaborada por el auxiliar de operaciones. <br> -	Mantener en buenas condiciones de Orden y Aseo el vehículo asignado.  <br> -	Mantener hábitos de vida saludables, consumir frutas y verduras, realizar actividad física. <br> -	No aceptar o cargar mercancía adicional durante el tránsito en la vía o sitios no autorizados o programados <br> -	No ingerir alcohol y sustancias psicoactivas que afecten el desempeño de sus funciones.  <br> -	No lavar, ni realizar arreglos al vehículo durante el tránsito, ni hacer diligencias personales o realizar detenciones. 
+              <h5> 1.	DECLARACIÓN SOBRE ORIGEN DE FONDOS/ SISTEMA INTEGRAL PARA LA PREVENCION DEL LAVADO DE ACTIVOS Y LA FINANCIACION DEL TERRORISMO Y PROLIFERACION DE ARMAS DE DESTRUCCION MASIVA </h5><p>Conozco, entiendo y acepto de manera voluntaria e inequívoca el cumplimiento de la regulación vigente y de acuerdo a lo establecido en la circular 0170 de 2002 de la Dirección de Impuestos y Aduanas Nacionales (DIAN), Resolución 74854/2016, Decreto 1165 /2019 y  demás normas que lo modifiquen o adicionen, bajo gravedad de juramento que los recursos que entrego, no provienen de ninguna actividad ilícita de las contempladas en el código penal colombiano y no admitiré que terceros efectúen depósitos a mis productos con recursos provenientes de actividades ilícitas ni efectuare transacciones destinadas a tales actividades ni a favor de personas relacionadas con las mismas, declaro expresamente lo siguiente:</p><p>1.La información suministrada en el presente documento es veraz y verificable y la persona natural o jurídica se compromete a actualizarla anualmente. <br> 2. Los recursos que se deriven de la actividad, profesión u oficio de la persona natural o jurídica, no se destinarán a la financiación del terrorismo, grupos terroristas o actividades terroristas y a la proliferación de armas de destrucción masiva. <br> 3. Los recursos que posee la persona natural o jurídica provienen de su actividad, profesión u oficio y/o objeto social. <br> 4.Todos los pagos que realizo (realizamos) son directos, con recursos propios, no a través de terceros, ni con recursos de terceros. <br> 5. De manera irrevocable autorizo (autorizamos) a la compañía para solicitar, consultar, procesar, suministrar, reportar o divulgar a cualquier entidad válidamente autorizada para manejar o administrar bases de datos, incluidas las entidades gubernamentales, información contenida en este formulario y demás. </p><h5>2.	AUTORIZACION DE CONSULTA Y REPORTE ACENTRALES DE RIESGO</h5><p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes, durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar, trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio, debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y solicitar la indemnización de perjuicios correspondiente.</p><h5>3.	CONFIDENCIALIDAD</h5><p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes, durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar, trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio, debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y solicitar la indemnización de perjuicios correspondiente.</p><h5>4.	DECLARACION CONOCIMIENTO DEL PROGRMA DE ETICA Y TRASNPARENCIA EMPRESARIAL</h5><p>Como asociado de negocios declaro conocer el Programa de ética y transparencia empresarial el cual se encuentra publicado en la página web. www.aldialogistiica.com el cual tiene como premisas y objetivos: <br> 1.	Cumplir las reglas de la compañía y procedimientos <br> 2.	Cumplir la legislación aplicable a la organización <br> 3.	Nunca ofrecer o tomar un soborno <br> 4.	Evitar cualquier conflicto de interés <br> 5.	Mostrar respeto por los demás. <br> 6.	Evitar todo hecho, tentativa u omisión deliberada para obtener un beneficio para sí o para terceros en detrimento de los principios organizacionales. <br> 7.	Cumplir con las normas de salud, la seguridad y el medio ambiente. </p><h5>5.	ACEPTACIÓN ROLES Y RESPONSABILIDADES SGI / MANIFESTACION SUSCRITA</h5><p>-	Suministrar los documentos necesarios dentro del proceso de registro para ser avalado como conductor tercero. <br> -	Informar al área de registro de vehículos y tráfico el usuario y clave de su GPS (satelital) y activar el botón de pánico no solo en casos de emergencia sino cuando sea detenido por un retén policial o del ejército. <br> -	Cumplir las recomendaciones dadas por las áreas de gestión integral y trafico respetando las normas de seguridad establecidas por la organización. <br> -	Salir a ruta en la fecha y hora informada. Se PROHIBE llevar acompañantes dentro de los vehículos.  <br> -	Velar por el cuidado y seguridad de la mercancía transportada e informar al área de tráfico cualquier novedad como (faltantes, sobrantes, averías, entre otros). <br> -	No debe lavar, ni realizar arreglos al vehículo durante el tránsito, ni hacer diligencias personales o realizar detenciones o desvíos de ruta no autorizados. Pernoctar únicamente en los lugares autorizados. <br> -	El asociado de negocio debe verificar que su vehículo sea precintado por el cliente o la empresa transportadora, los números de los precintos y/o sellos deben coincidir con los relacionados en los documentos. Durante el transito debe revisar que los precintos o sellos no sean vulnerados para que la mercancía no sea afectada, en caso de observar alguna novedad debe informar al área de tráfico. Si por alguna razón las autoridades de carretera le rompen o cambian el precinto o sello, solicite que le pongan la nota en la REMESA TERRESTRE DE CARGA e informe al área de tráfico. <br> -	Entregar la mercancía únicamente en la dirección relacionada en la remesa, elaborada por el auxiliar de operaciones. Debe reportar e informar al área de tráfico Bogotá la entrega de la mercancía al cliente y cualquier novedad (faltantes, averías, sobrantes etc.) que se presente en la entrega. <br> -	Para retirar un contenedor del patio, presentar la orden de cargue expedida por el auxiliar de operaciones (Si aplica). <br> -	Conocer los riesgos de Seguridad y Salud en el Trabajo y los viales de acuerdo al rol de actor vial que aplique en sus actividades <br> -	Cumplir con la legislación de tránsito y transporte, así como de los lineamientos de seguridad vial internos de la organización.  <br> -	Dar cumplimiento a las instrucciones y normas para el transporte de mercancías peligrosas, portar siempre el kit para atención de emergencias, identificar el vehículo con rótulos y la placa UN (Naciones Unidas), exigir y portar la Tarjeta de Emergencias y Hojas de Seguridad. (Si aplica). <br> -	Disponer los residuos generados en las canecas destinadas para ello.  <br> -	Garantizar el buen estado del vehículo asignado, reportando oportunamente al área de mantenimiento cualquier tipo de daño o mejora que requiera el equipo automotor.  <br> -	Hacer el Preoperacional para garantizar su seguridad, la de todos los usuarios de la vía y el buen estado del vehículo asignado. <br> -	Hacer un buen uso de los equipos y herramientas entregadas por la empresa (Herramienta, extintor, botiquín, si transporta mercancías peligrosas el Kit para atención de emergencias) Cuando aplique. <br> -	Informar oportunamente a la empresa acerca de los peligros y riesgos latentes en su sitio de trabajo.  <br> -	La mercancía debe ser entregada únicamente en la dirección relacionada en la remesa, elaborada por el auxiliar de operaciones. <br> -	Mantener en buenas condiciones de Orden y Aseo el vehículo asignado.  <br> -	Mantener hábitos de vida saludables, consumir frutas y verduras, realizar actividad física. <br> -	No aceptar o cargar mercancía adicional durante el tránsito en la vía o sitios no autorizados o programados <br> -	No ingerir alcohol y sustancias psicoactivas que afecten el desempeño de sus funciones.  <br> -	No lavar, ni realizar arreglos al vehículo durante el tránsito, ni hacer diligencias personales o realizar detenciones.
                 <br> -	No participar en el proceso de cargue y descargue de mercancías peligrosas salvo si está capacitado y autorizado. <br> -	Notificar cualquier novedad durante los desplazamientos laborales en carretera al área de Trafico (siniestros viales, actividades sospechosas, hurto, saqueo, derrame de producto, derrumbe, volcamiento, varada, colisión, inspección de mercancía, desvíos de ruta no autorizados, aprensión de mercancía, inmovilización del vehículo, trancones en la vía, entre otros) <br> -	Participar en el cumplimiento de los planes y programas del SGI <br> -	Participar en las actividades de prevención y promoción para prevenir los ATEL y los siniestros viales <br> -	Portar prendas de dotación y elementos de protección personal según sea el caso.</p>
             </ion-col>
           </ion-row>
@@ -967,7 +967,7 @@
               <button class="btn btn-success success-btn" type="submit" (click)="acept2()">
                 Aceptar
               </button>
-              
+
             </ion-col>
           </ion-row>
         </ion-grid>
@@ -985,7 +985,7 @@
 </ion-content>
 
 
-<app-documentos appTipoDocumento="dataTercero" [dataTecero]="dataTercero" *ngIf="openDocs" (save)="saveDocs($event)"
+<app-documentos appTipoDocumento="dataTercero" [dataTercero]="dataTercero" *ngIf="openDocs" (save)="saveDocs($event)"
 (cancel)="cancelDocs()">
-  
+
 </app-documentos>

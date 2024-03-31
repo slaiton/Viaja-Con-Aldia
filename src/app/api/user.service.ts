@@ -20,6 +20,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'camera',
+      hidden: false,
       tag: 'cedula',
       fecha:false,
       docs: [
@@ -41,6 +42,7 @@ export class UserService {
       type: 'doc',
       fecha :true,
       capture: 'camera',
+      hidden: false,
       fechaTag:'fechaLicencia',
       fechaTitle: 'Vencimiento Licencia',
       docs: [
@@ -61,6 +63,7 @@ export class UserService {
       tag: 'seguridad',
       type: 'doc',
       capture: 'galery',
+      hidden: false,
       fecha:false,
       docs: [
         {
@@ -68,7 +71,7 @@ export class UserService {
           codigo: 'seguridadsocial'
         }
       ]
-    } 
+    }
   ]
 
   documents_vehiculo:any = [
@@ -78,6 +81,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'camera',
+      hidden: false,
       tag: 'tarjePro',
       fecha:false,
       docs: [
@@ -97,6 +101,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'galery',
+      hidden: false,
       tag: 'soat',
       fecha:true,
       fechaTag:'fechaSoat',
@@ -114,6 +119,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'galery',
+      hidden: false,
       tag: 'tarjePro',
       fecha:true,
       fechaTag:'fechaTecno',
@@ -131,6 +137,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'camera',
+      hidden: false,
       tag: 'tarjePro',
       fecha:false,
       articulado:true,
@@ -151,6 +158,7 @@ export class UserService {
       status: false,
       type: 'doc',
       capture: 'camera',
+      hidden: false,
       tag: 'tarjePro',
       fecha:false,
       articulado:true,
@@ -173,7 +181,7 @@ export class UserService {
         }
       ]
     }
-    
+
   ]
 
   public onLoginChange = new Subject();
@@ -358,17 +366,17 @@ export class UserService {
 
     getFirma(e:any, tipo:any, token:any):Observable<any>
     {
-      
+
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
         'Accept': 'application/json',
         'Authorization': 'Bearer ' + token
         });
-  
+
        const params = new HttpParams({
         fromString: 'cedula=' + e + '&contrato=' + tipo
        });
-  
+
        const requestOptions = { headers: headers, params: params };
       return   this.http.get('https://api.3slogistica.com/api/firma', requestOptions)
     }
@@ -390,7 +398,7 @@ export class UserService {
         "codigoTercerox": cedula,
         "numeroPlacaxxx": placa,
         "agenteUsuarioxx": "",
-      } 
+      }
 
       try {
         const response = this.http.post("https://api.3slogistica.com/api/firma", json, requestOptions).toPromise()
@@ -489,7 +497,7 @@ export class UserService {
 
 
     getTemporalToken(cedula:any, placa:any) {
-      
+
       const headers = new HttpHeaders({
         'Content-Type':'application/json',
         'Accept': 'application/json'

@@ -17,11 +17,12 @@ import { defineCustomElements } from '@ionic/pwa-elements/loader';
 export class AppComponent {
   private componentDestroyed = new Subject();
   usserLogged: any;
-  
+
   public appPages = [
     { title: 'Inicio', url: '/home', icon: 'home', hidden: false },
     { title: 'Mis datos', url: '/datos', icon: 'person-circle', hidden: false },
     { title: 'Turnos', url: '/turnos', icon: 'archive', hidden: false },
+    { title: 'Mis Vehiculos', url: '/vehiculos', icon: 'briefcase' },
     { title: 'Pruebas', url: '/pruebas', icon: 'flashlight' },
     // { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
     // { title: 'Trash', url: '/folder/Trash', icon: 'trash' },
@@ -37,12 +38,12 @@ export class AppComponent {
   estado:any;
   placa:any;
   marca:any;
-  carroceria:any;  
+  carroceria:any;
   clase_vehiculo:any;
   clase_estado:any;
   token:any;
   fotoUser:any = false;
-  
+
 
 
   ngOnInit(){
@@ -53,13 +54,13 @@ export class AppComponent {
         this.token = this.userService.getToken();
        }
      );
-    
+
     if (localStorage.getItem("token") != null) {
-      
+
       // this.router.navigate(['/login']);
 
       this.userService.getUser3sL(this.token).subscribe(data => {
-        
+
         const datos = data.data[0];
         console.log(datos);
       this.conductor = datos.nombreTercerox.toLowerCase();
@@ -73,7 +74,7 @@ export class AppComponent {
       this.fotoUser = datos.apiFotoConductor;
 
       this.placa = this.placa.substr(0,3)+" - "+this.placa.substr(3,5);
-      
+
 
       if (this.estado == 'ACTIVO') {
          this.clase_estado = "badge text-bg-success";
@@ -81,7 +82,7 @@ export class AppComponent {
          this.clase_estado = "badge text-bg-danger";
          this.appPages[2].hidden = true;
       }
-      // console.log(data)       
+      // console.log(data)
 
     });
   }

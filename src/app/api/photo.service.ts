@@ -19,10 +19,10 @@ export class PhotoService {
 
   constructor( private http: HttpClient) { }
 
-public getFotoTercero(doc:any,tipo:any) : Observable<any>
+public getFotoTercero(doc:any,tipo:any, tiporegistro:any) : Observable<any>
 {
   const params = new HttpParams({
-    fromString: 'codigo='+doc+'&tipo='+tipo
+    fromString: 'codigo='+doc+'&tipo='+tipo + '&tipoRegistro='+ tiporegistro
   });
 
   const headers = new HttpHeaders({
@@ -35,10 +35,10 @@ public getFotoTercero(doc:any,tipo:any) : Observable<any>
   return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
 }
 
-public getFotosTercero(doc:any,tipos:any) : Observable<any>
+public getFotosTercero(doc:any, tipos:any, tiporegistro:any) : Observable<any>
 {
   const params = new HttpParams({
-    fromString: 'codigo='+doc+'&tipos='+tipos
+    fromString: 'codigo=' + doc + '&tipos=' + tipos + '&tipoRegistro='+ tiporegistro
   });
 
   const headers = new HttpHeaders({
@@ -58,7 +58,7 @@ public async addNewToCamera(name:any ) {
     direction: CameraDirection.Front,
     quality: 100
   });
-  
+
   const savedImageFile = await this.savePicture(capturedPhoto,name);
   this.fotos.unshift(savedImageFile);
 
@@ -98,7 +98,7 @@ public async addNewToCameraProfile(name:any ) {
     direction: CameraDirection.Front,
     quality: 100
   });
-  
+
   const savedImageFile = await this.savePicture(capturedPhoto,name);
   this.fotos.unshift(savedImageFile);
 
@@ -109,7 +109,7 @@ public async addNewToCameraProfile(name:any ) {
 
   private async savePicture(photo: Photo, name:any) {
     // console.log(photo);
-    
+
     // Convert photo to base64 format, required by Filesystem API to save
     const base64Data = await this.readAsBase64(photo);
 
@@ -117,9 +117,9 @@ public async addNewToCameraProfile(name:any ) {
 
     // localStorage.setItem('imagen_casa', this.base64Image);
     // console.log(this.base64Image);
-    
-    
-  
+
+
+
     // Write the file to the data directory
     const fileName = new Date().getTime() + '.jpeg';
     const savedFile = await Filesystem.writeFile({
@@ -132,7 +132,7 @@ public async addNewToCameraProfile(name:any ) {
       key: this.PHOTO_STORAGE,
       value: JSON.stringify(this.fotos),
     });
-  
+
     // Use webPath to display the new image instead of base64 since it's
     // already loaded into memory
     return {
@@ -147,10 +147,10 @@ public async addNewToCameraProfile(name:any ) {
     // Fetch the photo, read as a blob, then convert to base64 format
     const response = await fetch(photo.webPath!);
     const blob = await response.blob();
-  
+
     return await this.convertBlobToBase64(blob) as string;
   }
-  
+
   private convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
@@ -176,7 +176,7 @@ public async addNewToCameraProfile(name:any ) {
 
       photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
       // console.log(photo.webviewPath);
-      
+
 
    }
 
@@ -187,7 +187,7 @@ public async addNewToCameraProfile(name:any ) {
     return new Promise<string>((resolve, reject) => {
       const img = new Image();
 
-      
+
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -214,11 +214,11 @@ public async addNewToCameraProfile(name:any ) {
 
       img.src = base64Image;
 
-          
+
    });
   }
 
-  
+
   async processImage(base64Image: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const img = new Image();
@@ -254,9 +254,9 @@ public async addNewToCameraProfile(name:any ) {
       };
 
       img.src = base64Image;
-    
+
     });
-      
+
   }
 
   async processAndCropImage(base64Image: string, desiredSizeX:any, desiredSizeY:any, rotationAngle:any ): Promise<string> {

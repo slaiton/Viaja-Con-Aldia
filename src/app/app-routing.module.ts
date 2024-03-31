@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { LoginGuard } from './guard/login.guard';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { VehiculoComponent } from './vehiculo/vehiculo.component';
 
 
 const routes: Routes = [
@@ -41,6 +42,11 @@ const routes: Routes = [
   {
     path: 'pruebas',
     component: DashboardComponent,
+    canActivate: [LoginGuard]
+  },
+  {
+    path: 'vehiculos',
+    component: VehiculoComponent,
     canActivate: [LoginGuard]
   }
 

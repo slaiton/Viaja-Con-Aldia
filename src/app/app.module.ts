@@ -12,6 +12,8 @@ import { AuthService } from './api/auth.service';
 import { CookieService } from 'ngx-cookie-service';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { TipoDocumentoDirective } from './directives/tipo-documento.directive';
+import { VehiculoComponent } from './vehiculo/vehiculo.component';
+import { AutocompleteLibModule } from 'angular-ng-autocomplete';
 
 
 
@@ -19,14 +21,15 @@ import { TipoDocumentoDirective } from './directives/tipo-documento.directive';
 
 
 @NgModule({
-  declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective],
+  declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective, VehiculoComponent],
   imports: [
-    BrowserModule, 
-    IonicModule.forRoot(), 
-    AppRoutingModule, 
+    BrowserModule,
+    IonicModule.forRoot(),
+    AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule
+    RouterModule,
+    AutocompleteLibModule
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, Geolocation, AuthService, CookieService],
   bootstrap: [AppComponent],

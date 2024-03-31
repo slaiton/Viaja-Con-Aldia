@@ -3,13 +3,13 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title class="ml-3">Mis Datos</ion-title>
+    <ion-title class="ml-3">Información Conductor</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-user">
   <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
-    <div class="container panel-user">
+    <!-- <div class="container panel-user">
       <div class="row p-3">
         <div
           class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"
@@ -56,13 +56,6 @@
     <div class="p-2">
 
 
-      
-      <!-- <ion-item>
-        <ion-button id="change-vehicle" class="ion-activatable" (click)="changeVehicle()" color="medium" [strong]="true">
-          Cambiar Vehiculo
-        </ion-button>
-      </ion-item> -->
-
       <ion-list>
         <ng-container *ngFor="let p of modulos; let i = index">
           <ion-item
@@ -93,7 +86,208 @@
       <div class="mt-5 p-4">
         <ion-button expand="block" type="submit">Guardar</ion-button>
       </div>
+    </div> -->
+
+    <div class="container panel-user">
+      <div class="row p-3">
+        <div
+          class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"
+        >
+          <ion-avatar
+            [style.width]="'130px'"
+            [style.height]="'130px'"
+            slot="start"
+          >
+            <ion-img
+              alt="person"
+              *ngIf="hubImag.fotoperfil.webviewPath"
+              class="rounded-circle me-2"
+              [src]="hubImag.fotoperfil.webviewPath"
+            ></ion-img>
+            <ion-img
+              alt="person"
+              *ngIf="!hubImag.fotoperfil.webviewPath"
+              class="rounded-circle me-2"
+              src="http://54.176.177.178/checklist/userDefault.png"
+            ></ion-img>
+          </ion-avatar>
+          <span id="changePhoto" (click)="loadProfile()">
+            <img
+              src="http://54.176.177.178/checklist/camara_min.png"
+              alt=""
+            />
+          </span>
+        </div>
+
+        <div class="col col-12 text-center">
+          <ul class="list-unstyled ps-0 ml-3">
+            <li class="mb-1">
+              <h2 class="text-white">
+                <strong id="nameUser"
+                  >{{ conductor.nombres }} {{ conductor.apellidos }}</strong
+                >
+              </h2>
+            </li>
+
+            <li class="mb-1">
+              <h2 class="text-white">
+                <strong id="nameUser">CC. {{ conductor.cedula }}</strong>
+              </h2>
+            </li>
+          </ul>
+        </div>
+
+        <div [hidden]="hiddenDocs" class="doc-container">
+          <span id="documentos" (click)="loadDocs()">
+            <img
+            src="http://54.176.177.178/checklist/document.png"
+            alt=""
+            />
+          </span>
+          <ion-badge color="danger" slot="start">{{numDocs}}</ion-badge>
+        </div>
+
+
+        <div class="veh-container">
+          <span id="vehiculos" (click)="loadVehicle()">
+            <img
+            src="http://54.176.177.178/checklist/vehicle.png"
+            alt=""
+            />
+          </span>
+          <ion-badge color="primary" slot="start">{{vehiculo.placa}}</ion-badge>
+        </div>
+
+
+      </div>
     </div>
+
+    <ion-list class="p-2" [inset]="true">
+
+    <form [formGroup]="formDriver" (ngSubmit)="onSubmitDriver()" method="post">
+
+      <ion-grid>
+
+            <ion-col>
+              <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+                <strong><h1>Datos Personales</h1></strong>
+              </div>
+            </ion-col>
+
+            <ion-row class="mb-4">
+              <ion-col>
+                <label for="">Nombres</label>
+                <input type="text" [ngModel]="conductor.nombres" formControlName="nombres" class="input-registro">
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="mb-4">
+              <ion-col>
+                <label for="">Apellidos</label>
+                <input type="text" [ngModel]="conductor.apellidos" formControlName="apellidos" class="input-registro">
+              </ion-col>
+            </ion-row>
+
+
+            <ion-row class="mb-4">
+              <ion-col>
+                <label for="">Correo</label>
+                <input type="text" [ngModel]="conductor.correo" formControlName="correo" class="input-registro">
+
+              </ion-col>
+            </ion-row>
+
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Celular</label>
+              <input type="text" [ngModel]="conductor.celular" formControlName="celular" class="input-registro">
+            </ion-col>
+          </ion-row>
+
+
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Direccion</label>
+              <input type="text" [ngModel]="conductor.direccion" formControlName="direccion" class="input-registro">
+            </ion-col>
+          </ion-row>
+
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Fecha nacimeinto</label>
+              <input type="date" [ngModel]="conductor.fechaNacimiento" id="fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
+            </ion-col>
+          </ion-row>
+
+          <ion-col>
+            <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+              <strong><h1>Datos Referencia</h1></strong>
+            </div>
+          </ion-col>
+
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Nombre contacto</label>
+              <input type="text" [ngModel]="conductor.nombreContacto" formControlName="nombreContacto" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+              <label for="">Celular contacto</label>
+              <input type="text" [ngModel]="conductor.celularContacto" formControlName="celularContacto" class="input-registro">
+            </ion-col>
+          </ion-row>
+          <ion-row class="mb-4">
+            <ion-col>
+
+             <div class="autocomplete-container2 mb-4 col-md-12">
+             <ion-label position="floating">Parentesco </ion-label>
+
+               <ng-autocomplete
+               formControlName="parentesco"
+               [ngModel]="conductor.parentesco"
+               [data]="dataParentes"
+               [searchKeyword]="keyword"
+               placeholder=""
+               (selected)='selectParente($event)'
+               (inputChanged)='onChangeParente($event)'
+               (inputFocused)='onFocusedParente($event)'
+               [itemTemplate]="itemTemplate"
+               [notFoundTemplate]="notFoundTemplate">
+               </ng-autocomplete>
+             </div>
+
+           </ion-col>
+        </ion-row>
+
+        <ng-template #itemTemplate let-item>
+          <a [innerHTML]="item.name"></a>
+        </ng-template>
+
+        <ng-template #notFoundTemplate let-notFound>
+            <div [innerHTML]="notFound"></div>
+        </ng-template>
+
+
+
+
+      </ion-grid>
+
+
+      <!-- <div class="mt-5 p-2 d-flex justify-content-center">
+        <ion-text color="primary" (click)="openDocumentController(conductor.cedula, 'cedula')">
+          <h3> Verficar Fotos </h3>
+        </ion-text>
+      </div> -->
+
+
+      <div class="mt-5 p-4">
+        <button class="btn btn-primary btn-lgs" type="submit">Guardar</button>
+      </div>
+
+    </form>
+
+    </ion-list>
 
     <ion-modal #modal1 [isOpen]="isModalOpen1" trigger="personal-data">
       <ng-template>
@@ -113,158 +307,12 @@
           </ion-toolbar>
         </ion-header>
         <ion-content>
-          <div class="container panel-user">
-            <div class="row p-3">
-              <div
-                class="containerPhoto col col-12 d-flex justify-content-center p-2 mb-3"
-              >
-                <ion-avatar
-                  [style.width]="'130px'"
-                  [style.height]="'130px'"
-                  slot="start"
-                >
-                  <ion-img
-                    alt="person"
-                    *ngIf="hubImag.fotoperfil.webviewPath"
-                    class="rounded-circle me-2"
-                    [src]="hubImag.fotoperfil.webviewPath"
-                  ></ion-img>
-                  <ion-img
-                    alt="person"
-                    *ngIf="!hubImag.fotoperfil.webviewPath"
-                    class="rounded-circle me-2"
-                    src="http://54.176.177.178/checklist/userDefault.png"
-                  ></ion-img>
-                </ion-avatar>
-                <span id="changePhoto" (click)="loadProfile()">
-                  <img
-                    src="http://54.176.177.178/checklist/camara_min.png"
-                    alt=""
-                  />
-                </span>
-              </div>
-
-              <div class="col col-12 text-center">
-                <ul class="list-unstyled ps-0 ml-3">
-                  <li class="mb-1">
-                    <h2 class="text-white">
-                      <strong id="nameUser"
-                        >{{ conductor.nombres }} {{ conductor.apellidos }}</strong
-                      >
-                    </h2>
-                  </li>
-
-                  <li class="mb-1">
-                    <h2 class="text-white">
-                      <strong id="nameUser">CC. {{ conductor.cedula }}</strong>
-                    </h2>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <ion-list class="p-2" [inset]="true">
-
-          <form [formGroup]="formDriver" (ngSubmit)="onSubmitDriver()" method="post">
-
-            <ion-grid>
-              
-                  <ion-col>
-                    <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
-                      <strong><h1>Datos Personales</h1></strong>
-                    </div>
-                  </ion-col>
-      
-                  <ion-row class="mb-4">
-                    <ion-col>
-                      <label for="">Nombres</label>
-                      <input type="text" [ngModel]="conductor.nombres" formControlName="nombres" class="input-registro">
-                    </ion-col>
-                  </ion-row>
-      
-                  <ion-row class="mb-4">
-                    <ion-col>
-                      <label for="">Apellidos</label>
-                      <input type="text" [ngModel]="conductor.apellidos" formControlName="apellidos" class="input-registro">
-                    </ion-col>
-                  </ion-row>
-      
-                  
-                  <ion-row class="mb-4">
-                    <ion-col>
-                      <label for="">Correo</label>
-                      <input type="text" [ngModel]="conductor.correo" formControlName="correo" class="input-registro">
-      
-                    </ion-col>
-                  </ion-row>
-                
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Celular</label>
-                    <input type="text" [ngModel]="conductor.celular" formControlName="celular" class="input-registro">
-                  </ion-col>
-                </ion-row>
-      
-      
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Direccion</label>
-                    <input type="text" [ngModel]="conductor.direccion" formControlName="direccion" class="input-registro">
-                  </ion-col>
-                </ion-row>
-      
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Fecha nacimeinto</label>
-                    <input type="text" [ngModel]="conductor.fechaNacimeinto" formControlName="fechaNacimeinto" class="input-registro">
-                  </ion-col>
-                </ion-row>
-
-                <ion-col>
-                  <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
-                    <strong><h1>Datos Referencia</h1></strong>
-                  </div>
-                </ion-col>
-      
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Nombre contacto</label>
-                    <input type="text" [ngModel]="conductor.nombreContacto" formControlName="nombreContacto" class="input-registro">
-                  </ion-col>
-                </ion-row>
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Celular contacto</label>
-                    <input type="text" [ngModel]="conductor.celularContacto" formControlName="celularContacto" class="input-registro">
-                  </ion-col>
-                </ion-row>
-                <ion-row class="mb-4">
-                  <ion-col>
-                    <label for="">Parentesco</label>
-                    <input type="text" [ngModel]="conductor.parentesco" formControlName="parentesco" class="input-registro">
-                  </ion-col>
-                </ion-row>
-
-
-                
-      
-
-            </ion-grid>
-  
-
-            <div class="mt-5 p-4">
-              <button class="btn btn-primary btn-lgs" type="submit">Guardar</button>
-            </div>
-
-          </form>
-
-          </ion-list>
-
 
         </ion-content>
       </ng-template>
     </ion-modal>
+
+
 
     <ion-modal #modal2 [isOpen]="isModalOpen2" trigger="document-data">
       <ng-template>
@@ -305,7 +353,7 @@
 
                 <ion-row>
                   <ion-col>
-                   
+
                    <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                      <strong><h1>Cedula Cara Fontal</h1></strong>
                    </div>
@@ -318,13 +366,13 @@
                        <div *ngIf="!hubImag.cedula1.webviewPath" class="camera"></div>
                      </div>
                    </ion-item>
-      
+
                    </ion-col>
                  </ion-row>
 
                  <ion-row>
                   <ion-col>
-                   
+
                    <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                      <strong><h1>Cedula Cara Posterior</h1></strong>
                    </div>
@@ -337,15 +385,15 @@
                        <div *ngIf="!hubImag.cedula2.webviewPath" class="camera"></div>
                      </div>
                    </ion-item>
-      
+
                    </ion-col>
                  </ion-row>
 
-                 
+
 
               </div>
             </ion-accordion>
-            
+
             <ion-accordion value="second">
               <ion-item slot="header" color="light">
                 <ion-label>Licencia de conduccion</ion-label>
@@ -354,7 +402,7 @@
 
                 <ion-row>
                   <ion-col>
-                   
+
                    <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                      <strong><h1>Licencia Cara Frontal</h1></strong>
                    </div>
@@ -367,13 +415,13 @@
                        <div *ngIf="!hubImag.licencia1.webviewPath" class="camera"></div>
                      </div>
                    </ion-item>
-      
+
                    </ion-col>
                  </ion-row>
 
                  <ion-row>
                   <ion-col>
-                   
+
                    <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                      <strong><h1>Licencia Cara Posterior</h1></strong>
                    </div>
@@ -386,20 +434,20 @@
                        <div *ngIf="!hubImag.licencia2.webviewPath" class="camera"></div>
                      </div>
                    </ion-item>
-      
+
                    </ion-col>
                  </ion-row>
                  <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                   <strong><h3>Fecha Vencimiento Licencia</h3></strong>
                 </div>
-                         
-              
+
+
                  <ion-row>
                    <ion-col class="d-flex justify-content-center">
                     <ion-item>
                       <ion-datetime [ngModel]="vehiculo.fechaLicencia" formControlName="fechaLicencia" presentation="date"></ion-datetime>
                     </ion-item>
-          
+
                   </ion-col>
                  </ion-row>
 
@@ -414,7 +462,7 @@
 
                 <ion-row>
                   <ion-col>
-                   
+
                    <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                      <strong><h1>Seguridad Social</h1></strong>
                    </div>
@@ -427,20 +475,20 @@
                        <div *ngIf="!hubImag.seguridadSocial.webviewPath" class="camera"></div>
                      </div>
                    </ion-item>
-      
+
                    </ion-col>
                  </ion-row>
                  <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                   <strong><h3>Fecha Vencimiento</h3></strong>
                 </div>
-                         
-              
+
+
                  <ion-row>
                    <ion-col class="d-flex justify-content-center">
                     <ion-item>
                       <ion-datetime [ngModel]="conductor.fechaSeguridad" formControlName="fechaSeguridad" presentation="date"></ion-datetime>
                     </ion-item>
-          
+
                   </ion-col>
                  </ion-row>
 
@@ -448,7 +496,7 @@
             </ion-accordion>
 
           </ion-accordion-group>
-         </form> 
+         </form>
         </ion-list>
 
         </ion-content>
@@ -456,7 +504,6 @@
     </ion-modal>
 
     <ion-modal #modal4 [isOpen]="isModalOpen4" trigger="change-vehicle">
-
       <ng-template>
 
         <ion-header>
@@ -482,21 +529,21 @@
           <ion-input id="placa"></ion-input>
         </ion-item> -->
         <form [formGroup]="dataChange" (ngSubmit)="onChange()" method="post">
-        
+
         <ion-row class="mb-4">
           <ion-col size="8" class="d-flex justify-content-center p-3">
             <ion-item>
               <ion-label position="floating">Placa Vehiculo</ion-label>
-              <ion-input 
-               [ngModel]="claseNewVh" 
-               formControlName="placa" 
-               value="{{searchTerm}}" 
-               (ionChange)="upperPlaca($event)" 
-               id="placa" 
+              <ion-input
+               [ngModel]="claseNewVh"
+               formControlName="placa"
+               value="{{searchTerm}}"
+               (ionChange)="upperPlaca($event)"
+               id="placa"
                type="text"></ion-input>
             </ion-item>
           </ion-col>
-          
+
           <ion-col size="4" class="d-flex justify-content-center align-centr p-3">
             <ion-button (click)="changeVehicle()" color="primary"> Buscar </ion-button>
           </ion-col>
@@ -505,7 +552,7 @@
         <!-- <ion-row *ngIf="placaChange"> -->
 
           <ion-item>
-            
+
           </ion-item>
 
           <ion-item *ngIf="placaChange">
@@ -516,16 +563,16 @@
             [disabled]="isDisabled"
             ></ion-input>
           </ion-item>
-          
+
           <ion-item *ngIf="placaChange">
             <ion-label position="floating">Marca</ion-label>
-            <ion-input 
-            [ngModel]="marcaVeh" 
-            formControlName="marca" 
+            <ion-input
+            [ngModel]="marcaVeh"
+            formControlName="marca"
             [disabled]="isDisabled1"
             ></ion-input>
           </ion-item >
-          
+
         <ion-item *ngIf="placaChange">
           <ion-label position="floating">Carroceria</ion-label>
           <ion-input
@@ -534,19 +581,19 @@
           [disabled]="isDisabled2"
           ></ion-input>
         </ion-item>
-        
+
       <!-- </ion-row> -->
-        
-        
+
+
       <ion-button *ngIf="placaChange" expand="block" color="primary" type="submit">
         Cambiar
       </ion-button>
-        
+
       </form>
 
       </ion-content>
       </ng-template>
-      
+
     </ion-modal>
 
     <ion-modal #modal7 [isOpen]="isModalOpen7" trigger="my-vehicles">
@@ -568,48 +615,7 @@
         </ion-header>
         <ion-content>
 
-          <ion-list class="p-3">
 
-            
-            <ion-card class="mt-4" *ngFor="let a of dataVehiculos; let i = index">
-              <!-- <img *ngIf="!a.foto" alt="ejemplo" src="https://ionicframework.com/docs/img/demos/card-media.png"/>
-              <img *ngIf="a.foto" alt="ejemplo" [src]="a.foto"/> -->
-              <div class="fondo-vehiculo" [style.background-image]="a.foto ? 'url(' + a.foto + ')': 'https://ionicframework.com/docs/img/demos/card-media.png'">
-
-              </div>
-              <ion-card-header class="p-2">
-                <ion-card-title> {{a.numeroPlacaxxx}} </ion-card-title>
-                <ion-card-subtitle>  </ion-card-subtitle>
-              </ion-card-header>
-              
-              <ion-card-content>
-
-                <ion-grid>
-                  <ion-row>
-                    <ion-col>
-                      {{a.nombreSiatxxxx}} <br>
-                      <span [class]="'badge text-bg-' + a.color"> {{a.estado}} </span>
-                    </ion-col>
-                    <ion-col>
-                       <!-- <button (click)="" *ngIf="a.status" class="btn btn-primary">EDITAR</button> -->
-                       <ion-button *ngIf="a.status" (click)="setOpenVehiculo(true); setOpenHubVehicles(false)" [strong]="true">Editar</ion-button>
-                       <button *ngIf="!a.status && !a.hojaVidaApp" class="btn btn-success ml-2">ASIGNAR</button>
-                       <button *ngIf="!a.status" class="btn btn-danger">ELIMINAR</button>
-                    </ion-col>
-                  </ion-row>
-                </ion-grid>
-                              
-              </ion-card-content>  
-            </ion-card>
-
-          </ion-list>
-
-    
-
-
-
-
-          
         </ion-content>
 
       </ng-template>
@@ -640,24 +646,24 @@
             <ion-list class="p-2" [inset]="true">
               <ion-grid>
                 <!-- <ion-row> -->
-                  
-                <div class="container-prop"> 
+
+                <div class="container-prop">
                   <div class="prop-flotante">
                     <ion-row class="mt-4">
-                      
+
                       <ion-col class="mr-2 col-n" size="6" (click)="checkPropietario()">
                         <ion-card class="{{isPropietario ? 'select-card' : '' }}" id="propietario">
                           <ion-card-content>
-                            
+
                             <div>
                               <span>Soy el Propietario</span>
                             </div>
-                            
+
                           </ion-card-content>
                         </ion-card>
                       </ion-col>
-  
-  
+
+
                       <ion-col class="ml-2 col-n" size="6" (click)="checkTenedor()">
                         <ion-card  class="{{isTenedor ? 'select-card' : '' }}" id="tenedor" >
                           <ion-card-content>
@@ -667,20 +673,20 @@
                            </ion-card-content>
                          </ion-card>
                        </ion-col>
-                  
+
                     </ion-row>
-                  </div>    
+                  </div>
                 </div>
-  
-  
-                  
+
+
+
                 <ion-col>
                   <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
                     <strong><h1>Datos del vehiculo</h1></strong>
                   </div>
                 </ion-col>
-                  
-                  
+
+
                   <!-- <ion-input
                     [ngModel]="claseVehiculo"
                       id="claseVehiculo"
@@ -692,14 +698,14 @@
                             <input type="text" [ngModel]="vehiculo.modelo" formControlName="modelo" class="input-registro">
                         </ion-col>
                       </ion-row>
-  
+
                     <ion-row>
                       <ion-col>
-              
+
                       <div class="autocomplete-container2 mb-4 col-md-12">
                         <ion-label position="floating">Clase Vehiculo</ion-label>
-                        
-                        <ng-autocomplete 
+
+                        <ng-autocomplete
                         formControlName="claseVehiculo"
                         [ngModel]="vehiculo.claseVehiculo"
                         [data]="dataClases"
@@ -709,20 +715,20 @@
                         (inputChanged)='onChangeSearch($event)'
                         (inputFocused)='onFocused($event)'
                         [itemTemplate]="itemTemplate"
-                        [notFoundTemplate]="notFoundTemplate">                                 
+                        [notFoundTemplate]="notFoundTemplate">
                       </ng-autocomplete>
-    
+
                      </div>
                    </ion-col>
                   </ion-row>
-  
+
                      <ion-row>
                         <ion-col>
-  
-                         <div class="autocomplete-container2 mb-4 col-md-12">  
+
+                         <div class="autocomplete-container2 mb-4 col-md-12">
                          <ion-label position="floating">Marca</ion-label>
-                         
-                           <ng-autocomplete 
+
+                           <ng-autocomplete
                            formControlName="marca"
                            [ngModel]="vehiculo.marca"
                            [data]="dataMarcas"
@@ -732,20 +738,20 @@
                            (inputChanged)='onChangeMarca($event)'
                            (inputFocused)='onFocusedMarca($event)'
                            [itemTemplate]="itemTemplate"
-                           [notFoundTemplate]="notFoundTemplate">                                 
+                           [notFoundTemplate]="notFoundTemplate">
                            </ng-autocomplete>
                          </div>
-                  
+
                        </ion-col>
                     </ion-row>
 
                     <ion-row>
                       <ion-col>
-    
-                       <div class="autocomplete-container2 mb-4 col-md-12">  
+
+                       <div class="autocomplete-container2 mb-4 col-md-12">
                        <ion-label position="floating">Clase Linea</ion-label>
-                       
-                         <ng-autocomplete 
+
+                         <ng-autocomplete
                          formControlName="linea"
                          [ngModel]="vehiculo.linea"
                          [data]="dataLineas"
@@ -755,21 +761,21 @@
                          (inputChanged)='onChangeLinea($event)'
                          (inputFocused)='onFocusedLinea($event)'
                          [itemTemplate]="itemTemplate"
-                         [notFoundTemplate]="notFoundTemplate">                                 
+                         [notFoundTemplate]="notFoundTemplate">
                          </ng-autocomplete>
                        </div>
-                
+
                      </ion-col>
                     </ion-row>
-  
-  
+
+
                      <ion-row>
                        <ion-col>
-         
-                         <div class="autocomplete-container2 mb-4 col-md-12">    
+
+                         <div class="autocomplete-container2 mb-4 col-md-12">
                            <ion-label position="floating">Carroceria</ion-label>
-                           
-                           <ng-autocomplete 
+
+                           <ng-autocomplete
                            formControlName="carroceria"
                            [ngModel]="vehiculo.carroceria"
                            [data]="dataCarroc"
@@ -779,21 +785,21 @@
                            (inputChanged)='onChangeCarroceria($event)'
                            (inputFocused)='onFocusedCarroceria($event)'
                            [itemTemplate]="itemTemplate"
-                           [notFoundTemplate]="notFoundTemplate">                                 
+                           [notFoundTemplate]="notFoundTemplate">
                          </ng-autocomplete>
                        </div>
-         
+
                       </ion-col>
                      </ion-row>
 
 
                      <ion-row>
                       <ion-col>
-    
-                       <div class="autocomplete-container2 mb-4 col-md-12">  
+
+                       <div class="autocomplete-container2 mb-4 col-md-12">
                        <ion-label position="floating">Color </ion-label>
-                       
-                         <ng-autocomplete 
+
+                         <ng-autocomplete
                          formControlName="color"
                          [ngModel]="vehiculo.color"
                          [data]="dataColores"
@@ -803,39 +809,34 @@
                          (inputChanged)='onChangeColor($event)'
                          (inputFocused)='onFocusedColor($event)'
                          [itemTemplate]="itemTemplate"
-                         [notFoundTemplate]="notFoundTemplate">                                 
+                         [notFoundTemplate]="notFoundTemplate">
                          </ng-autocomplete>
                        </div>
-                
+
                      </ion-col>
                   </ion-row>
-              
+
               <ng-template #itemTemplate let-item>
                 <a [innerHTML]="item.name"></a>
               </ng-template>
-              
+
               <ng-template #notFoundTemplate let-notFound>
                   <div [innerHTML]="notFound"></div>
                 </ng-template>
-  
-                <ion-col>
-                  <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
-                    <strong><h1>Documentos</h1></strong>
-                  </div>
-                </ion-col>
-  
+
+
                 <!-- <ion-accordion-group>
                   <ion-accordion value="first">
                     <ion-item slot="header" color="light">
                       <ion-label>Tarjeta de propiedad</ion-label>
                     </ion-item>
                     <div class="ion-padding" slot="content">
-  
+
                       <ion-row>
                         <ion-col>
 
                          <ion-item>
-                           
+
                            <div (click)="addToCamera('tarjePro')" class="container-upload mb-3">
                                <ion-img
                                *ngIf="hubImag.tarjePro.webviewPath"
@@ -844,11 +845,11 @@
                                <div *ngIf="!hubImag.tarjePro.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-                           
+
                          </ion-col>
-                       </ion-row> 
-  
-  
+                       </ion-row>
+
+
                     </div>
                   </ion-accordion>
                   <ion-accordion value="second">
@@ -856,11 +857,11 @@
                       <ion-label>Soat</ion-label>
                     </ion-item>
                     <div class="ion-padding" slot="content">
-  
-                      
+
+
                        <ion-row>
                          <ion-col>
-                          
+
 
                           <ion-item>
                             <div (click)="addToCamera('soat1')" class="container-upload mb-3">
@@ -871,24 +872,24 @@
                               <div *ngIf="!hubImag.soat1.webviewPath" class="camera"></div>
                             </div>
                           </ion-item>
-            
+
                           </ion-col>
                         </ion-row>
-  
+
                         <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                           <strong><h3>Fecha Vencimiento SOAT</h3></strong>
                         </div>
-                                  
+
                         <ion-row>
                           <ion-col class="d-flex justify-content-center">
                            <ion-item>
                              <ion-datetime [ngModel]="vehiculo.fechaSoat" formControlName="fechaSoat" presentation="date"></ion-datetime>
                            </ion-item>
-                      
+
                           </ion-col>
-                        </ion-row> 
-  
-  
+                        </ion-row>
+
+
                     </div>
                   </ion-accordion>
                   <ion-accordion value="third">
@@ -896,13 +897,13 @@
                       <ion-label>TecnoMecanica</ion-label>
                     </ion-item>
                     <div class="ion-padding" slot="content">
-  
+
                       <ion-row>
                         <ion-col>
-   
-                         
+
+
                          <ion-item>
-                           
+
                            <div (click)="addToCamera('tecnomecanica')" class="container-upload mb-3">
                                <ion-img
                                *ngIf="hubImag.tecnomecanica.webviewPath"
@@ -911,25 +912,25 @@
                                <div *ngIf="!hubImag.tecnomecanica.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-                           
+
                          </ion-col>
-                       </ion-row> 
-           
-           
+                       </ion-row>
+
+
                             <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                              <strong><h3>Fecha Vencimiento TecnoMecanica</h3></strong>
                            </div>
-           
+
                        <ion-row>
                         <ion-col class="d-flex justify-content-center">
-                      
-                           
+
+
                            <ion-item>
                              <ion-datetime [ngModel]="vehiculo.fechaTecno" formControlName="fechaTecno" presentation="date" locale="es-ES"></ion-datetime>
                            </ion-item>
                          </ion-col>
                        </ion-row>
-  
+
                     </div>
                   </ion-accordion>
 
@@ -941,7 +942,7 @@
 
                         <ion-row>
                           <ion-col>
-                           
+
                            <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                              <strong><h1>Foto Frontal</h1></strong>
                            </div>
@@ -954,14 +955,14 @@
                                <div *ngIf="!hubImag.fotovehi1.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-              
+
                            </ion-col>
                          </ion-row>
 
 
                          <ion-row>
                           <ion-col>
-                           
+
                            <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                              <strong><h1>Foto Lateral</h1></strong>
                            </div>
@@ -974,7 +975,7 @@
                                <div *ngIf="!hubImag.fotovehi2.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-              
+
                            </ion-col>
                          </ion-row>
 
@@ -982,7 +983,7 @@
 
                          <ion-row>
                           <ion-col>
-                           
+
                            <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                              <strong><h1>Foto Motor</h1></strong>
                            </div>
@@ -995,7 +996,7 @@
                                <div *ngIf="!hubImag.fotovehi3.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-              
+
                            </ion-col>
                          </ion-row>
 
@@ -1003,7 +1004,7 @@
 
                          <ion-row>
                           <ion-col>
-                           
+
                            <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                              <strong><h1>Foto Posterior</h1></strong>
                            </div>
@@ -1016,7 +1017,7 @@
                                <div *ngIf="!hubImag.fotovehi4.webviewPath" class="camera"></div>
                              </div>
                            </ion-item>
-              
+
                            </ion-col>
                          </ion-row>
 
@@ -1029,21 +1030,21 @@
                       <ion-label>Remolque</ion-label>
                     </ion-item>
                     <div class="ion-padding" slot="content">
-  
-  
-  
+
+
+
                       <ion-row *ngIf="articulado">
                         <ion-col>
                           <label for="">Placa Remolque</label>
                           <input type="text" [ngModel]="remolque" formControlName="remolque" class="input-registro">
-          
+
                         </ion-col>
                       </ion-row>
-          
-          
+
+
                       <ion-row *ngIf="articulado">
                         <ion-col>
-                         
+
                          <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                            <strong><h1>Foto Remolque</h1></strong>
                          </div>
@@ -1056,13 +1057,13 @@
                              <div *ngIf="!hubImag.fotoremol.webviewPath" class="camera"></div>
                            </div>
                          </ion-item>
-            
+
                          </ion-col>
                        </ion-row>
-            
+
                        <ion-row *ngIf="articulado">
                         <ion-col>
-                         
+
                          <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                            <strong><h1>Tarjeta de propiedad</h1></strong>
                          </div>
@@ -1075,35 +1076,30 @@
                              <div *ngIf="!hubImag.tarjePror.webviewPath" class="camera"></div>
                            </div>
                          </ion-item>
-            
+
                          </ion-col>
                        </ion-row>
-  
+
                     </div>
                   </ion-accordion>
-  
+
                 </ion-accordion-group> -->
 
-                <div class="mt-5 p-2 d-flex justify-content-center">
-                  <ion-text color="primary" (click)="openDocumentController(vehiculo.placa, 'placa')">
-                    <h3> Verficar Fotos </h3>
-                  </ion-text>
-                </div>
-  
+
                   <div class="mt-5 p-4">
                     <ion-button expand="block" type="submit">
                       Guardar
                     </ion-button>
                   </div>
-                
+
             <!-- </ion-row> -->
           </ion-grid>
         </ion-list>
-  
+
       </form>
-          
- 
-        
+
+
+
         </ion-content>
       </ng-template>
     </ion-modal>
@@ -1127,7 +1123,7 @@
         </ion-header>
         <ion-content>
 
-          
+
         <ion-list class="p-2" [inset]="true">
           <form [formGroup]="formNewProp" (ngSubmit)="onSubmitNewProp()" method="post">
             <ion-grid>
@@ -1137,7 +1133,7 @@
                 <ion-col>
                   <label for="">Cedula</label>
                   <input type="text" (change)="searchInfoPro($event)" formControlName="cedula" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -1152,7 +1148,7 @@
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="propietario.nombres" formControlName="nombres" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -1160,18 +1156,18 @@
                 <ion-col>
                   <label for="">Apellidos</label>
                   <input type="text" [ngModel]="propietario.apellidos" formControlName="apellidos" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-              
+
               <ion-row *ngIf="propietario.cedula" class="mb-4">
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="propietario.correo" formControlName="correo" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-            
+
               <ion-row *ngIf="propietario.cedula" class="mb-4">
                 <ion-col>
                   <label for="">Celular</label>
@@ -1204,7 +1200,7 @@
 
                     <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Frontal</h1></strong>
                        </div>
@@ -1217,14 +1213,14 @@
                            <div *ngIf="!hubImag.cedula_pro1.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
 
                      <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Posterior</h1></strong>
                        </div>
@@ -1237,7 +1233,7 @@
                            <div *ngIf="!hubImag.cedula_pro2.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
@@ -1263,8 +1259,6 @@
       </ng-template>
     </ion-modal>
 
-
-
     <ion-modal #modal6 [isOpen]="isModalOpen6" trigger="tenedor-data">
       <ng-template>
         <ion-header>
@@ -1284,7 +1278,7 @@
         </ion-header>
         <ion-content>
 
-          
+
         <ion-list class="p-2" [inset]="true">
           <form [formGroup]="formNewTene" (ngSubmit)="onSubmitNewTen()" method="post">
             <ion-grid>
@@ -1294,7 +1288,7 @@
                 <ion-col>
                   <label for="">Cedula</label>
                   <input type="number" (change)="searchInfoTen($event)" [ngModel]="tenedor.cedula" formControlName="cedula" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -1310,7 +1304,7 @@
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="tenedor.nombres" formControlName="nombres" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
 
@@ -1318,18 +1312,18 @@
                 <ion-col>
                   <label for="">Apellidos</label>
                   <input type="text" [ngModel]="tenedor.apellidos" formControlName="apellidos" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-              
+
               <ion-row *ngIf="tenedor.cedula" class="mb-4">
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="tenedor.correo" formControlName="correo" class="input-registro">
-  
+
                 </ion-col>
               </ion-row>
-            
+
               <ion-row *ngIf="tenedor.cedula" class="mb-4">
                 <ion-col>
                   <label for="">Celular</label>
@@ -1362,7 +1356,7 @@
 
                     <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Frontal</h1></strong>
                        </div>
@@ -1375,14 +1369,14 @@
                            <div *ngIf="!hubImag.cedula_ten1.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
 
                      <ion-row>
                       <ion-col>
-                       
+
                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
                          <strong><h1>Cedula Cara Posterior</h1></strong>
                        </div>
@@ -1395,7 +1389,7 @@
                            <div *ngIf="!hubImag.cedula_ten2.webviewPath" class="camera"></div>
                          </div>
                        </ion-item>
-          
+
                        </ion-col>
                      </ion-row>
 
@@ -1421,7 +1415,13 @@
     </ion-modal>
 
 
-    
+
 
   </form>
 </ion-content>
+
+
+<app-documentos-data appTipoDocumento="dataTercero" [dataTercero]="dataTercero" *ngIf="openDocs" (save)="saveDocs($event)"
+(cancel)="cancelDocs()">
+
+</app-documentos-data>

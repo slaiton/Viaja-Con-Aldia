@@ -1,0 +1,539 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="ml-3">Mis Vehiulos</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+
+
+  <ion-list class="p-3">
+
+
+    <ion-card class="mt-4" *ngFor="let a of dataVehiculos; let i = index">
+      <!-- <img *ngIf="!a.foto" alt="ejemplo" src="https://ionicframework.com/docs/img/demos/card-media.png"/>
+      <img *ngIf="a.foto" alt="ejemplo" [src]="a.foto"/> -->
+      <div class="fondo-vehiculo" [style.background-image]="a.foto ? 'url(' + a.foto + ')': 'https://ionicframework.com/docs/img/demos/card-media.png'">
+
+      </div>
+      <ion-card-header class="p-2">
+        <ion-card-title> {{a.numeroPlacaxxx}} </ion-card-title>
+        <ion-card-subtitle>  </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+
+        <ion-grid>
+          <ion-row>
+            <ion-col>
+              {{a.nombreSiatxxxx}} <br>
+              <span [class]="'badge text-bg-' + a.color"> {{a.estado}} </span>
+            </ion-col>
+            <ion-col>
+               <!-- <button (click)="" *ngIf="a.status" class="btn btn-primary">EDITAR</button> -->
+               <!-- <ion-button *ngIf="a.status" (click)="" [strong]="true">Editar</ion-button> -->
+               <button *ngIf="!a.status && !a.hojaVidaApp" class="btn btn-success ml-2">ASIGNAR</button>
+               <button *ngIf="!a.status" class="btn btn-danger">ELIMINAR</button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+
+      </ion-card-content>
+    </ion-card>
+
+  </ion-list>
+
+
+  <ion-modal #modal [isOpen]="isModalOpen" trigger="vehicle-data">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button color="medium" (click)="setOpenVehiculo(false)"
+              >Cancelar</ion-button
+            >
+          </ion-buttons>
+          <ion-title class="ml-4">Datos Vehiculo</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="onSubmitVehicle()" [strong]="true"
+              >Confirmar</ion-button
+            >
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+
+        <form [formGroup]="formVehicle" (ngSubmit)="onSubmitVehicle()" method="post">
+
+          <ion-list class="p-2" [inset]="true">
+            <ion-grid>
+              <!-- <ion-row> -->
+
+              <div class="container-prop">
+                <div class="prop-flotante">
+                  <ion-row class="mt-4">
+
+                    <ion-col class="mr-2 col-n" size="6" (click)="checkPropietario()">
+                      <ion-card class="{{isPropietario ? 'select-card' : '' }}" id="propietario">
+                        <ion-card-content>
+
+                          <div>
+                            <span>Soy el Propietario</span>
+                          </div>
+
+                        </ion-card-content>
+                      </ion-card>
+                    </ion-col>
+
+
+                    <ion-col class="ml-2 col-n" size="6" (click)="checkTenedor()">
+                      <ion-card  class="{{isTenedor ? 'select-card' : '' }}" id="tenedor" >
+                        <ion-card-content>
+                         <div>
+                           <span>Soy el Tenedor</span>
+                         </div>
+                         </ion-card-content>
+                       </ion-card>
+                     </ion-col>
+
+                  </ion-row>
+                </div>
+              </div>
+
+
+
+              <ion-col>
+                <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
+                  <strong><h1>Datos del vehiculo</h1></strong>
+                </div>
+              </ion-col>
+
+
+                <!-- <ion-input
+                  [ngModel]="claseVehiculo"
+                    id="claseVehiculo"
+                    formControlName="claseVehiculo"
+                    ></ion-input> -->
+                    <ion-row class="mb-4">
+                      <ion-col>
+                          <label for="">Modelo</label>
+                          <input type="text" [ngModel]="vehiculo.modelo" formControlName="modelo" class="input-registro">
+                      </ion-col>
+                    </ion-row>
+
+                  <ion-row>
+                    <ion-col>
+
+                    <div class="autocomplete-container2 mb-4 col-md-12">
+                      <ion-label position="floating">Clase Vehiculo</ion-label>
+
+                      <ng-autocomplete
+                      formControlName="claseVehiculo"
+                      [ngModel]="vehiculo.claseVehiculo"
+                      [data]="dataClases"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectEvent($event)'
+                      (inputChanged)='onChangeSearch($event)'
+                      (inputFocused)='onFocused($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
+                    </ng-autocomplete>
+
+                   </div>
+                 </ion-col>
+                </ion-row>
+
+                   <ion-row>
+                      <ion-col>
+
+                       <div class="autocomplete-container2 mb-4 col-md-12">
+                       <ion-label position="floating">Marca</ion-label>
+
+                         <ng-autocomplete
+                         formControlName="marca"
+                         [ngModel]="vehiculo.marca"
+                         [data]="dataMarcas"
+                         [searchKeyword]="keyword"
+                         placeholder=""
+                         (selected)='selectMarca($event)'
+                         (inputChanged)='onChangeMarca($event)'
+                         (inputFocused)='onFocusedMarca($event)'
+                         [itemTemplate]="itemTemplate"
+                         [notFoundTemplate]="notFoundTemplate">
+                         </ng-autocomplete>
+                       </div>
+
+                     </ion-col>
+                  </ion-row>
+
+                  <ion-row>
+                    <ion-col>
+
+                     <div class="autocomplete-container2 mb-4 col-md-12">
+                     <ion-label position="floating">Clase Linea</ion-label>
+
+                       <ng-autocomplete
+                       formControlName="linea"
+                       [ngModel]="vehiculo.linea"
+                       [data]="dataLineas"
+                       [searchKeyword]="keyword"
+                       placeholder=""
+                       (selected)='selectLinea($event)'
+                       (inputChanged)='onChangeLinea($event)'
+                       (inputFocused)='onFocusedLinea($event)'
+                       [itemTemplate]="itemTemplate"
+                       [notFoundTemplate]="notFoundTemplate">
+                       </ng-autocomplete>
+                     </div>
+
+                   </ion-col>
+                  </ion-row>
+
+
+                   <ion-row>
+                     <ion-col>
+
+                       <div class="autocomplete-container2 mb-4 col-md-12">
+                         <ion-label position="floating">Carroceria</ion-label>
+
+                         <ng-autocomplete
+                         formControlName="carroceria"
+                         [ngModel]="vehiculo.carroceria"
+                         [data]="dataCarroc"
+                         [searchKeyword]="keyword"
+                         placeholder=""
+                         (selected)='selectCarroceria($event)'
+                         (inputChanged)='onChangeCarroceria($event)'
+                         (inputFocused)='onFocusedCarroceria($event)'
+                         [itemTemplate]="itemTemplate"
+                         [notFoundTemplate]="notFoundTemplate">
+                       </ng-autocomplete>
+                     </div>
+
+                    </ion-col>
+                   </ion-row>
+
+
+                   <ion-row>
+                    <ion-col>
+
+                     <div class="autocomplete-container2 mb-4 col-md-12">
+                     <ion-label position="floating">Color </ion-label>
+
+                       <ng-autocomplete
+                       formControlName="color"
+                       [ngModel]="vehiculo.color"
+                       [data]="dataColores"
+                       [searchKeyword]="keyword"
+                       placeholder=""
+                       (selected)='selectColor($event)'
+                       (inputChanged)='onChangeColor($event)'
+                       (inputFocused)='onFocusedColor($event)'
+                       [itemTemplate]="itemTemplate"
+                       [notFoundTemplate]="notFoundTemplate">
+                       </ng-autocomplete>
+                     </div>
+
+                   </ion-col>
+                </ion-row>
+
+            <ng-template #itemTemplate let-item>
+              <a [innerHTML]="item.name"></a>
+            </ng-template>
+
+            <ng-template #notFoundTemplate let-notFound>
+                <div [innerHTML]="notFound"></div>
+              </ng-template>
+
+
+              <!-- <ion-accordion-group>
+                <ion-accordion value="first">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Tarjeta de propiedad</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+                    <ion-row>
+                      <ion-col>
+
+                       <ion-item>
+
+                         <div (click)="addToCamera('tarjePro')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.tarjePro.webviewPath"
+                             [src]="hubImag.tarjePro.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.tarjePro.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                       </ion-col>
+                     </ion-row>
+
+
+                  </div>
+                </ion-accordion>
+                <ion-accordion value="second">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Soat</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+
+                     <ion-row>
+                       <ion-col>
+
+
+                        <ion-item>
+                          <div (click)="addToCamera('soat1')" class="container-upload mb-3">
+                            <ion-img
+                            *ngIf="hubImag.soat1.webviewPath"
+                            [src]="hubImag.soat1.webviewPath"
+                            ></ion-img>
+                            <div *ngIf="!hubImag.soat1.webviewPath" class="camera"></div>
+                          </div>
+                        </ion-item>
+
+                        </ion-col>
+                      </ion-row>
+
+                      <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                        <strong><h3>Fecha Vencimiento SOAT</h3></strong>
+                      </div>
+
+                      <ion-row>
+                        <ion-col class="d-flex justify-content-center">
+                         <ion-item>
+                           <ion-datetime [ngModel]="vehiculo.fechaSoat" formControlName="fechaSoat" presentation="date"></ion-datetime>
+                         </ion-item>
+
+                        </ion-col>
+                      </ion-row>
+
+
+                  </div>
+                </ion-accordion>
+                <ion-accordion value="third">
+                  <ion-item slot="header" color="light">
+                    <ion-label>TecnoMecanica</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+                    <ion-row>
+                      <ion-col>
+
+
+                       <ion-item>
+
+                         <div (click)="addToCamera('tecnomecanica')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.tecnomecanica.webviewPath"
+                             [src]="hubImag.tecnomecanica.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.tecnomecanica.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                       </ion-col>
+                     </ion-row>
+
+
+                          <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h3>Fecha Vencimiento TecnoMecanica</h3></strong>
+                         </div>
+
+                     <ion-row>
+                      <ion-col class="d-flex justify-content-center">
+
+
+                         <ion-item>
+                           <ion-datetime [ngModel]="vehiculo.fechaTecno" formControlName="fechaTecno" presentation="date" locale="es-ES"></ion-datetime>
+                         </ion-item>
+                       </ion-col>
+                     </ion-row>
+
+                  </div>
+                </ion-accordion>
+
+                <ion-accordion value="four">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Fotos</ion-label>
+                  </ion-item>
+                    <div class="ion-padding" slot="content">
+
+                      <ion-row>
+                        <ion-col>
+
+                         <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h1>Foto Frontal</h1></strong>
+                         </div>
+                         <ion-item>
+                           <div (click)="addToCamera('fotovehi1')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.fotovehi1.webviewPath"
+                             [src]="hubImag.fotovehi1.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.fotovehi1.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                         </ion-col>
+                       </ion-row>
+
+
+                       <ion-row>
+                        <ion-col>
+
+                         <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h1>Foto Lateral</h1></strong>
+                         </div>
+                         <ion-item>
+                           <div (click)="addToCamera('fotovehi2')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.fotovehi2.webviewPath"
+                             [src]="hubImag.fotovehi2.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.fotovehi2.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                         </ion-col>
+                       </ion-row>
+
+
+
+                       <ion-row>
+                        <ion-col>
+
+                         <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h1>Foto Motor</h1></strong>
+                         </div>
+                         <ion-item>
+                           <div (click)="addToCamera('fotovehi3')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.fotovehi3.webviewPath"
+                             [src]="hubImag.fotovehi3.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.fotovehi3.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                         </ion-col>
+                       </ion-row>
+
+
+
+                       <ion-row>
+                        <ion-col>
+
+                         <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                           <strong><h1>Foto Posterior</h1></strong>
+                         </div>
+                         <ion-item>
+                           <div (click)="addToCamera('fotovehi4')" class="container-upload mb-3">
+                             <ion-img
+                             *ngIf="hubImag.fotovehi4.webviewPath"
+                             [src]="hubImag.fotovehi4.webviewPath"
+                             ></ion-img>
+                             <div *ngIf="!hubImag.fotovehi4.webviewPath" class="camera"></div>
+                           </div>
+                         </ion-item>
+
+                         </ion-col>
+                       </ion-row>
+
+
+                    </div>
+                </ion-accordion>
+
+                <ion-accordion *ngIf="articulado" value="four">
+                  <ion-item slot="header" color="light">
+                    <ion-label>Remolque</ion-label>
+                  </ion-item>
+                  <div class="ion-padding" slot="content">
+
+
+
+                    <ion-row *ngIf="articulado">
+                      <ion-col>
+                        <label for="">Placa Remolque</label>
+                        <input type="text" [ngModel]="remolque" formControlName="remolque" class="input-registro">
+
+                      </ion-col>
+                    </ion-row>
+
+
+                    <ion-row *ngIf="articulado">
+                      <ion-col>
+
+                       <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>Foto Remolque</h1></strong>
+                       </div>
+                       <ion-item>
+                         <div (click)="addToCamera('fotoremol')" class="container-upload mb-3">
+                           <ion-img
+                           *ngIf="hubImag.fotoremol.webviewPath"
+                           [src]="hubImag.fotoremol.webviewPath"
+                           ></ion-img>
+                           <div *ngIf="!hubImag.fotoremol.webviewPath" class="camera"></div>
+                         </div>
+                       </ion-item>
+
+                       </ion-col>
+                     </ion-row>
+
+                     <ion-row *ngIf="articulado">
+                      <ion-col>
+
+                       <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                         <strong><h1>Tarjeta de propiedad</h1></strong>
+                       </div>
+                       <ion-item>
+                         <div (click)="addToCamera('tarjePror')" class="container-upload mb-3">
+                           <ion-img
+                           *ngIf="hubImag.tarjePror.webviewPath"
+                           [src]="hubImag.tarjePror.webviewPath"
+                           ></ion-img>
+                           <div *ngIf="!hubImag.tarjePror.webviewPath" class="camera"></div>
+                         </div>
+                       </ion-item>
+
+                       </ion-col>
+                     </ion-row>
+
+                  </div>
+                </ion-accordion>
+
+              </ion-accordion-group> -->
+
+
+                <div class="mt-5 p-4">
+                  <ion-button expand="block" type="submit">
+                    Guardar
+                  </ion-button>
+                </div>
+
+          <!-- </ion-row> -->
+        </ion-grid>
+      </ion-list>
+
+    </form>
+
+
+
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="newVehicle(); modal.present()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+
+</ion-content>
