@@ -45,20 +45,22 @@
             </ion-item>
           </ion-list> -->
 
-          <ion-card class="w-100 ion-activatable ripple-parent rectangle" *ngFor="let a of documents; let i = index" (click)="selectDocument(i); modal1.present();" [hidden]="a.hidden">
-              <ion-card-header>
-                <ion-card-title>{{a.nombre}}</ion-card-title>
-                <ion-card-subtitle>
-                  <ion-text *ngFor="let b of a.docs">
-                    <span class="ml-3">
-                      {{b.nombre}}
-                    </span> -
-                  </ion-text >
+          <ion-card class="w-100 ion-activatable ripple-parent rectangle" *ngFor="let a of documents; let i = index"
+            (click)="selectDocument(i); modal1.present();" [hidden]="a.hidden">
+            <ion-card-header>
+              <ion-card-title>{{a.nombre}}</ion-card-title>
+              <ion-card-subtitle>
+                <ion-text *ngFor="let b of a.docs">
+                  <span class="ml-3">
+                    {{b.nombre}}
+                  </span> -
+                </ion-text>
 
-                </ion-card-subtitle>
-              </ion-card-header>
+              </ion-card-subtitle>
+            </ion-card-header>
 
-              <ion-card-content class="{{a.status ? 'confirm' : 'pending'}}"> {{a.status ? 'En revision': 'Pendiente'}} </ion-card-content>
+            <ion-card-content class="{{a.status ? 'confirm' : 'pending'}}"> {{a.status ? 'En revision': 'Pendiente'}}
+            </ion-card-content>
           </ion-card>
 
         </ion-row>
@@ -95,66 +97,71 @@
       </ion-header>
       <ion-content>
 
-        <ion-grid *ngIf="documentActive.type == 'doc'">
+        <ion-list class="p-2" [inset]="true">
 
-          <ion-row *ngFor="let c of documentActive.docs">
-            <ion-col>
 
-             <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-               <strong><h1>{{ c.nombre }}</h1></strong>
-             </div>
-             <ion-item>
-               <div  *ngIf="documentActive.capture == 'camera'" (click)="addToCamera(c.codigo)" class="container-upload mb-3">
-                   <ion-img
-                   *ngIf="getImagen(c.codigo)"
-                   [src]="getImagen(c.codigo)"
-                   ></ion-img>
-                   <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
+          <ion-grid *ngIf="!documentActive.hidden">
+
+            <ion-row *ngFor="let c of documentActive.docs">
+              <ion-col>
+
+                <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+                  <strong>
+                    <h1>{{ c.nombre }}</h1>
+                  </strong>
                 </div>
-                <div *ngIf="documentActive.capture == 'galery'" (click)="addToGalery(c.codigo)" class="container-upload mb-3">
-                    <ion-img
-                   *ngIf="getImagen(c.codigo)"
-                   [src]="getImagen(c.codigo)"
-                   ></ion-img>
-                   <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
-                </div>
-             </ion-item>
+                <ion-item>
+                  <div *ngIf="documentActive.capture == 'camera'" (click)="addToCamera(c.codigo, documentActive.rotate)"
+                    class="container-upload mb-3">
+                    <ion-img *ngIf="getImagen(c.codigo)" [src]="getImagen(c.codigo)"></ion-img>
+                    <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
+                  </div>
+                  <div *ngIf="documentActive.capture == 'galery'" (click)="addToGalery(c.codigo, documentActive.rotate)"
+                    class="container-upload mb-3">
+                    <ion-img *ngIf="getImagen(c.codigo)" [src]="getImagen(c.codigo)"></ion-img>
+                    <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
+                  </div>
+                </ion-item>
 
-             </ion-col>
+              </ion-col>
 
-           </ion-row>
+            </ion-row>
 
-           <div *ngIf="documentActive.fecha" class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-            <strong><h3>{{documentActive.fechaTitle}}</h3></strong>
-          </div>
+            <div *ngIf="documentActive.fecha"
+              class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
+              <strong>
+                <h3>{{documentActive.fechaTitle}}</h3>
+              </strong>
+            </div>
+
+            <ion-row *ngIf="documentActive.fecha">
+              <ion-col class="d-flex justify-content-center">
 
 
-           <ion-row *ngIf="documentActive.fecha">
-             <ion-col class="d-flex justify-content-center">
+                <input type="date" value="{{fechaL[documentActive.fechaTag]}}" id="{{documentActive.fechaTag}}"
+                  class="input-registro">
 
-
-              <input type="date" value="{{fechaL[documentActive.fechaTag]}}" id="{{documentActive.fechaTag}}" class="input-registro">
-
-            </ion-col>
-           </ion-row>
-
+              </ion-col>
+            </ion-row>
 
           </ion-grid>
 
-        </ion-content>
+        </ion-list>
+
+      </ion-content>
 
 
-        <ion-footer>
+      <ion-footer>
 
-            <ion-button class="mb-4" expand="block" type="submit" (click)="checkDocument()">
-              Confirmar Fotos
-            </ion-button>
+        <ion-button class="mb-4" expand="block" type="submit" (click)="checkDocument()">
+          Confirmar Fotos
+        </ion-button>
 
-            <ion-button class="mb-4" expand="block" type="submit" (click)="resetFotos()">
-              Cambiar fotos
-            </ion-button>
+        <ion-button class="mb-4" expand="block" type="submit" (click)="resetFotos()">
+          Cambiar fotos
+        </ion-button>
 
-          </ion-footer>
+      </ion-footer>
 
 
     </ng-template>
@@ -163,4 +170,3 @@
 
 
 </ion-content>
-

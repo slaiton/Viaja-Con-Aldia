@@ -16,7 +16,7 @@
           <ion-item>
             <ion-avatar  [style.width]="'110px'" [style.height]="'110px'" slot="start">
               <img alt="persons" *ngIf="fotoUser" class="rounded-circle me-2" src="{{fotoUser}}"/>
-              <img alt="persons" *ngIf="!fotoUser" class="rounded-circle me-2" src="http://54.176.177.178/checklist/userDefault.png"/>
+              <img alt="persons" *ngIf="!fotoUser" class="rounded-circle me-2" src="https://3slogistica.com/tr_aldia/files/checklist/userDefault.png"/>
             </ion-avatar>
             <ul class="list-unstyled ps-0 ml-3">
               <li class="mb-1">
@@ -85,6 +85,16 @@
     <ion-router-outlet id="main-content"></ion-router-outlet>
 
   </ion-split-pane>
+
+
+
+  <ion-modal [isOpen]="!statusNet">
+    <ng-template>
+      <ion-content>
+        <app-empty-screen [model]="model"  (retry)="checkStatus($event)"></app-empty-screen>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
 
 </ion-app>

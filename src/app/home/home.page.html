@@ -33,7 +33,7 @@
             alt="person"
             *ngIf="!fotoUser"
             class="rounded-circle me-2"
-            src="http://54.176.177.178/checklist/userDefault.png"
+            src="https://3slogistica.com/tr_aldia/files/checklist/userDefault.png"
           ></ion-img>
         </ion-avatar>
       </div>
@@ -82,7 +82,8 @@
 
   <div class="panel-turnos d-flex justify-content-center">
 
-    <div>
+
+    <div *ngIf="statusDoc && estado">
       <ul class="list-unstyled p-2 ps-0 ml-3">
         <li style="text-align:center;">
           <span class="{{clase_estado}}">
@@ -100,18 +101,25 @@
         </li>
         <li class="mt-3 d-flex justify-content-center">
            <ion-button
-           (click)="turnoExistente ? getTurno() : nuevoTurno()"
-           id="open-modal"
-           class="botontiemporestante"
-           expand="full"
-           shape="round"
-           [color]="turnoExistente ? 'success' : 'danger'">
-           <span class="ml-2 mb-0">
-            {{ turnoExistente ? 'Reenturnarse' : 'Enturnarse' }}
-           </span>
+              (click)="turnoExistente ? getTurno() : nuevoTurno()"
+              id="open-modal"
+              class="botontiemporestante"
+              expand="full"
+              shape="round"
+              [color]="turnoExistente ? 'success' : 'danger'">
+               <span class="ml-2 mb-0">
+                {{ estadoBoton }}
+               </span>
            </ion-button>
+
         </li>
       </ul>
+    </div>
+
+    <div *ngIf="!estado">
+      <span class="ml-2 mb-0">
+        {{ estadoBoton }}
+       </span>
     </div>
 
 
@@ -135,7 +143,7 @@
       <div class="col col-6">
         <h6 class="placa-min">
           {{placaLetras}}<img
-            src="http://54.176.177.178/checklist/ministerio.png"
+            src="https://3slogistica.com/tr_aldia/files/checklist/ministerio.png"
             class="img-min"
           />{{placaNum}}
         </h6>
@@ -168,38 +176,38 @@
   </div> -->
 <!-- <div class="container data-turnos">
   <div class="row">
-    
-    <div class="col col-4">    
+
+    <div class="col col-4">
       <ion-card color="primary">
-        
+
         <ion-card-header class="p-2">
           <ion-card-title>Turno: {{posicionTurno1}}</ion-card-title>
         </ion-card-header>
-        
+
         <ion-card-content>{{destino1}}</ion-card-content>
       </ion-card>
   </div>
-  
-  <div class="col col-4">    
+
+  <div class="col col-4">
     <ion-card color="secondary">
       <ion-card-header class="p-2">
         <ion-card-title>Turno: {{posicionTurno2}}</ion-card-title>
       </ion-card-header>
-      
+
       <ion-card-content>{{destino2}}</ion-card-content>
     </ion-card>
   </div>
-  
-  <div class="col col-4">    
+
+  <div class="col col-4">
     <ion-card color="tertiary">
       <ion-card-header class="p-2">
         <ion-card-title>Turno: {{posicionTurno3}}</ion-card-title>
       </ion-card-header>
-      
+
       <ion-card-content>{{destino3}}</ion-card-content>
     </ion-card>
   </div>
- 
+
  </div>
 </div> -->
   <div *ngIf="turnoExistente" class="container cont-turnos">
@@ -209,7 +217,7 @@
       <div class="ticket">
         <p>{{destino1}}</p>
         <img
-        src="http://temp.aldialogistica.com/tester/images/tiket.png"
+        src="https://3slogistica.com/tr_aldia/files/checklist/tiket.png"
         alt="ticket"
         />
         <span>{{posicionTurno1}}</span>
@@ -218,7 +226,7 @@
       <div class="ticket">
         <p>{{destino2}}</p>
         <img
-          src="http://temp.aldialogistica.com/tester/images/tiket.png"
+          src="https://3slogistica.com/tr_aldia/files/checklist/tiket.png"
           alt="ticket"
         />
         <span>{{posicionTurno2}}</span>
@@ -227,7 +235,7 @@
       <div class="ticket">
         <p>{{destino3}}</p>
         <img
-        src="http://temp.aldialogistica.com/tester/images/tiket.png"
+        src="https://3slogistica.com/tr_aldia/files/checklist/tiket.png"
         alt="ticket"
           />
         <span>{{posicionTurno3}}</span>

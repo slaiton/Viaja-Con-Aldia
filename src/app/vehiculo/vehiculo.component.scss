@@ -32,3 +32,29 @@
   background-position: center;
 }
 
+.containerPhoto, .centerObject {
+  display: flex;
+  justify-content: center;
+}
+
+.align-center {
+  text-align: center;
+  }
+
+  .badge {
+    padding: 0.5rem;
+    border-radius: 15px;
+  }
+
+  .text-bg-success {
+    color: #FFFFFF;
+    background-color: #0094DA;
+
+  }
+
+  .text-bg-danger {
+    color: #FFFFFF;
+    background-color: red;
+  }
+
+

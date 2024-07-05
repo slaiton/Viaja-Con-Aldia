@@ -7,6 +7,7 @@ import { UserService } from '../../api/user.service';
 import { log } from 'console';
 import { Photo } from '@capacitor/camera';
 import { DatosPage } from '../datos.page';
+import { RegistroService } from 'src/app/api/registro.service';
 
 
 @Component({
@@ -15,7 +16,7 @@ import { DatosPage } from '../datos.page';
   styleUrls: ['./documentos.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom
 })
-export class Documentos2Component  implements OnInit {
+export class Documentos2Component implements OnInit {
 
 
   // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
@@ -23,137 +24,143 @@ export class Documentos2Component  implements OnInit {
   @Input() public dataTercero: any;
   listEvents: Array<any> = [];
   overCanvas: any;
-  documentActive:any;
-  articulado:any = true;
-  loadingData:any;
+  documentActive: any;
+  codeDocumentActive: any;
+  articulado: any = true;
+  loadingData: any;
+  dataAutoComplete: any = []
+  token: any;
+
+
+  dataAuto: any;
+  keyword = 'name';
+  itemTemplate: any;
+  notFoundTemplate: any;
 
 
 
-  isModalOpen:any = false;
-  documents:any;
-  fechaL:any = [];
+  isModalOpen: any = false;
+  documents: any;
+  fechaL: any = [];
 
 
   constructor(
     private datos: DatosPage,
+    private route: Router,
     private photo: PhotoService,
     private alertController: AlertController,
     private user: UserService,
-    private loading: LoadingController  )
-  {
+    private loading: LoadingController,
+    private reg: RegistroService) {
   }
 
 
   ngOnInit() {
 
-    console.log(this.dataTercero);
-    // console.log(this.active);
-    // this.active = false;
+    this.token = this.user.getToken();
     var validate = true;
     var doc = ''
     var tipoRegistro = '';
     var mensaje = '';
 
+    console.log(this.dataTercero);
+
+
     if (this.dataTercero.docs) {
       this.documents = this.dataTercero.docs;
+      console.log(this.documents);
+    }
 
-      if (this.dataTercero.cedula) {
-        doc = this.dataTercero.cedula
-        tipoRegistro = 'conductor'
-      //   this.jsonDriverApi['codigoTercerox'] = this.dataTercero.cedula;
-      }
-
-      if (this.dataTercero.placa) {
-        doc = this.dataTercero.placa
-        tipoRegistro = 'vehiculo'
-      //   this.jsonDriverApi['placa'] = this.dataTercero.placa;
-
-      }
-
-      if (this.dataTercero.articulado) {
-        this.documents.pop()
-      }
-
+    if (!this.dataTercero.articulado) {
+      this.documents = this.deleteDocumentByName(this.documents, 'Remolque')
     }
 
     if (this.documents) {
+
       for (let a = 0; a < this.documents.length; a++) {
         // const element = this.documents[a];
         for (let b = 0; b < this.documents[a].docs.length; b++) {
           // //   const element = this.documentActive.docs[b];
           const code = this.documents[a].docs[b].codigo;
 
-          this.getDocument(doc, code, tipoRegistro).then(
-                (doc:any) => {
-                     if (doc['code'] !== '204') {
-                       this.datos.hubImag[code].webviewPath = doc['data'];
-                       this.documents[a].docs[b].imagen = doc['data'];
-                       // this.documents[a].status = true;
-                      }else{
-                        // this.documents[a].status = false;
-                        validate = false;
-                        mensaje += '<li>' + this.documents[a].docs[b].nombre + '</li>'
-                      }
-                  }
-                  )
-                  // console.log(code);
+          if (this.documents[a].capture == 'galery' || this.documents[a].capture == 'camera') {
 
-                }
-                if (this.documents[a].fecha && this.dataTercero.cedula) {
-                  this.fechaL[this.documents[a].fechaTag] = this.datos.conductor[this.documents[a].fechaTag]
-                }
-                if (this.documents[a].fecha && this.dataTercero.placa) {
-                  this.fechaL[this.documents[a].fechaTag] = this.datos.vehiculo[this.documents[a].fechaTag]
+            if (this.documents[a].type == 'conductor') {
+              doc = this.dataTercero.cedula
+            }
+
+            if (this.documents[a].type == 'vehiculo') {
+              doc = this.dataTercero.placa
+            }
+
+            tipoRegistro = this.documents[a].type
+
+            this.getDocument(doc, code, tipoRegistro).then(
+              (doc: any) => {
+
+                if (doc['code'] !== '204' && doc['data'][code]) {
+                  console.log(doc['data']);
+
+                  this.datos.hubImag[code].webviewPath = doc['data'][code];
+                  this.documents[a].docs[b].imagen = doc['data'][code];
+                  // this.documents[a].status = true;
+                } else {
+                  // this.documents[a].status = false;
+                  validate = false
+                  mensaje += '<li>' + this.documents[a].docs[b].nombre + '</li>'
                 }
               }
+            )
+          } else if (this.documents[a].capture == 'data') {
+            // console.log(this.datos.vehiculo);
 
-              // console.log(this.datos.hubImag);
+            if (this.documents[a].type == 'vehiculo') {
 
-       }
+              this.fechaL[this.documents[a].docs[b].codigo] = this.datos.vehiculo[this.documents[a].docs[b].codigo];
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      // console.log(this.documentActive);
+
+    }
   }
 
-  backdata()
-  {
+  backdata() {
     this.datos.openDocs = false;
   }
 
-  setModal(isOpen:any)
-  {
+  setModal(isOpen: any) {
     this.isModalOpen = isOpen;
   }
 
-  selectDocument(a:any) {
+  selectDocument(a: any) {
     this.isModalOpen = true;
     this.documentActive = this.documents[a];
-
-
-    const tag  = this.documents[a].fechaTag
-
-    // if (this.dataTercero.cedula) {
-    //   this.fechaL[tag] = this.datos.conductor[tag]
-    // }
-
-    // if (this.dataTercero.placa) {
-    //   this.fechaL[tag] = this.datos.vehiculo[tag]
-    // }
-
+    this.codeDocumentActive = a;
   }
 
- async addToGalery(name:any) {
+  async addToGalery(name: any) {
 
 
-  this.loadingData = await this.loading.create({
-    message: 'Guradando Foto..'
-  });
+    this.loadingData = await this.loading.create({
+      message: 'Guradando Foto..'
+    });
 
 
     this.photo.addNewToGallery(name).then((da) => {
       this.loadingData.present();
-      this.processImage(da,name);
+      this.processImage(da, name);
     });
   }
 
-  async addToCamera(name:any){
+  async addToCamera(name: any) {
 
     this.loadingData = await this.loading.create({
       message: 'Guradando Foto..'
@@ -161,28 +168,24 @@ export class Documentos2Component  implements OnInit {
 
     this.photo.addNewToCamera(name).then((da) => {
       this.loadingData.present();
-      this.processImage(da,name);
+      this.processImage(da, name);
       // loading.dismiss()
     });
 
   }
 
-  async processImage(da:any, name:any){
+  async processImage(da: any, name: any) {
     try {
 
-      const processedImagerotate:any =  await this.photo.processAndRotationImage(da.base64);
-
-      // console.log(processedImagerotate);
-
+      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, 90);
 
       const dataPhoto1: Photo = {
-        webPath:processedImagerotate,
-        format:'jpeg',
-        saved:false
+        webPath: processedImagerotate,
+        format: 'jpeg',
+        saved: false
       };
 
       const data64 = await this.photo.readAsBase64(dataPhoto1)
-      // console.log(data64);
 
       const desiredSizeX = 450;
       const desiredSizeY = 290;
@@ -190,9 +193,9 @@ export class Documentos2Component  implements OnInit {
       const processedImageDataUrl = await this.photo.processImage(data64);
 
       const dataPhoto2: Photo = {
-        webPath:processedImageDataUrl,
-        format:'jpeg',
-        saved:false
+        webPath: processedImageDataUrl,
+        format: 'jpeg',
+        saved: false
       };
 
       // console.log(data64);
@@ -208,176 +211,198 @@ export class Documentos2Component  implements OnInit {
     }
   }
 
-  async documentValidate()
-  {
-    this.datos.openDocs = false;
-    const data = this.documents
-    var doc = ''
-    var tipo = ''
-
-    this.loadingData = await this.loading.create({
-      message: 'Revisando Fotos..'
-    });
-
-        this.loadingData.present();
 
 
-    if (this.dataTercero.cedula) {
-      doc = this.dataTercero.cedula
-      tipo = 'conductor'
-    }
-
-    if (this.dataTercero.placa) {
-      doc = this.dataTercero.placa
-      tipo = 'vehiculo'
-    }
-
-    const tipos:any = [];
-
-    data.forEach((documento:any) => {
-      documento.docs.forEach((doc:any) => {
-          tipos.push(doc.codigo);
-      });
-  });
-
-  const cadena = tipos.join(',');
-
-
-    this.photo.getFotosTercero(doc, cadena, tipo).toPromise().then(
-      data =>{
-        this.loadingData.dismiss()
-       if (data.code == '201') {
-
-        this.presentAlert("Error", "Documentos pendientes por cargar", "", "Cerrar")
-
-        }else{
-
-          // if (this.dataTercero.cedula) {
-          //   this.datos.refreshDataDriver();
-          // }
-
-          // if (this.dataTercero.placa) {
-          //   this.datos.refreshDataVehicule();
-          // }
-
-        }
-           // this.getDriverApi(cedula, false);
-
-      }
-    )
-
-
-  }
-
- async checkDocument()
-  {
+  async checkDocument() {
 
     // console.log(this.fechaL);
     const loading = await this.loading.create({
       message: 'Guradando Fotos..'
     });
 
+    loading.present();
+
     var validate = true;
     var mensaje = '<ul>';
     var doc = false
+    var jsonApiVehiculo: any = {}
+    var jsonApiConductor: any = {}
 
-    if (this.dataTercero.cedula) {
+    if (this.documentActive.type == 'conductor') {
       doc = this.dataTercero.cedula
     }
-
-    if (this.dataTercero.placa) {
+    if (this.documentActive.type == 'vehiculo') {
       doc = this.dataTercero.placa
     }
 
-    const data = this.documentActive.docs;
-    for (let a = 0; a < data.length; a++) {
-      const element = data[a];
-      if (!this.datos.hubImag[element.codigo].webviewPath) {
-       validate = false;
-       mensaje += '<li>'+ this.documentActive.nombre + element.nombre + '</li>'
-      }else{
-        element.imagen = this.datos.hubImag[element.codigo].webviewPath
+    if (this.documentActive.capture == 'camera' || this.documentActive.capture == 'galery') {
+
+      const data = this.documentActive.docs;
+
+      for (let a = 0; a < data.length; a++) {
+        const element = data[a];
+        if (!this.datos.hubImag[element.codigo].webviewPath) {
+          validate = false;
+          mensaje += '<li>' + this.documentActive.nombre + element.nombre + '</li>'
+        } else {
+          element.imagen = this.datos.hubImag[element.codigo].webviewPath
+        }
       }
+
+      console.log(this.documentActive);
+      if (this.documentActive.fecha) {
+        const fecha = document.getElementById(this.documentActive.fechaTag) as HTMLInputElement;
+
+        if (fecha.value) {
+
+
+          if (this.documentActive.type == 'conductor') {
+            this.datos.conductor[this.documentActive.fechaTag] = fecha.value;
+            this.documents[this.codeDocumentActive]['value'] = fecha.value;
+            jsonApiConductor['codigoTercerox'] = this.dataTercero.cedula;
+            jsonApiConductor['conductor'] = true;
+            jsonApiConductor[this.documentActive.fechaTag] = fecha.value;
+          }
+
+          if (this.documentActive.type == 'vehiculo') {
+            this.datos.vehiculo[this.documentActive.fechaTag] = fecha.value;
+            this.documents[this.codeDocumentActive]['value'] = fecha.value;
+            jsonApiVehiculo['placa'] = this.dataTercero.placa;
+            jsonApiVehiculo[this.documentActive.fechaTag] = fecha.value;
+            // this.fechaL[this.documentActive.type][this.documentActive.fechaTag] = fecha.value
+          }
+
+        } else {
+
+          validate = false;
+          mensaje += '<li>' + this.documentActive.fechaTag + '</li>'
+        }
+      } else if (!this.documentActive.fecha && this.documentActive.fechaTag) {
+        if (this.documentActive.type == 'conductor') {
+          const fecha = new Date();
+          fecha.setMonth(fecha.getMonth() + 1); // Agregar un mes
+          this.documents[this.codeDocumentActive]['value'] = fecha.toISOString().slice(0, 10);
+          jsonApiConductor['codigoTercerox'] = this.dataTercero.cedula
+          jsonApiConductor['conductor'] = true;
+          jsonApiConductor[this.documentActive.fechaTag] = fecha.toISOString().slice(0, 10);
+        }
+      }
+
+
+      mensaje += '</ul>'
+
+      if (validate) {
+
+
+
+        if (this.documentActive.type == 'vehiculo' && jsonApiVehiculo.placa) {
+          const envio = await this.reg.sendDataVehiculo(jsonApiVehiculo);
+        }
+
+        if (this.documentActive.type == 'conductor' && jsonApiConductor.conductor) {
+          const envio = await this.reg.sendDataTercero(jsonApiConductor);
+          console.log(envio);
+        }
+
+        if (doc) {
+
+          var jsonDocs: any = {
+            files: [],
+          };
+
+          for (let b = 0; b < data.length; b++) {
+            const doctipe = data[b];
+
+            if (this.datos.hubImag[doctipe.codigo].base64) {
+              const dataDoc: any = {
+                codigo: doc,
+                tipo: doctipe.codigo,
+                tipoRegistro: this.documentActive.type,
+                data64: this.datos.hubImag[doctipe.codigo].base64,
+              }
+
+              jsonDocs.files.push(dataDoc);
+            }
+          }
+
+          this.user.cargaDocumentos(jsonDocs).subscribe(
+            (data) => {
+              const files = data.data;
+
+              for (let a = 0; a < jsonDocs.length; a++) {
+                const element = jsonDocs[a];
+                if (files[element.tipo]) {
+                  this.datos.hubImag[element.tipo].webviewPath = files[element.tipo];
+                }
+              }
+
+              this.isModalOpen = false;
+              this.documentActive.status = true
+
+
+            },
+            (err) => {
+              this.presentAlert("Error", "Se presento una novedad en los datos", "Volver a intentar", "Cerrar")
+              loading.dismiss();
+            },
+            () => {
+              loading.dismiss();
+            }
+          )
+
+        }
+
+
+      } else {
+        this.presentAlert('Error', 'En necesario cargar', mensaje, 'Cerrar')
+        loading.dismiss();
+      }
+
     }
 
-    if (this.documentActive.fecha) {
-      const fecha = document.getElementById(this.documentActive.fechaTag) as HTMLInputElement;
-     if (fecha.value) {
+  }
 
-      if (this.dataTercero.cedula) {
-        this.datos.conductor[this.documentActive.fechaTag] = fecha.value;
-      }
+  async documentValidate() {
+    const data = this.documents
+    var doc = ''
+    var tipo = ''
+    var validate = true
+    var jsonApiVehiculo: any = {}
+    var jsonApiConductor: any = {}
 
-      if (this.dataTercero.placa) {
-        this.datos.vehiculo[this.documentActive.fechaTag] = fecha.value;
-      }
+    // this.loadingData = await this.loading.create({
+    //   message: 'Revisando Datos..'
+    // });
 
-      }else{
-        validate = false;
-        mensaje += '<li>' + this.documentActive.fechaTag + '</li>'
+    // this.loadingData.present();
+
+    for (const document of data) {
+      if (!document.status) {
+        validate = false
       }
     }
-
-    mensaje += '</ul>'
 
     if (validate) {
 
+      this.datos.openDocs = false;
+      this.datos.ngOnInit();
 
-
-      if (doc) {
-
-           var jsonDocs:any = {
-             files: [],
-           };
-
-             for (let b = 0; b < data.length; b++) {
-               const doctipe = data.docs[b];
-
-               if (this.datos.hubImag[doctipe.codigo].base64) {
-                 const dataDoc:any = {
-                   codigo: doc,
-                   tipo: doctipe.codigo,
-                   data64: this.datos.hubImag[doctipe.codigo].base64,
-                 }
-
-                 jsonDocs.files.push(dataDoc);
-               }
-             }
-
-           this.user.cargaDocumentos(jsonDocs).subscribe(
-             (data) => {
-               const files = data.data;
-
-               for (let a = 0; a < jsonDocs.length; a++) {
-                 const element = jsonDocs[a];
-                 if (files[element.tipo]) {
-                   this.datos.hubImag[element.tipo].webviewPath = files[element.tipo];
-                 }
-               }
-
-               this.isModalOpen = false;
-               this.documentActive.status = true
-
-
-             },
-             (err) => {
-               this.presentAlert("Error","Se presento una novedad en los datos","Volver a intentar","Cerrar")
-               loading.dismiss();
-             },
-             ()=>{
-              loading.dismiss();
-             }
-           )
-
-      }
-
-
-    }else{
-      this.presentAlert('Error', 'En necesario cargar', mensaje, 'Cerrar')
+    } else {
+      this.presentAlert("Error", "Hay documentos pendientes por cargar", "", "Cerrar")
     }
+    // this.loadingData.dismiss();
+
+
+
   }
 
-  resetFotos(){
+
+  async getFechas() {
+    const data = await this.user.getFechas(this.token).toPromise();
+    return data;
+  }
+
+  resetFotos() {
     const data = this.documentActive.docs;
     for (let a = 0; a < data.length; a++) {
       const element = data[a];
@@ -386,22 +411,36 @@ export class Documentos2Component  implements OnInit {
 
   }
 
-  async getDocument(codigo:any, tipo:any, tipoRegistro:any): Promise<any>
-  {
+  select(e: any) {
+
+  }
+  onChange(e: any) {
+
+  }
+  onFocused(e: any) {
+
+  }
+
+  async getDocument(codigo: any, tipo: any, tipoRegistro: any): Promise<any> {
     try {
-      const resp:any = await this.photo.getFotoTercero(codigo,tipo,tipoRegistro).toPromise()
+      const resp: any = await this.photo.getFotoTercero(codigo, tipo, tipoRegistro).toPromise()
       return resp
     } catch (error) {
       throw error
     }
   }
 
-  getImagen(code:any)
-  {
-    return this.datos.hubImag[code].webviewPath;
+  getImagen(code: any) {
+    const imageData = this.datos.hubImag[code];
+    if (imageData && imageData.webviewPath) {
+      return imageData.webviewPath;
+    } else {
+      console.error(`No se encontró la imagen para el código: ${code}`);
+      return '';
+    }
   }
 
-  async presentAlert(title: String, subheader: String, desc: String, botton: String ) {
+  async presentAlert(title: String, subheader: String, desc: String, botton: String) {
     const alert = await this.alertController.create({
       header: '' + title,
       subHeader: '' + subheader,
@@ -410,6 +449,10 @@ export class Documentos2Component  implements OnInit {
     });
 
     await alert.present();
+  }
+
+  deleteDocumentByName(arr: any, name: any) {
+    return arr.filter((doc: any) => doc.nombre !== name);
   }
 
 }

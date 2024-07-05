@@ -183,7 +183,7 @@ public async addNewToCameraProfile(name:any ) {
 
   }
 
-  async processAndRotationImage(base64Image: string): Promise<string> {
+  async processAndRotationImage(base64Image: string, rotate:number): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const img = new Image();
 
@@ -192,10 +192,18 @@ public async addNewToCameraProfile(name:any ) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-         canvas.width = img.height;
-         canvas.height = img.width;
-         ctx!.rotate(-90 * Math.PI / 180);
-         ctx!.drawImage(img, -img.width, 0);
+        if (rotate > 0) {
+          if (rotate == 90) {
+            canvas.width = img.height;
+            canvas.height = img.width;
+          }
+           ctx!.rotate(-rotate * Math.PI / 180);
+           ctx!.drawImage(img, -img.width, 0);
+          }else{
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx!.drawImage(img, 0, 0);
+          }
 
 
          canvas.toBlob((blob: any) => {
@@ -226,12 +234,25 @@ public async addNewToCameraProfile(name:any ) {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const MAX_WIDTH = 800;
-        const MAX_HEIGHT = 600;
+
+
+
+
         let width = img.width;
         let height = img.height;
 
-        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        if (width > length){
+          var MAX_WIDTH = 800;
+          var MAX_HEIGHT = 600;
+        }else{
+          var MAX_WIDTH = 600;
+          var MAX_HEIGHT = 800;
+        }
+
+
+
+
+        if (width > MAX_WIDTH && height > MAX_HEIGHT) {
           if (width / height > MAX_WIDTH / MAX_HEIGHT) {
             width = MAX_WIDTH;
             height *= MAX_WIDTH / img.width;
@@ -239,7 +260,15 @@ public async addNewToCameraProfile(name:any ) {
             height = MAX_HEIGHT;
             width *= MAX_HEIGHT / img.height;
           }
+        } else if(width < MAX_WIDTH && height < MAX_HEIGHT){
+
+
+
         }
+
+
+        console.log(width);
+        console.log(height);
 
         canvas.width = width;
         canvas.height = height;

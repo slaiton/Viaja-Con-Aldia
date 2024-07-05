@@ -11,6 +11,45 @@ export class RegistroService {
 
  constructor(private http: HttpClient) { }
 
+getDataCode(cedula:any, placa:any, token:any): Promise<any>
+{
+  const params = new HttpParams({
+    fromString: 'cedula=' + cedula + '&placa=' + placa
+  });
+
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+  const requestOptions = { headers: headers, params: params };
+  return this.http.get("https://api.3slogistica.com/api/vehiculo/validation", requestOptions).toPromise();
+}
+
+sendCode(json:any, token:any): Promise<any>
+{
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+  const requestOptions = { headers: headers };
+  return this.http.post("https://api.3slogistica.com/api/vehiculo/validation", json, requestOptions).toPromise();
+}
+
+validateCode(json:any, token:any): Promise<any>
+{
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+  const requestOptions = { headers: headers };
+  return this.http.put("https://api.3slogistica.com/api/vehiculo/validation", json, requestOptions).toPromise();
+}
 
 sendDataTercero(json:any): Promise<any>
 {
@@ -21,6 +60,35 @@ sendDataTercero(json:any): Promise<any>
   const requestOptions = { headers: headers };
 
   return this.http.post("https://api.3slogistica.com/api/tercero", json, requestOptions).toPromise();
+}
+
+addVehiclexDriver(token:any, json:any): Promise<any> {
+
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+
+  const requestOptions = { headers: headers };
+
+  return this.http.post("https://api.3slogistica.com/api/mis-vehiculos", json, requestOptions).toPromise();
+}
+
+
+deleteVehicle(params:any, token:any):Observable<any> {
+
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+  const requestOptions = { headers: headers, body: params };
+
+
+  return this.http.delete("https://api.3slogistica.com/api/mis-vehiculos/1", requestOptions)
 }
 
 
@@ -52,6 +120,19 @@ sendDataVehiculo(json:any): Promise<any>
   return this.http.post("https://api.3slogistica.com/api/vehiculo", json, requestOptions).toPromise();
 }
 
+changeDataVehicle(json:any, token:any): Promise<any>
+{
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+  const requestOptions = { headers: headers };
+
+  return this.http.post("https://api.3slogistica.com/api/vehiculo/change", json, requestOptions).toPromise()
+}
+
 
 
 getDataVehiculo(placa:any): Observable<any>
@@ -70,6 +151,22 @@ getDataVehiculo(placa:any): Observable<any>
   return this.http.get("https://api.3slogistica.com/api/vehiculo", requestOptions)
 }
 
+getSatelital(token:any) : Observable<any>{
+
+  const params = new HttpParams({
+    fromString: 'estado=1'
+  });
+
+  const headers = new HttpHeaders({
+    'Content-Type':'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token
+  });
+
+const requestOptions = { headers: headers, params: params };
+
+  return this.http.get("https://api.3slogistica.com/api/satelital", requestOptions)
+}
 
 
  getClasevehiculo(token:any) : Observable<any>{
@@ -93,15 +190,15 @@ getDataVehiculo(placa:any): Observable<any>
     const params = new HttpParams({
         fromString: ''
       });
-  
+
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
         'Accept': 'application/json',
         'Authorization': 'Bearer ' + token
       });
-  
+
     const requestOptions = { headers: headers, params: params };
-  
+
       return this.http.get("https://api.3slogistica.com/api/marcavehiculo", requestOptions)
  }
 
@@ -125,15 +222,15 @@ getDataVehiculo(placa:any): Observable<any>
     const params = new HttpParams({
         fromString: 'clase='+ clase
       });
-  
+
       const headers = new HttpHeaders({
         'Content-Type':'application/json; charset=utf-8',
         'Accept': 'application/json',
         'Authorization': 'Bearer ' + token
       });
-  
+
     const requestOptions = { headers: headers, params: params };
-  
+
       return this.http.get("https://api.3slogistica.com/api/carroceriavehiculo", requestOptions)
  }
 
@@ -188,7 +285,7 @@ const requestOptions = { headers: headers, params: params };
 
 
  getTermGeneral() {
-  
+
   const container = document.getElementById('dataTerms');
 
   const title = document.createElement('h5');
@@ -198,7 +295,7 @@ const requestOptions = { headers: headers, params: params };
   const content = document.createElement('p');
   content.innerHTML = 'Conozco, entiendo y acepto de manera voluntaria e inequívoca el cumplimiento de la regulación vigente y de acuerdo a lo establecido en la circular 0170 de 2002 de la Dirección de Impuestos y Aduanas Nacionales (DIAN), Resolución 74854/2016, Decreto 1165 /2019 y  demás normas que lo modifiquen o adicionen, bajo gravedad de juramento que los recursos que entrego, no provienen de ninguna actividad ilícita de las contempladas en el código penal colombiano y no admitiré que terceros efectúen depósitos a mis productos con recursos provenientes de actividades ilícitas ni efectuare transacciones destinadas a tales actividades ni a favor de personas relacionadas con las mismas, declaro expresamente lo siguiente:'
   container?.appendChild(content)
-  
+
 
   const content1 = document.createElement('p');
   content1.innerHTML = '1.La información suministrada en el presente documento es veraz y verificable y la persona natural o jurídica se compromete a actualizarla anualmente. <br> 2. Los recursos que se deriven de la actividad, profesión u oficio de la persona natural o jurídica, no se destinarán a la financiación del terrorismo, grupos terroristas o actividades terroristas y a la proliferación de armas de destrucción masiva. <br> 3. Los recursos que posee la persona natural o jurídica provienen de su actividad, profesión u oficio y/o objeto social. <br> 4.Todos los pagos que realizo (realizamos) son directos, con recursos propios, no a través de terceros, ni con recursos de terceros. <br> 5. De manera irrevocable autorizo (autorizamos) a la compañía para solicitar, consultar, procesar, suministrar, reportar o divulgar a cualquier entidad válidamente autorizada para manejar o administrar bases de datos, incluidas las entidades gubernamentales, información contenida en este formulario y demás. ';

@@ -10,18 +10,44 @@
     flex: revert-layer !important;
   }
 
-.container-prop {
-    position: relative;
-    height: 150px;
-    width: 100%;
-    margin-top: 10px;
-  }
+// .container-prop {
+//     position: relative;
+//     height: 300px;
+//     width: 100%;
+//     margin-top: 10px;
+//   }
 
-  .prop-flotante {
-    position: absolute;
-    width: 100%;
-    top: 0;
-  }
+//   .prop-flotante {
+//     position: absolute;
+//     width: 100%;
+//     top: 0;
+//   }
+
+.container-prop {
+  height: auto;
+  padding: 10px;
+  // border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.prop-flotante {
+  height: auto;
+  padding: 10px;
+  // border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+ion-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+ion-col {
+  height: auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
 
   .select-card {
     background-color: #0094DA;

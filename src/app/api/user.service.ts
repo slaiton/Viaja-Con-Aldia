@@ -18,9 +18,10 @@ export class UserService {
       nombre: 'Cedula Ciudadania',
       position: 1,
       status: false,
-      type: 'doc',
+      type: 'conductor',
       capture: 'camera',
       hidden: false,
+      rotate: true,
       tag: 'cedula',
       fecha:false,
       docs: [
@@ -39,10 +40,11 @@ export class UserService {
       position: 2,
       status: false,
       tag: 'licencia',
-      type: 'doc',
+      type: 'conductor',
       fecha :true,
       capture: 'camera',
       hidden: false,
+      rotate: true,
       fechaTag:'fechaLicencia',
       fechaTitle: 'Vencimiento Licencia',
       docs: [
@@ -61,10 +63,12 @@ export class UserService {
       position: 3,
       status: false,
       tag: 'seguridad',
-      type: 'doc',
+      type: 'conductor',
       capture: 'galery',
       hidden: false,
-      fecha:false,
+      rotate: false,
+      fecha: false,
+      fechaTag: 'fechaSeguridad',
       docs: [
         {
           nombre: 'Cara Frontal',
@@ -79,11 +83,12 @@ export class UserService {
       nombre: 'Tarjeta Propiedad Vehiculo',
       position: 1,
       status: false,
-      type: 'doc',
+      type: 'vehiculo',
       capture: 'camera',
       hidden: false,
+      rotate: true,
       tag: 'tarjePro',
-      fecha:false,
+      fecha: false,
       docs: [
         {
           nombre:'Cara frontal',
@@ -99,11 +104,12 @@ export class UserService {
       nombre: 'Soat',
       position: 2,
       status: false,
-      type: 'doc',
+      type: 'vehiculo',
       capture: 'galery',
       hidden: false,
+      rotate: false,
       tag: 'soat',
-      fecha:true,
+      fecha: true,
       fechaTag:'fechaSoat',
       fechaTitle: 'Vencimiento Soat',
       docs: [
@@ -117,11 +123,12 @@ export class UserService {
       nombre: 'Tecnomecanica',
       position: 3,
       status: false,
-      type: 'doc',
+      type: 'vehiculo',
       capture: 'galery',
       hidden: false,
+      rotate: false,
       tag: 'tarjePro',
-      fecha:true,
+      fecha: true,
       fechaTag:'fechaTecno',
       fechaTitle: 'Vencimiento Tecnomecanica',
       docs: [
@@ -132,36 +139,15 @@ export class UserService {
       ]
     },
     {
-      nombre: 'Remolque',
-      position: 4,
-      status: false,
-      type: 'doc',
-      capture: 'camera',
-      hidden: false,
-      tag: 'tarjePro',
-      fecha:false,
-      articulado:true,
-      docs: [
-        {
-          nombre:'Foto romolque',
-          codigo:'fotoremol'
-        },
-        {
-          nombre:'Tarjeta de propiedad remolque',
-          codigo:'tarjePror'
-        }
-      ]
-    },
-    {
       nombre: 'Fotos Vehiculo',
       position: 5,
       status: false,
-      type: 'doc',
+      type: 'vehiculo',
       capture: 'camera',
       hidden: false,
+      rotate: false,
       tag: 'tarjePro',
-      fecha:false,
-      articulado:true,
+      fecha: false,
       docs: [
         {
           nombre:'Foto Frontal',
@@ -178,6 +164,28 @@ export class UserService {
         {
           nombre:'Foto Posterior',
           codigo:'fotovehi4'
+        }
+      ]
+    },
+    {
+      nombre: 'Remolque',
+      position: 6,
+      status: false,
+      type: 'vehiculo',
+      capture: 'camera',
+      hidden: false,
+      rotate: false,
+      tag: 'tarjePro',
+      fecha: false,
+      articulado: true,
+      docs: [
+        {
+          nombre:'Foto romolque',
+          codigo:'fotoremol'
+        },
+        {
+          nombre:'Tarjeta de propiedad remolque',
+          codigo:'tarjePror'
         }
       ]
     }
@@ -265,6 +273,21 @@ export class UserService {
       const requestOptions = { headers: headers, params: params };
 
       return this.http.get("https://api.aldialogistica.com/api/datos/terceros", requestOptions)
+    }
+
+    getFechas(token:any):Observable<any> {
+      const params = new HttpParams({
+        fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
+      });
+
+      const headers = new HttpHeaders({
+        'Content-Type':'application/json; charset=utf-8',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + token
+      });
+      const requestOptions = { headers: headers, params: params };
+
+      return this.http.get("https://api.3slogistica.com/api/document/validate", requestOptions)
     }
 
 
@@ -493,6 +516,43 @@ export class UserService {
     getSession()
     {
       return this.onLoginChange.asObservable();
+    }
+
+    separarCamelCase(cadena: any): string {
+      const regex = /([a-z])([A-Z])/g;
+      let nuevaCadena: any = cadena.replace(regex, '$1 $2');
+      nuevaCadena = nuevaCadena.toLowerCase();
+      nuevaCadena = nuevaCadena.charAt(0).toLowerCase() + nuevaCadena.slice(1);
+      return nuevaCadena;
+    }
+
+    buscarCodigoEnDocumentos(codigo: string) {
+      for (const documento1 of this.documents_conductor) {
+        if (documento1.fechaTag && documento1.fechaTag === codigo) {
+          return documento1;
+        } else {
+          for (const docs of documento1.docs) {
+            if (docs.codigo === codigo) {
+              return documento1;
+            }
+          }
+        }
+      }
+
+      for (const documento2 of this.documents_vehiculo) {
+        if (documento2.fechaTag && documento2.fechaTag === codigo) {
+          return documento2;
+        } else {
+          for (const docs of documento2.docs) {
+            if (docs.codigo === codigo) {
+              return documento2;
+            }
+          }
+        }
+      }
+
+
+      return undefined;
     }
 
 

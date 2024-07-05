@@ -5,11 +5,8 @@ import { PhotoService } from '../api/photo.service';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
-
-
-
-
-
+import { GeodataService } from '../api/geodata.service';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 
 
 
@@ -19,131 +16,61 @@ import { Platform } from '@ionic/angular';
   styleUrls: ['./dashboard.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom
 })
-export class DashboardComponent  implements OnInit {
+export class DashboardComponent{
 
 
-  // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
-  @ViewChild('canvasElement', { static: true }) canvasElement!: ElementRef<HTMLCanvasElement>;
-    public context!: CanvasRenderingContext2D|null;
-
-  public videoElement:any;
-  @Input() stream:any;
-  @Input() width!: number;
-  @Input() height!: number;
-  modelsReady!: boolean;
-  listEvents: Array<any> = [];
-  overCanvas: any;
-  hubImag:any = []
-
-
-  constructor(
-    private renderer2: Renderer2,
-    private elementRef: ElementRef,
-    private faceApiService: FaceApiService,
-    private videoPlayerService: VideoPlayerService,
-    private photo: PhotoService,
-  ) 
+  constructor(private geolocation: Geolocation)
   {
   }
 
+  // async init() {
+  //   try {
+  //     const permissions = await BackgroundRunner.requestPermissions({
+  //       apis:['geolocation', 'notifications']
+  //     });
+  //     console.log('OK' + permissions);
 
-  ngOnInit():void {
-    this.context = this.canvasElement.nativeElement.getContext('2d');
-  }
+  //   } catch (error) {
 
+  //     console.log('Shit  '  + error);
 
-  listenerEvents = () => {
-    const observer1$ = this.faceApiService.cbModels.subscribe(res => {
-      //: TODO Los modelos estan ready!!
-      this.modelsReady = true;
-      this.checkFace();
-    });
+  //   }
 
-    const observer2$ = this.videoPlayerService.cbAi
-      .subscribe(({resizedDetections, displaySize, expressions, eyes}) => {
-        resizedDetections = resizedDetections[0] || null;
-        // :TODO Aqui pintamos! dibujamos!
-        if (resizedDetections) {
-          this.drawFace(resizedDetections, displaySize, eyes);
-        }
-      });
+  // }
 
-    this.listEvents = [observer1$, observer2$];
-  };
+  // getPosition() {
+  //   this.geolocation
+  //   .getCurrentPosition()
+  //   .then((resp) => {
+  //       return { lat: resp.coords.latitude, lon: resp.coords.longitude }
+  //   })
+  //   .catch((error) => {
+  //     console.log('Error getting location', error);
+  //   });
+  // }
 
-  drawFace = (resizedDetections:any, displaySize:any, eyes:any) => {
-    const {globalFace} = this.faceApiService;
-    this.overCanvas.getContext('2d').clearRect(0, 0, displaySize.width, displaySize.height);
-    // globalFace.draw.drawDetections(this.overCanvas, resizedDetections);
-    // globalFace.draw.drawFaceLandmarks(this.overCanvas, resizedDetections);
+  // async geoSave() {
+  //   const geoData:any = this.getPosition();
+  //    const result = await BackgroundRunner.dispatchEvent({
+  //     label: 'com.viajaconaldia.runner.check',
+  //     event: 'geoSave',
+  //     details: {}
+  //    })
 
-    const scale = this.width / displaySize.width;
-    console.log(scale);
+  //    console.log('SAVE' + result);
 
-    const elementFilterEye = document.querySelector('.filter-eye');
-    this.renderer2.setStyle(elementFilterEye, 'left', `${eyes.left[0].x * scale}px`);
-    this.renderer2.setStyle(elementFilterEye, 'top', `${eyes.left[0].y * scale}px`);
-  };
+  //   }
 
-  checkFace = () => {
-    setInterval(async () => {
-      await this.videoPlayerService.getLandMark(this.videoElement);
-    }, 100);
-  };
+  // async geoLoad() {
+  //   const result = await BackgroundRunner.dispatchEvent({
+  //     label: 'com.viajaconaldia.runner.check',
+  //     event: 'geoLoad',
+  //     details: {}
+  //    })
 
-  loadedMetaData(): void {
-    this.videoElement.nativeElement.play();
-  }
+  //    console.log('LOAD' + result);
 
-  listenerPlay(): void {
-    const {globalFace} = this.faceApiService;
-    this.overCanvas = globalFace.createCanvasFromMedia(this.videoElement.nativeElement);
-    this.renderer2.setProperty(this.overCanvas, 'id', 'new-canvas-over');
-    this.renderer2.setStyle(this.overCanvas, 'width', `${this.width}px`);
-    this.renderer2.setStyle(this.overCanvas, 'height', `${this.height}px`);
-    this.renderer2.appendChild(this.elementRef.nativeElement, this.overCanvas);
-  }
+  // }
 
-
-  addToCamera(name:any){
-    const pwaCameraElement = document.querySelector('body');
-    
-    const shadowRoot: DocumentFragment = this.elementRef.nativeElement.shadowRoot;
-    const Button = document.querySelector('html');
-    
-    console.log(this.elementRef.nativeElement.pwaCameraElement);
-    console.log(Button);
-    console.log(shadowRoot);
-
-    this.listenerEvents();
-    
-    
-    this.photo.addNewToCameraProfileTest(name).then((da) => {
-      
-
-    });
-
-
-  }
-
-  
-  drawLines(): void {
-    // Configuraciones de estilo de línea
-    this.context!.strokeStyle = 'blue';
-    this.context!.lineWidth = 5;
-
-    // Dibujar una línea
-    this.context?.beginPath();
-    this.context?.moveTo(50, 50); // Punto inicial (x, y)
-    this.context?.lineTo(200, 50); // Punto final (x, y)
-    this.context?.stroke(); // Dibujar la línea
-
-    // Dibujar otra línea
-    this.context?.beginPath();
-    this.context?.moveTo(50, 100);
-    this.context?.lineTo(200, 100);
-    this.context?.stroke();
-  }
- 
 
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+
 import {
   FormControl,
   FormBuilder,
@@ -62,7 +63,7 @@ export class LoginPage implements OnInit {
         );
 
         this.userService.setToken(data.access_token);
-        
+
         localStorage.setItem('conductor', this.loginForm.value.username);
         this.menu.enable(true);
         this.userService.onLoginChange.next(data.token);
@@ -100,7 +101,7 @@ export class LoginPage implements OnInit {
 
 
     }
-    
+
 
     this.platform.backButton.subscribeWithPriority(10, () => {
       App.exitApp();

@@ -5,7 +5,7 @@ import { Observable } from "rxjs-compat/Observable";
 import { BehaviorSubject, tap } from 'rxjs';
 import { CookieService } from "ngx-cookie-service";
 import { User } from "../models/user.model";
-import { MenuController } from '@ionic/angular';
+import { LoadingController, MenuController } from '@ionic/angular';
 
 
 
@@ -17,7 +17,12 @@ export class AuthService {
   public onLoginChange = new BehaviorSubject(false);
   public onChange = this.onLoginChange.asObservable();
 
-  constructor(private menu: MenuController, private http: HttpClient, private cookies: CookieService, private router: Router) { }
+  constructor(
+    private menu: MenuController,
+    private http: HttpClient,
+    private cookies: CookieService,
+    private router: Router,
+   private loading: LoadingController) { }
 
 
   login(user: any): Observable<any> {
@@ -70,7 +75,7 @@ tokenValidate(jsonToken:any) :Observable<any> {
   return this.http.post("https://api.3slogistica.com/api/auth/token", jsonToken)
 }
 
-delToken(jsonToken:any) :Observable<any> 
+delToken(jsonToken:any) :Observable<any>
 {
   const options = {
     headers: new HttpHeaders({
@@ -82,14 +87,21 @@ delToken(jsonToken:any) :Observable<any>
   return this.http.delete("https://api.3slogistica.com/api/auth/token", options)
 }
 
-  logout(){
-    
+  async logout(){
+
+    const loadingData = await this.loading.create({
+      message: 'Cerrando... Hasta luego!',
+    });
+
+    loadingData.present();
+
     const token =  this.getToken()
     const jsontoken = {
       'token' : token
     };
     this.delToken(jsontoken).subscribe(
       (data:any) => {
+        loadingData.dismiss();
         localStorage.removeItem("token");
         localStorage.removeItem("placa");
         this.menu.enable(false);

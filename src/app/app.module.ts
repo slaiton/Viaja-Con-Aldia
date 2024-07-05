@@ -14,6 +14,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { TipoDocumentoDirective } from './directives/tipo-documento.directive';
 import { VehiculoComponent } from './vehiculo/vehiculo.component';
 import { AutocompleteLibModule } from 'angular-ng-autocomplete';
+import { EmptyScreenComponent } from './empty-screen/empty-screen.component';
+
 
 
 
@@ -21,7 +23,7 @@ import { AutocompleteLibModule } from 'angular-ng-autocomplete';
 
 
 @NgModule({
-  declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective, VehiculoComponent],
+  declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective, VehiculoComponent, EmptyScreenComponent],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
