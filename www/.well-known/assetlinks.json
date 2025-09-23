@@ -1,0 +1,5 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target" : { "namespace": "android_app", "package_name": "io.ionic.viajaconaldia",
+               "sha256_cert_fingerprints": ["86:38:E2:84:B8:59:31:CE:DC:43:9D:E4:B9:C0:A7:89:6A:21:FB:75:7C:2E:64:48:7E:56:06:E6:0E:69:D7:EA"] }
+}]
