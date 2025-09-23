@@ -15,99 +15,98 @@ export class PhotoService {
 
   private PHOTO_STORAGE: string = 'photos';
   public fotos: Foto[] = [];
-  public base64Image:any;
+  public base64Image: any;
 
-  constructor( private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-public getFotoTercero(doc:any,tipo:any, tiporegistro:any) : Observable<any>
-{
-  const params = new HttpParams({
-    fromString: 'codigo='+doc+'&tipo='+tipo + '&tipoRegistro='+ tiporegistro
-  });
+  public getFotoTercero(doc: any, tipo: any, tiporegistro: any): Observable<any> {
+    const params = new HttpParams({
+      fromString: 'codigo=' + doc + '&tipo=' + tipo + '&tipoRegistro=' + tiporegistro
+    });
 
-  const headers = new HttpHeaders({
-    'Content-Type':'application/json; charset=utf-8',
-    'user':'USUSEGINT',
-    'password':'12249'
-  });
-  const requestOptions = { headers: headers, params: params };
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json; charset=utf-8',
+      'user': 'USUSEGINT',
+      'password': '12249'
+    });
+    const requestOptions = { headers: headers, params: params };
 
-  return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
-}
+    return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
+  }
 
-public getFotosTercero(doc:any, tipos:any, tiporegistro:any) : Observable<any>
-{
-  const params = new HttpParams({
-    fromString: 'codigo=' + doc + '&tipos=' + tipos + '&tipoRegistro='+ tiporegistro
-  });
+  public getFotosTercero(doc: any, tipos: any, tiporegistro: any, remolque:any = false): Observable<any> {
 
-  const headers = new HttpHeaders({
-    'Content-Type':'application/json; charset=utf-8',
-    'user':'USUSEGINT',
-    'password':'12249'
-  });
-  const requestOptions = { headers: headers, params: params };
+    var remol:any = ''
+    if(remolque){
+      remol = '&remolque=' + remolque
+    }
+    const params = new HttpParams({
+      fromString: 'codigo=' + doc + '&tipos=' + tipos + '&tipoRegistro=' + tiporegistro + remol
+    });
 
-  return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
-}
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json; charset=utf-8',
+      'user': 'USUSEGINT',
+      'password': '12249'
+    });
+    const requestOptions = { headers: headers, params: params };
 
-public async addNewToCamera(name:any ) {
-  const capturedPhoto = await Camera.getPhoto({
-    resultType: CameraResultType.Uri,
-    source: CameraSource.Camera,
-    direction: CameraDirection.Front,
-    quality: 100
-  });
+    return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
+  }
 
-  const savedImageFile = await this.savePicture(capturedPhoto,name);
-  this.fotos.unshift(savedImageFile);
+  public async addNewToCamera(name: any) {
+    try {
+      const capturedPhoto = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        direction: CameraDirection.Rear,
+        quality: 100
+      });
 
-  return savedImageFile;
-}
+      const savedImageFile = await this.savePicture(capturedPhoto, name);
+      this.fotos.unshift(savedImageFile);
 
-public async addNewToCameraProfileTest(name:any ) {
-  const capturedPhoto = await Camera.getPhoto({
-    resultType: CameraResultType.Uri,
-    source: CameraSource.Camera,
-    direction: CameraDirection.Front,
-    quality: 100
-  });
+      return savedImageFile;
+    } catch (error) {
 
-  return capturedPhoto;
-}
+      return false;
 
-public async addNewToGallery(name:any) {
-  // Take a photo
-  const capturedPhoto = await Camera.getPhoto({
-    resultType: CameraResultType.Uri,
-    source: CameraSource.Prompt,
-    quality: 100
-  });
+    }
+  }
 
+  public async addNewToCameraProfile(name: any) {
+    const capturedPhoto = await Camera.getPhoto({
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+      direction: CameraDirection.Front,
+      quality: 100
+    });
 
-  const savedImageFile = await this.savePicture(capturedPhoto,name);
-  this.fotos.unshift(savedImageFile);
+    const savedImageFile = await this.savePicture(capturedPhoto, name);
+    this.fotos.unshift(savedImageFile);
 
-  return savedImageFile;
-}
-
-public async addNewToCameraProfile(name:any ) {
-  const capturedPhoto = await Camera.getPhoto({
-    resultType: CameraResultType.Uri,
-    source: CameraSource.Camera,
-    direction: CameraDirection.Front,
-    quality: 100
-  });
-
-  const savedImageFile = await this.savePicture(capturedPhoto,name);
-  this.fotos.unshift(savedImageFile);
-
-  return savedImageFile;
-}
+    return savedImageFile;
+  }
 
 
+  public async addNewToGallery(name: any) {
+    // Take a photo
+    const capturedPhoto = await Camera.getPhoto({
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Photos,
+      quality: 100
+    });
 
-  private async savePicture(photo: Photo, name:any) {
+
+    const savedImageFile = await this.savePicture(capturedPhoto, name);
+    this.fotos.unshift(savedImageFile);
+
+    return savedImageFile;
+  }
+
+
+
+  private async savePicture(photo: Photo, name: any) {
     // console.log(photo);
 
     // Convert photo to base64 format, required by Filesystem API to save
@@ -143,7 +142,7 @@ public async addNewToCameraProfile(name:any ) {
     };
   }
 
-   async readAsBase64(photo: Photo) {
+  async readAsBase64(photo: Photo) {
     // Fetch the photo, read as a blob, then convert to base64 format
     const response = await fetch(photo.webPath!);
     const blob = await response.blob();
@@ -155,10 +154,20 @@ public async addNewToCameraProfile(name:any ) {
     const reader = new FileReader();
     reader.onerror = reject;
     reader.onload = () => {
-        resolve(reader.result);
+      resolve(reader.result);
     };
     reader.readAsDataURL(blob);
   });
+
+
+  convertFileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
 
 
@@ -178,12 +187,12 @@ public async addNewToCameraProfile(name:any ) {
       // console.log(photo.webviewPath);
 
 
-   }
+    }
 
 
   }
 
-  async processAndRotationImage(base64Image: string, rotate:number): Promise<string> {
+  async processAndRotationImage(base64Image: string, rotate: number): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const img = new Image();
 
@@ -197,16 +206,16 @@ public async addNewToCameraProfile(name:any ) {
             canvas.width = img.height;
             canvas.height = img.width;
           }
-           ctx!.rotate(-rotate * Math.PI / 180);
-           ctx!.drawImage(img, -img.width, 0);
-          }else{
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx!.drawImage(img, 0, 0);
-          }
+          ctx!.rotate(-rotate * Math.PI / 180);
+          ctx!.drawImage(img, -img.width, 0);
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx!.drawImage(img, 0, 0);
+        }
 
 
-         canvas.toBlob((blob: any) => {
+        canvas.toBlob((blob: any) => {
           if (!blob) {
             reject('Error al convertir el lienzo a Blob');
             return;
@@ -223,7 +232,7 @@ public async addNewToCameraProfile(name:any ) {
       img.src = base64Image;
 
 
-   });
+    });
   }
 
 
@@ -241,10 +250,10 @@ public async addNewToCameraProfile(name:any ) {
         let width = img.width;
         let height = img.height;
 
-        if (width > length){
+        if (width > length) {
           var MAX_WIDTH = 800;
           var MAX_HEIGHT = 600;
-        }else{
+        } else {
           var MAX_WIDTH = 600;
           var MAX_HEIGHT = 800;
         }
@@ -260,12 +269,9 @@ public async addNewToCameraProfile(name:any ) {
             height = MAX_HEIGHT;
             width *= MAX_HEIGHT / img.height;
           }
-        } else if(width < MAX_WIDTH && height < MAX_HEIGHT){
-
-
+        } else if (width < MAX_WIDTH && height < MAX_HEIGHT) {
 
         }
-
 
         console.log(width);
         console.log(height);
@@ -288,7 +294,7 @@ public async addNewToCameraProfile(name:any ) {
 
   }
 
-  async processAndCropImage(base64Image: string, desiredSizeX:any, desiredSizeY:any, rotationAngle:any ): Promise<string> {
+  async processAndCropImage(base64Image: string, desiredSizeX: any, desiredSizeY: any, rotationAngle: any): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const img = new Image();
 
@@ -320,7 +326,7 @@ public async addNewToCameraProfile(name:any ) {
         const newImageDataUrl = canvas.toDataURL('image/jpeg');
 
 
-        canvas.toBlob((blob:any) => {
+        canvas.toBlob((blob: any) => {
           if (!blob) {
             reject('Error al convertir el lienzo a Blob');
             return;

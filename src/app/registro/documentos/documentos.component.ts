@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { AlertController, IonModal, LoadingController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { RegistroPage } from '../../registro/registro.page';
 import { PhotoService } from '../../api/photo.service';
@@ -20,6 +20,7 @@ export class DocumentosComponent implements OnInit {
 
   // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
   // @Input() dataTercero: any;
+  @ViewChild(IonModal) modalType!: IonModal;
   @Input() public dataTercero: any;
   listEvents: Array<any> = [];
   overCanvas: any;
@@ -28,10 +29,13 @@ export class DocumentosComponent implements OnInit {
   articulado: any = true;
   loadingData: any;
   cambiosDocs: any;
+  codeImageSelect: any;
+  rotateImageSelect: any;
 
 
 
   isModalOpen: any = false;
+  modalTypeInput: any = false;
   documents: any = [];
   fechaL: any = [];
 
@@ -53,13 +57,16 @@ export class DocumentosComponent implements OnInit {
       this.reg.openDocs = false;
     });
 
-    console.log(this.dataTercero);
     // console.log(this.active);
     // this.active = false;
     var validate = true;
     var doc = ''
     var mensaje = '';
     var tipoRegistro = ''
+
+    console.log(this.dataTercero);
+
+
 
     if (this.dataTercero.docs) {
       this.documents = this.dataTercero.docs;
@@ -70,6 +77,7 @@ export class DocumentosComponent implements OnInit {
         this.documents = this.deleteDocumentByName(this.documents, 'Remolque')
       }
     }
+
 
 
     if (this.documents) {
@@ -87,13 +95,16 @@ export class DocumentosComponent implements OnInit {
 
             if (this.documents[a].type == 'vehiculo') {
               doc = this.dataTercero.placa
-              if (this.dataTercero.articulado) {
-                this.documents = this.deleteDocumentByName(this.documents, 'Remolque')
-              }
+              // if (this.dataTercero.articulado) {
+              //   this.documents = this.deleteDocumentByName(this.documents, 'Remolque')
+              // }
             }
-
             tipoRegistro = this.documents[a].type
 
+            if (this.documents[a].articulado) {
+              doc = this.dataTercero.articulado
+              tipoRegistro = 'remolque'
+            }
 
             this.getDocument(doc, code, tipoRegistro).then(
               (doc: any) => {
@@ -127,6 +138,25 @@ export class DocumentosComponent implements OnInit {
     this.isModalOpen = isOpen;
   }
 
+  setModalType(isOpen: any) {
+    this.modalTypeInput = isOpen;
+  }
+
+  dimmissModalType(e: any) {
+    this.modalTypeInput = false;
+    console.log(e);
+
+  }
+
+  selectTypeDocument(code: any, rotate: any) {
+
+    this.codeImageSelect = code
+    this.rotateImageSelect = rotate
+    this.setModalType(true)
+  }
+
+
+
   selectDocument(a: any) {
     this.isModalOpen = true;
     this.documentActive = this.documents[a];
@@ -146,9 +176,9 @@ export class DocumentosComponent implements OnInit {
       message: 'Guradando Foto..'
     });
 
+    this.loadingData.present();
 
     this.photo.addNewToGallery(name).then((da) => {
-      this.loadingData.present();
       this.processImage(da, name, rotate);
       this.cambiosDocs = true;
     });
@@ -160,11 +190,16 @@ export class DocumentosComponent implements OnInit {
       message: 'Guradando Foto..'
     });
 
+    this.loadingData.present();
+
     this.photo.addNewToCamera(name).then((da) => {
-      this.loadingData.present();
-      this.processImage(da, name, rotate);
-      // loading.dismiss()
-      this.cambiosDocs = true;
+      if (da) {
+        this.processImage(da, name, rotate);
+        // loading.dismiss()
+        this.cambiosDocs = true;
+      } else {
+        this.loadingData.dismiss()
+      }
     });
 
   }
@@ -178,12 +213,7 @@ export class DocumentosComponent implements OnInit {
         rot = 90;
       }
 
-      console.log(rot);
-
       const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, rot);
-
-      console.log(processedImagerotate);
-
 
       const dataPhoto1: Photo = {
         webPath: processedImagerotate,
@@ -216,6 +246,49 @@ export class DocumentosComponent implements OnInit {
     } catch (error) {
       console.error('Error al procesar la imagen:', error);
     }
+  }
+
+  async onFileSelected(event: any, name: any) {
+    this.loadingData = await this.loading.create({
+      message: 'Guradando Foto..'
+    });
+
+    this.loadingData.present();
+
+    const file = event.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      this.processPdf(file, name);
+    }
+  }
+
+  triggerFileInput() {
+    const fileInput = document.getElementById('pdfInput') as HTMLElement;
+    fileInput.click();
+  }
+
+  // Procesar y guardar PDF
+  private async processPdf(file: File, name: any) {
+    const da: any = {};
+
+    console.log(name);
+
+    const base64Data = await this.photo.convertFileToBase64(file);
+
+
+
+    da.webviewPath = 'assets/icon/pdf.png';
+    da.base64 = base64Data
+
+    this.reg.hubImag[name] = da;
+
+    this.loadingData.dismiss();
+
+    // const savedPdfFile = {
+    //   fileName: `${file.name}`,
+    //   fileData: base64Data
+    // };
+
+    // this.fotos.unshift(savedPdfFile);
   }
 
   async documentValidate() {
@@ -251,29 +324,34 @@ export class DocumentosComponent implements OnInit {
 
     const cadena = tipos.join(',');
 
+    try {
 
-    this.photo.getFotosTercero(doc, cadena, tipo).toPromise().then(
-      data => {
-        this.loadingData.dismiss()
-        if (data.code == '201') {
+      if (this.dataTercero.cedula) {
+        await this.reg.refreshDataDriver();
+      }
 
-          this.presentAlert("Error", "Documentos pendientes por cargar", "", "Cerrar")
+      if (this.dataTercero.placa) {
+        await this.reg.refreshDataVehicule();
+      }
 
-        } else {
 
-          if (this.dataTercero.cedula) {
-            this.reg.refreshDataDriver();
-          }
+      this.photo.getFotosTercero(doc, cadena, tipo).toPromise().then(
+        data => {
+          this.loadingData.dismiss()
+          if (data.code == '201') {
 
-          if (this.dataTercero.placa) {
-            this.reg.refreshDataVehicule();
+            this.presentAlert("Error", "Documentos pendientes por cargar", "", "Cerrar")
+
           }
 
         }
-        // this.getDriverApi(cedula, false);
+      )
+    } catch (error: any) {
 
-      }
-    )
+      this.loadingData.dismiss();
+      this.presentAlert("Error", "Error al guardar", error.error, 'cerrar')
+
+    }
   }
 
   async checkDocument() {
@@ -305,7 +383,11 @@ export class DocumentosComponent implements OnInit {
     }
     if (this.documentActive.type == 'vehiculo') {
       doc = this.dataTercero.placa
+    }
 
+    if (this.documentActive.articulado) {
+      doc = this.dataTercero.articulado
+      tipoRegistro = 'remolque'
     }
 
     const data = this.documentActive.docs;
@@ -374,6 +456,8 @@ export class DocumentosComponent implements OnInit {
 
         for (let b = 0; b < data.length; b++) {
           const doctipe = data[b];
+          console.log(doctipe);
+
 
           if (this.reg.hubImag[doctipe.codigo].base64) {
             const dataDoc: any = {
@@ -421,7 +505,7 @@ export class DocumentosComponent implements OnInit {
 
 
     } else {
-      this.presentAlert('Error', 'En necesario cargar', mensaje, 'Cerrar')
+      this.presentAlert('Error', 'Es necesario cargar', mensaje, 'Cerrar')
       loading.dismiss();
     }
   }

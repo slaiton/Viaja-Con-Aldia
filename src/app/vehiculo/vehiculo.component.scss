@@ -35,6 +35,7 @@
 .containerPhoto, .centerObject {
   display: flex;
   justify-content: center;
+  margin-top: 10px;
 }
 
 .align-center {
@@ -57,4 +58,34 @@
     background-color: red;
   }
 
+  ion-toolbar {
+    --background: #3C8CCD;
+    --color: white;
+  }
 
+  ion-title {
+    --margin-start: 15px;
+  }
+
+  .custom-title {
+    text-align: center;
+    width: 100%;
+  }
+
+  ion-menu-button {
+    color: var(white);
+  }
+
+.btn {
+ padding: .6rem .9rem;
+ border-radius: 5px;
+ text-transform: uppercase;
+ box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+ border: 0 ;
+}
+
+.btn-danger {
+  background-color: #fd1f18;
+  color: #FFFFFF;
+
+}

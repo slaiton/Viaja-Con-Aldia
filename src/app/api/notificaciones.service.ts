@@ -1,26 +1,17 @@
 import { Injectable } from '@angular/core';
-import {
-  Plugins,
-  
-} from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications';
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class NotificacionesService {
+export class NotificationService {
+  constructor() {}
 
-  constructor() { 
-    
-   }
+  async getTokenNotifications() {
+    let permStatus = await PushNotifications.requestPermissions();
 
-  // async requestPermission() {
-  //   const { PushNotifications } = Plugins;
-  //   const { granted } = await PushNotifications.requestPermission();
-  //   if (!granted) {
-  //     console.error('Permisos de notificación no otorgados.');
-  //   }
-  // }
-
+    PushNotifications.addListener('registration', async (token) => {
+      console.log('Token FCM obtenido:', token.value);
+    });
+  }
 }

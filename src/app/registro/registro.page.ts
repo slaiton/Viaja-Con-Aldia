@@ -1,7 +1,6 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { AlertController, LoadingController, ModalController, Platform } from '@ionic/angular';
-import { log } from 'console';
+import { AlertController, LoadingController, MenuController, ModalController, Platform } from '@ionic/angular';
 import { UserService } from '../api/user.service';
 import { PhotoService } from '../api/photo.service';
 
@@ -12,6 +11,7 @@ import { finalize, map, startWith } from 'rxjs/operators';
 import { Photo } from '@capacitor/camera';
 import * as e from 'cors';
 import { AuthService } from '../api/auth.service';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 
 @Component({
@@ -26,11 +26,11 @@ export class RegistroPage implements OnInit {
   @ViewChild('modal3') modal3!: ModalController;
   @ViewChild('modal4') modal4!: ModalController;
   @ViewChild('modalcode') modalcode!: ModalController;
+  @ViewChild('autocompleteContainer', { static: false }) autocompleteContainer!: ElementRef;
   @Input() dataTercero: any = [];
 
   @ViewChild('fechaInput') fechaInputNac: any;
 
-  host: any = 'http://54.215.78.160';
   registroForm: any = FormGroup;
   formNewVehicle: any = FormGroup;
   formNewDriver: any = FormGroup;
@@ -73,7 +73,7 @@ export class RegistroPage implements OnInit {
   docsFailDriver: any = [];
 
   loadingData: any;
-  codeValidation:any = false;
+  codeValidation: any = false;
 
   jsonDocs: any = [];
 
@@ -182,7 +182,8 @@ export class RegistroPage implements OnInit {
     soat1: { webviewPath: false },
     tecnomecanica: { webviewPath: false },
     fotoremol: { webviewPath: false },
-    tarjePror: { webviewPath: false },
+    tarjePror1: { webviewPath: false },
+    tarjePror2: { webviewPath: false },
     cedula_pro1: { webviewPath: false },
     cedula_pro2: { webviewPath: false },
     cedula_ten1: { webviewPath: false },
@@ -248,6 +249,15 @@ export class RegistroPage implements OnInit {
   isPropietario: any = true;
   isTenedor: any = true;
 
+  questions = [
+    { text: '¿Por su cargo o actividad maneja recursos publicos?', formControlName: 'con_rec_pub' },
+    { text: '¿Por su cargo o actividad ejerce algun grado del poder publico?', formControlName: 'grd_pod_pub' },
+    { text: '¿Por su actividad u oficio goza usted de reconocimiento publico?', formControlName: 'rec_pub_gnr' },
+    { text: '¿Existe algun vinculo entre usted y alguna persona publicamente expuesta?', formControlName: 'vin_per_pub' },
+    { text: '¿Es usted sujeto de obligaciones tributarias en otro pais o grupo de paises?', formControlName: 'per_tri_eco' },
+    { text: '¿Pertenece usted a gremios o asociaciones reconocidas?', formControlName: 'gre_rec_pub' },
+  ];
+
   public actionSheetButtons = [
     {
       text: 'Salir',
@@ -274,7 +284,13 @@ export class RegistroPage implements OnInit {
     private platform: Platform,
     private router: Router,
     private reg: RegistroService,
-    private auth: AuthService) {
+    private auth: AuthService,
+    private menu: MenuController) {
+    this.initializeApp();
+
+    this.documents_vehiculo = this.user.documents_vehiculo
+    this.documents_conductor = this.user.documents_conductor
+
     this.registroForm = this.formBuilder.group({
       placa: ['', [Validators.required]],
       cedula: ['', [Validators.required]],
@@ -301,7 +317,7 @@ export class RegistroPage implements OnInit {
     this.formNewDriver = formBuilder.group({
       nombres: ['', [Validators.required]],
       apellidos: ['', [Validators.required]],
-      correo: ['', [Validators.required]],
+      correo: ['', [Validators.required, Validators.email]],
       celular: ['', [Validators.required]],
       direccion: ['', [Validators.required]],
       fechaNacimiento: ['', [Validators.required]],
@@ -352,9 +368,6 @@ export class RegistroPage implements OnInit {
       codigo: ['', [Validators.required]]
     });
 
-
-
-
   }
 
   ngOnInit() {
@@ -362,15 +375,25 @@ export class RegistroPage implements OnInit {
       this.router.navigate(['/login']);
     });
 
-    this.documents_vehiculo = this.user.documents_vehiculo
-    this.documents_conductor = this.user.documents_conductor
 
     // Pregunta si esta seguro de salir
   }
 
-  ngAfterViewInit() {
+  initializeApp() {
+    this.platform.ready().then(() => {
+      this.setStatusBarColor();
+    });
+  }
 
-    console.log('OK');
+  setStatusBarColor() {
+    if (this.platform.is('android')) {
+      StatusBar.setBackgroundColor({ color: '#5C8CDF' });
+    } else if (this.platform.is('ios')) {
+      StatusBar.setStyle({ style: Style.Dark });
+    }
+  }
+
+  ngAfterViewInit() {
 
     const term = document.getElementById('term-scroll');
 
@@ -481,21 +504,22 @@ export class RegistroPage implements OnInit {
     }
   }
 
-  getClaseLinea(id: any) {
-    this.dataLineas = []
-    this.reg.getLineas(id, '', this.token).subscribe(
-      data => {
-        if (data.status) {
-          const dataArray = data.data;
-          for (let a = 0; a < dataArray.length; a++) {
-            const element = dataArray[a];
+  async getClaseLinea(id: any) {
+    try {
+      this.dataLineas = []
+      const data = await this.reg.getLineas(id, '', this.token).toPromise();
+      if (data.status) {
+        const dataArray = data.data;
+        for (let a = 0; a < dataArray.length; a++) {
+          const element = dataArray[a];
 
-            this.dataLineas.push({ id: element.codigoVehlinea, name: element.nombreVehlinea });
-          }
-          // console.log(this.dataLineas);
+          this.dataLineas.push({ id: element.codigoVehlinea, name: element.nombreVehlinea });
         }
+
       }
-    )
+    } catch (error) {
+      console.log(error);
+    }
   }
 
 
@@ -638,6 +662,7 @@ export class RegistroPage implements OnInit {
       message: 'Cargando Datos...'
     });
 
+    loading.present();
 
     this.formNewVehicle.patchValue({
       carroceria: ''
@@ -677,20 +702,54 @@ export class RegistroPage implements OnInit {
 
   }
 
+  onBlurClase(e: any) {
+    const objeto = this.dataClases.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('claseVehiculo')?.setValue('');
+    }
+  }
 
-  selectMarca(e: any) {
+  async selectMarca(e: any) {
+    const loading = await this.loading.create({
+      message: 'Cargando Datos...'
+    });
+
+    loading.present();
+
     this.formNewVehicle.patchValue({
       linea: ''
     });
     this.vehiculo.codigoMarca = e.id
     this.vehiculo.marca = e.name
-    this.getClaseLinea(e.id);
+    this.getClaseLinea(e.id).then(
+      data => {
+        loading.dismiss();
+      }
+    )
   }
   onChangeMarca(e: any) {
 
   }
   onFocusedMarca(e: any) {
+    setTimeout(() => {
+      this.scrollToAutocomplete();
+    }, 200);
+  }
 
+  onBlurMarca(e: any) {
+    const objeto = this.dataMarcas.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('marca')?.setValue('');
+    }
+  }
+
+
+  scrollToAutocomplete() {
+    const yOffset = this.autocompleteContainer.nativeElement.offsetTop;
+    window.scrollTo({
+      top: yOffset - 100, // Ajusta este valor según sea necesario
+      behavior: 'smooth'
+    });
   }
 
 
@@ -705,6 +764,13 @@ export class RegistroPage implements OnInit {
 
   }
 
+  onBlurCarroceria(e: any) {
+    const objeto = this.dataCarroc.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('carroceria')?.setValue('');
+    }
+  }
+
   selectLinea(e: any) {
     this.vehiculo.linea = e.name
     this.vehiculo.codigoLinea = e.id
@@ -715,6 +781,13 @@ export class RegistroPage implements OnInit {
   }
   onFocusedLinea(e: any) {
 
+  }
+
+  onBlurLinea(e: any) {
+    const objeto = this.dataLineas.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('linea')?.setValue('');
+    }
   }
 
 
@@ -732,18 +805,26 @@ export class RegistroPage implements OnInit {
   }
 
 
+  onBlurColor(e: any) {
+
+    const objeto = this.dataColores.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('color')?.setValue('');
+    }
+
+  }
+
+
   selectParente(e: any) {
-    this.conductor.parentesco = e.name
-    this.conductor.codigoParentesco = e.id
+    console.log(e);
   }
 
 
   onChangeParente(e: any) {
-
+    this.conductor.codigoParentesco = e.target.value
   }
-  onFocusedParente(e: any) {
 
-  }
+
 
   selectSatelital(e: any) {
     this.vehiculo.empresaSatelital = e.name
@@ -755,9 +836,18 @@ export class RegistroPage implements OnInit {
   }
 
   onFocusedSatelital(e: any) {
-
+    console.log(e);
   }
 
+  onBlurSatelital(e: any) {
+    console.log(e.target.value);
+
+    const objeto = this.dataSatelital.find((objeto: any) => objeto.name === e.target.value);
+    if (!objeto) {
+      this.formNewVehicle.get('empresaSatelital')?.setValue('');
+    }
+
+  }
 
 
 
@@ -768,7 +858,7 @@ export class RegistroPage implements OnInit {
     }
   }
 
-  private saveUser() {
+  async saveUser() {
 
     if (!this.checkTercero) {
       // this.presentAlert("Alerta","","Informacion del conductor requerida","Cerrar")
@@ -888,26 +978,41 @@ export class RegistroPage implements OnInit {
     }
 
 
-    this.user.registroApiAldia(json, this.token).subscribe(
+    await this.user.registroApiAldia(json, this.token).then(
       data => {
-
-        // console.log(data);
-        this.user.getTemporalToken(this.conductor.cedula, this.vehiculo.placa).subscribe(
-          data => {
-            this.presentAlert("Exito", "Usuario Creado", "Inicia Sesion", "Cerrar");
-            this.router.navigate(['/login']);
-            this.loadingData.dismiss();
-          },
-          err => {
-            this.loadingData.dismiss();
-            this.presentAlert("Error", "Se presento un error en el app", err.error.message || err.message || "Error desconocido", "Cerrar");
-          }
-        )
 
       },
       err => {
         this.loadingData.dismiss();
         this.presentAlert("Error", "Se presento un error al guardar los datos", err.error.message || err.message || "Error desconocido", "Cerrar");
+      }
+    )
+
+
+    const buttons = [
+      {
+        text: 'Continuar',
+        handler: () => {
+        this.menu.enable(true);
+        this.router.navigate(['/home']);
+        },
+      }
+    ]
+
+    await this.user.loginUser(this.conductor.cedula, this.vehiculo.placa).then(
+      (data: any) => {
+        this.loadingData.dismiss();
+        this.user.setToken(data.access_token);
+        localStorage.setItem('conductor', this.conductor.cedula);
+        localStorage.setItem('placa', this.vehiculo.placa);
+
+        this.user.onLoginChange.next(data.access_token);
+        this.presentAlertButtons("Exito", "Usuario Creado", "Inicia Sesion", "Cerrar", buttons);
+
+      },
+      err => {
+        this.loadingData.dismiss();
+        this.presentAlert("Error", "Se presento un error en el app", err.error.message || err.message || "Error desconocido", "Cerrar");
       }
     )
 
@@ -953,11 +1058,11 @@ export class RegistroPage implements OnInit {
         },
         () => {
           if (!this.aceptTerms) {
-            this.getDataFirma(this.conductor.cedula, 2).then(data => {
+            this.getDataFirma(this.conductor.cedula, 2).then(async data => {
 
               if (data.status) {
                 this.aceptTerms = true;
-                this.saveUser();
+                await this.saveUser();
               } else {
                 this.setOpenTerms(true)
                 this.loadingData.dismiss();
@@ -974,7 +1079,7 @@ export class RegistroPage implements OnInit {
 
   openDocumentController(doc: any, tipo: any, statusDoc: any, docs: any) {
 
-    if (tipo == 'cedula' && doc != '') {
+    if (tipo == 'conductor' && doc != '') {
       this.dataTercero['cedula'] = doc
       this.dataTercero['placa'] = '';
       this.dataTercero['docs'] = docs
@@ -984,7 +1089,10 @@ export class RegistroPage implements OnInit {
       this.openDocs = true;
 
 
-    } else if (tipo == 'placa' && doc != '') {
+    } else if (tipo == 'vehiculo' && doc != '') {
+      if (this.vehiculo.articulado) {
+        this.dataTercero['articulado'] = this.vehiculo.remolque;
+      }
       this.dataTercero['placa'] = doc
       this.dataTercero['cedula'] = ''
       this.dataTercero['docs'] = docs
@@ -1036,70 +1144,163 @@ export class RegistroPage implements OnInit {
 
       this.loadingData.present();
 
-      this.reg.getDataVehiculo(placa).subscribe(
-        esl => {
-          var mensaje = '<ul>';
-          const datos = esl.data[0];
-          const cedulaTer = datos['codigoTercerox']
+      try {
 
+        const esl = await this.reg.getDataVehiculo(placa)
+        var mensaje = '<ul>';
+        const datos = esl.data[0];
+        const cedulaTer = datos['codigoTercerox']
+
+        this.vehiculo.celularPropietario = datos.celularPropietario
+
+        if (datos.celularPropietario) {
+          this.vehiculo.celularPropietariox3 = datos.celularPropietario.slice(0, 3)
+          this.vehiculo.celularPropietarioLast = datos.celularPropietario.charAt(datos.celularPropietario.length - 1)
+        }
+
+        if (cedulaTer != null && !this.codeValidation) {
+          this.presentAlert("Alerta", "", "Vehiculo ya registra en el app", "Cerrar")
+          // this.checkVehicle = false;
+          // this.alertVehiculo = true;
+          this.incompletoVehiculo = false;
+          this.setOpenCode(true)
+          validate = false;
+          this.loadingData.dismiss();
+          return;
+        } else {
+
+          this.vehiculo.codigoMarca = datos.codigoVehmarca
+          this.vehiculo.codigoLinea = datos.codigoVehlinea
+          this.vehiculo.codigoClase = datos.codigoVehclase
+          this.vehiculo.codigoColor = datos.codigoVehcolor
+          this.vehiculo.codigoCarroceria = datos.codigoVehcarro
+          this.vehiculo.marca = datos.nombreVehmarca
+          this.vehiculo.carroceria = datos.nombreVehcarro
+          this.vehiculo.claseVehiculo = datos.nombreClaseVeh
+          this.vehiculo.linea = datos.nombreVehlinea
+          this.vehiculo.color = datos.nombreVehcolor
+          this.vehiculo.remolque = datos.placaRemolque
+          this.vehiculo.usuarioSatelital = datos.sateliUsuariox
+          this.vehiculo.claveSatelital = datos.satelContrasen
+          this.vehiculo.codigoSatelital = datos.sateliEmpresax
+          this.vehiculo.empresaSatelital = datos.nombreAppempgp
+          this.vehiculo.cuentaSatelital = datos.satelCuentaxx
           this.vehiculo.celularPropietario = datos.celularPropietario
 
+
           if (datos.celularPropietario) {
-            this.vehiculo.celularPropietariox3 = datos.celularPropietario.slice(0,3)
+            this.vehiculo.celularPropietariox3 = datos.celularPropietario.slice(0, 3)
             this.vehiculo.celularPropietarioLast = datos.celularPropietario.charAt(datos.celularPropietario.length - 1)
           }
 
-          if (cedulaTer != null && !this.codeValidation) {
-            this.presentAlert("Alerta", "", "Vehiculo ya registra en el app", "Cerrar")
-            // this.checkVehicle = false;
-            // this.alertVehiculo = true;
-            this.incompletoVehiculo = false;
-            this.setOpenCode(true)
-            validate = false;
-            this.loadingData.dismiss();
-            return;
-          } else {
-
-            this.vehiculo.codigoMarca = datos.codigoVehmarca
-            this.vehiculo.codigoLinea = datos.codigoVehlinea
-            this.vehiculo.codigoClase = datos.codigoVehclase
-            this.vehiculo.codigoColor = datos.codigoVehcolor
-            this.vehiculo.codigoCarroceria = datos.codigoVehcarro
-            this.vehiculo.marca = datos.nombreVehmarca
-            this.vehiculo.carroceria = datos.nombreVehcarro
-            this.vehiculo.claseVehiculo = datos.nombreSiatxxxx
-            this.vehiculo.linea = datos.nombreVehlinea
-            this.vehiculo.color = datos.nombreVehcolor
-            this.vehiculo.remolque = datos.placaRemolque
-            this.vehiculo.usuarioSatelital = datos.sateliUsuariox
-            this.vehiculo.claveSatelital = datos.satelContrasen
-            this.vehiculo.codigoSatelital = datos.sateliEmpresax
-            this.vehiculo.empresaSatelital = datos.nombreVehgpsxx
-            this.vehiculo.cuentaSatelital = datos.satelCuentaxx
-            this.vehiculo.celularPropietario = datos.celularPropietario
-
-
-            if (datos.celularPropietario) {
-              this.vehiculo.celularPropietariox3 = datos.celularPropietario.slice(0,3)
-              this.vehiculo.celularPropietarioLast = datos.celularPropietario.charAt(datos.celularPropietario.length - 1)
-            }
-
-            this.vehiculo.fechaSoat = datos.fechaxSoatxxxx
-            this.vehiculo.fechaTecno = datos.fechaxTecnimec
-            this.formNewVehicle.patchValue({
-              fechaSoat: datos.fechaxSoatxxxx,
-              fechaTecno: datos.fechaxTecnimec
+          this.vehiculo.fechaSoat = datos.fechaxSoatxxxx
+          this.vehiculo.fechaTecno = datos.fechaxTecnimec
+          this.formNewVehicle.patchValue({
+            fechaSoat: datos.fechaxSoatxxxx,
+            fechaTecno: datos.fechaxTecnimec
           })
 
 
+          await this.getClases();
+          await this.getMarcas();
+          await this.getCarroc2(datos.codigoVehclase);
+          await this.getClaseLinea(datos.codigoVehmarca);
+          await this.getColores()
+          await this.getSatelital();
+
+
+
+          if (datos.numeroModeloxx) { this.vehiculo.modelo = datos.numeroModeloxx; }
+          else { validate = false; mensaje += '<li> Modelo </li>' }
+          if (datos.fechaxSoatxxxx) { this.vehiculo.fechaSoat = datos.fechaxSoatxxxx; }
+          if (datos.fechaxTecnimec) { this.vehiculo.fechaTecno = datos.fechaxTecnimec; }
+
+
+
+          if (datos.tipoxxVehiculo == "ARTICULADO") {
+
+            this.dataTercero.articulado = true;
+            this.vehiculo.articulado = true
+
+            if (!this.vehiculo.remolque) {
+
+              validate = false;
+              mensaje += '<li> Es necesario Remolque </li>'
+
+            }
+
+          } else {
+            ;
+            this.vehiculo.articulado = false;
+            this.dataTercero.articulado = false;
+          }
+
+
+
+          if (!validate) {
+            this.incompletoVehiculo = true;
+            this.checkVehicle = false;
+            this.setOpenVeh(true)
+            this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
+            this.loadingData.dismiss();[]
+          } else {
+
+            var statusDoc = true;
+            var docs: any = [];
+            var text: any = '<ul>'
+            var docsFinal: any = []
+            var docsVehiculo = false;
+            var status: any = true;
+
+            if (!datos.documents.status) {
+              statusDoc = datos.documents.status;
+              docs = datos.documents.documents;
+              this.docsFailVehicle = docs;
+            } else {
+              docsFinal = this.documents_vehiculo;
+            }
+
+            const response: any = await this.validateDocuments(this.vehiculo.placa, this.documents_vehiculo, 'vehiculo')
+
+            console.log(response);
+
+            if (response['status']) {
+              this.incompletoVehiculo = false
+              this.newVehicle = false
+              this.checkVehicle = true;
+            } else {
+              this.openDocs = true;
+              this.openDocumentController(this.vehiculo.placa, 'vehiculo', true, response['data']);
+            }
+
+          }
+
+        }
+
+      } catch (err: any) {
+
+        this.user.getVehiculoByPlaca(placa).subscribe(async data => {
+          if (data.code == 200 && data.rows > 0) {
+            const datos = data.view.data[0];
+            var mensaje = '<ul>';
+
+            // this.vehiculo.codigoMarca = datos.marca
+            // this.vehiculo.codigoLinea = datos.codigoVehlinea
+            // this.vehiculo.codigoClase = datos.codigoVehclase
+            // this.vehiculo.codigoColor = datos.codigoVehcolor
+            // this.vehiculo.codigoCarroceria = datos.codigoVehcarro
+            this.vehiculo.marca = datos.marca
+            this.vehiculo.carroceria = datos.carroceria
+            this.vehiculo.claseVehiculo = datos.clase_vehiculo
+            this.vehiculo.linea = datos.clase_linea
+            this.vehiculo.color = datos.color
+
+            // var resp = this.searchInfoVeh(datos.claseVehiculo, datos.marca, datos.carroceria, datos.clase_linea, datos.color);
+
             this.getClases().then(
               data => {
-                // console.log("getClases Cargado");
-                // console.log(datos);
-
-                const objeto2 = this.dataClases.find((objeto2: any) => objeto2.name === datos.nombreClaseVeh);
+                const objeto2 = this.dataClases.find((objeto2: any) => objeto2.name === datos.clase_vehiculo);
                 // console.log(objeto2);
-
                 if (objeto2 != undefined) {
                   this.vehiculo.codigoClase = objeto2.id;
                   this.vehiculo.claseVehiculo = objeto2.name
@@ -1109,17 +1310,16 @@ export class RegistroPage implements OnInit {
                   validate = false;
                   mensaje += '<li>Clase Vehiculo</li>'
                 }
-
               }
             )
 
 
             this.getMarcas().then(
               data => {
-                // console.log("getMarcas Cargado");
+                // console.log("getMarcas Cargado")
                 // console.log(data);
 
-                const objeto1 = this.dataMarcas.find((objeto1: any) => objeto1.name === datos.nombreVehmarca);
+                const objeto1 = this.dataMarcas.find((objeto1: any) => objeto1.name === datos.marca);
                 // console.log(objeto1);
 
                 if (objeto1 != undefined) {
@@ -1141,9 +1341,11 @@ export class RegistroPage implements OnInit {
             )
             this.getColores().then(
               data => {
+                // console.log(".getColores Cargado");
+                // console.log(data);
 
-                const objeto3 = this.dataColores.find((objeto3: any) => objeto3.name === datos.nombreVehcolor);
-                console.log(objeto3);
+                const objeto3 = this.dataColores.find((objeto3: any) => objeto3.name === datos.color);
+                // console.log(objeto3);
 
 
                 if (objeto3 != undefined) {
@@ -1162,6 +1364,61 @@ export class RegistroPage implements OnInit {
               }
             )
 
+
+            // Promise.all([clases, marcas, colores]).then(
+            //   ([doc1, doc2, doc3]) => {
+
+
+
+
+            //  if (!resp.code) {
+            //   validate = false;
+            //   mensaje += resp.data
+            // }else{
+
+
+
+            // const objeto4 = this.dataLineas.find((objeto4: any) => objeto4.name === datos.clase_linea);
+
+            // if (objeto4 == undefined) {
+            //   validate = false;
+            //   mensaje += '<li>Clase Linea</li>'
+            //   this.vehiculo.linea = ''
+            //   this.vehiculo.codigoLinea = ''
+            //   this.formNewVehicle.patchValue({
+            //     linea: ''
+            //   })
+            // } else {
+            //   this.vehiculo.codigoLinea = objeto4.id;
+            //   this.vehiculo.linea = objeto4.name
+            // }
+
+            // console.log(datos.carroceria);
+
+
+            // var carropro = datos.carroceria.toString();
+            // carropro = carropro.replace(/\s/g, "");
+            // const objeto = this.dataCarroc.find((objeto: any) => objeto.name === datos.carroceria);
+            // if (objeto == undefined) {
+            //   this.vehiculo.carroceria = ''
+            //   this.vehiculo.codigoCarroceria = ''
+            //   this.formNewVehicle.patchValue({
+            //     carroceria: ''
+            //   })
+
+            //   validate = false;
+            //   mensaje += '<li>Carroceria</li>'
+
+            // } else {
+            //   this.vehiculo.codigoCarroceria = objeto?.id;
+            //   this.vehiculo.carroceria = carropro;
+            // }
+
+            // }
+
+            // })
+
+
             this.getSatelital().then(
               data => {
 
@@ -1170,398 +1427,138 @@ export class RegistroPage implements OnInit {
 
 
 
-            if (datos.numeroModeloxx) { this.vehiculo.modelo = datos.numeroModeloxx; }
-            else { validate = false; mensaje += '<li> Modelo </li>' }
-            if (datos.fechaxSoatxxxx) { this.vehiculo.fechaSoat = datos.fechaxSoatxxxx; }
-            if (datos.fechaxTecnimec) { this.vehiculo.fechaTecno = datos.fechaxTecnimec; }
+            // this.claseVehiculo = datos.claseVehiculo;
+            // this.marca = datos.marca;
+            // this.linea = datos.clase_linea
+            // this.color = datos.color
+
+            // this.fechaSoat = datos.vigencia_soat;
+            // this.fechaTecno = datos.vigencia_tecnomecanica;
+            // this.modelo = datos.modelo;
+
+            if (datos.modelo) { this.vehiculo.modelo = datos.modelo; }
+            else { validate = false; mensaje += '<li>Modelo </li>' }
+            if (datos.vigencia_soat) { this.vehiculo.fechaSoat = datos.vigencia_soat; }
+            // else { validate = false; mensaje += '<li> Vencimiento SOAT </li>' }
+            if (datos.vigencia_tecnomecanica) { this.vehiculo.fechaTecno = datos.vigencia_tecnomecanica; }
+            // else { validate = false; mensaje += '<li> Vencimienton Tecnomecanica </li>' }
 
 
 
-            if (datos.tipoxxVehiculo == "ARTICULADO") {
+            if (datos.tipo_vehiculo == "ARTICULADO") {
               this.vehiculo.articulado = true
-              this.dataTercero.articulado = true;
 
             } else {
-              this.vehiculo.articulado = false;
-              this.dataTercero.articulado = false;
+              this.vehiculo.articulado = false
             }
 
 
+            mensaje += "</ul>"
 
             if (!validate) {
               this.incompletoVehiculo = true;
               this.checkVehicle = false;
               this.setOpenVeh(true)
               this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
-              this.loadingData.dismiss();[]
+              this.loadingData.dismiss();
             } else {
 
-              var statusDoc = true;
-              var docs: any = [];
-              var text: any = '<ul>'
-              var docsFinal: any = []
-              var docsVehiculo = false;
-              var status: any = true;
 
-              if (!datos.documents.status) {
-                statusDoc = datos.documents.status;
-                docs = datos.documents.documents;
-                this.docsFailVehicle = docs;
+              const response: any = await this.validateDocuments(this.vehiculo.placa, this.documents_vehiculo, 'vehiculo')
+
+              if (response['status']) {
+                this.incompletoVehiculo = false
+                this.newVehicle = false
+                this.checkVehicle = true;
               } else {
-                docsFinal = this.documents_vehiculo;
+                this.openDocs = true;
+                this.openDocumentController(this.vehiculo.placa, 'vehiculo', true, response['data']);
               }
-
-              var restricFecha = false;
-              for (const document of docs) {
-                if (document.name === 'fechaSatelital') {
-                  restricFecha = true;
-                }
-              }
-
-              if (!datos.documents.status) {
-                status = false;
-                for (let a = 0; a < docs.length; a++) {
-                  const element = docs[a];
-                  const palabra = this.user.separarCamelCase(element.name);
-                  text += "<li>" + palabra + "</li>"
-                  const doc = this.user.buscarCodigoEnDocumentos(element.name);
-                  if (doc) {
-                    docsFinal.push(doc);
-                  } else {
-                    docsVehiculo = true
-                  }
-                }
-                text += '<ul>';
-                // console.log(docsFinal);
-
-              }
-
-
-
-              const tipos: any = [];
-
-              this.documents_vehiculo.forEach((documento: any) => {
-                documento.docs.forEach((doc: any) => {
-                  tipos.push(doc.codigo);
-                });
-              });
-
-              const cadena = tipos.join(',');
-
-              this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
-                data => {
-                  this.loadingData.dismiss();
-                  if (data.code == '201' || !statusDoc) {
-                    for (const a in data.data) {
-                      const status = data.data[a];
-                      if (!status) {
-                         const doc = this.user.buscarCodigoEnDocumentos(a);
-                         if (doc) {
-                          docsFinal.push(doc);
-                        }
-                      }
-                    }
-                    if (restricFecha) {
-
-                      this.vehiculo.empresaSatelital = '';
-                      this.vehiculo.codigoSatelital = '';
-                      this.vehiculo.usuarioSatelital = '';
-                      this.vehiculo.claveSatelital = '';
-                      this.vehiculo.cuentaSatelital = '';
-                      this.incompletoVehiculo = true;
-                      this.checkVehicle = false;
-                      this.newVehicle = false;
-
-                      this.setOpenVeh(true);
-
-                    } else {
-                      this.openDocs = true
-                      this.openDocumentController(this.vehiculo.placa, 'placa', statusDoc, docsFinal);
-                    }
-                  } else {
-                    this.incompletoVehiculo = false;
-                    this.checkVehicle = true;
-                    this.newVehicle = false;
-                  }
-                },
-                err => {
-                  this.loadingData.dismiss();
-                }
-              )
 
             }
 
+            //  this.getDataVehculo();
+
+            this.newVehicle = false;
+
+          } else {
+            this.newVehicle = true;
+            this.checkVehicle = false;
+            this.loadingData.dismiss();
+            // this.modal.present();
+            // this.presentAlert("Alerta","","Vehiculo","Cerrar")
           }
 
         },
-        err => {
-          // this.alertVehiculo = false;
+          async err => {
 
+            this.newVehicle = true;
+            this.incompletoVehiculo = false;
+            this.checkVehicle = false;
 
-          this.user.getVehiculoByPlaca(placa).subscribe(data => {
-            if (data.code == 200 && data.rows > 0) {
-              const datos = data.view.data[0];
-              var mensaje = '<ul>';
+            console.log("ERROR", err);
 
-              // this.vehiculo.codigoMarca = datos.marca
-              // this.vehiculo.codigoLinea = datos.codigoVehlinea
-              // this.vehiculo.codigoClase = datos.codigoVehclase
-              // this.vehiculo.codigoColor = datos.codigoVehcolor
-              // this.vehiculo.codigoCarroceria = datos.codigoVehcarro
-              this.vehiculo.marca = datos.marca
-              this.vehiculo.carroceria = datos.carroceria
-              this.vehiculo.claseVehiculo = datos.clase_vehiculo
-              this.vehiculo.linea = datos.clase_linea
-              this.vehiculo.color = datos.color
+            await this.getClases()
 
-              // var resp = this.searchInfoVeh(datos.claseVehiculo, datos.marca, datos.carroceria, datos.clase_linea, datos.color);
+            await this.getMarcas()
 
-              this.getClases().then(
-                data => {
+            await this.getColores()
 
-                  const objeto2 = this.dataClases.find((objeto2: any) => objeto2.name === datos.clase_vehiculo);
-                  // console.log(objeto2);
+            await this.getSatelital()
 
-                  if (objeto2 != undefined) {
-                    this.vehiculo.codigoClase = objeto2.id;
-                    this.vehiculo.claseVehiculo = objeto2.name
+            this.loadingData.dismiss();
 
-                    this.getCarroc(objeto2.id);
-                  } else {
-                    validate = false;
-                    mensaje += '<li>Clase Vehiculo</li>'
-                  }
-
-                }
-              )
-
-
-              this.getMarcas().then(
-                data => {
-                  // console.log("getMarcas Cargado")
-                  // console.log(data);
-
-                  const objeto1 = this.dataMarcas.find((objeto1: any) => objeto1.name === datos.marca);
-                  // console.log(objeto1);
-
-                  if (objeto1 != undefined) {
-                    this.getClaseLinea(objeto1.id);
-                    this.vehiculo.codigoMarca = objeto1.id;
-                    this.vehiculo.marca = objeto1.name
-                  } else {
-                    validate = false;
-                    mensaje += '<li>Marca</li>'
-                    this.vehiculo.marca = ''
-                    this.vehiculo.codigoMarca = ''
-                    this.formNewVehicle.patchValue({
-                      marca: ''
-                    })
-                  }
-
-
-                }
-              )
-              this.getColores().then(
-                data => {
-                  // console.log(".getColores Cargado");
-                  // console.log(data);
-
-                  const objeto3 = this.dataColores.find((objeto3: any) => objeto3.name === datos.color);
-                  // console.log(objeto3);
-
-
-                  if (objeto3 != undefined) {
-                    this.vehiculo.codigoColor = objeto3.id;
-                    this.vehiculo.color = objeto3.name
-                  } else {
-                    validate = false;
-                    mensaje += '<li>Color</li>'
-                    this.vehiculo.color = ''
-                    this.vehiculo.codigoColor = ''
-                    this.formNewVehicle.patchValue({
-                      color: ''
-                    })
-                  }
-
-                }
-              )
-
-
-              // Promise.all([clases, marcas, colores]).then(
-              //   ([doc1, doc2, doc3]) => {
-
-
-
-
-              //  if (!resp.code) {
-              //   validate = false;
-              //   mensaje += resp.data
-              // }else{
-
-
-
-              // const objeto4 = this.dataLineas.find((objeto4: any) => objeto4.name === datos.clase_linea);
-
-              // if (objeto4 == undefined) {
-              //   validate = false;
-              //   mensaje += '<li>Clase Linea</li>'
-              //   this.vehiculo.linea = ''
-              //   this.vehiculo.codigoLinea = ''
-              //   this.formNewVehicle.patchValue({
-              //     linea: ''
-              //   })
-              // } else {
-              //   this.vehiculo.codigoLinea = objeto4.id;
-              //   this.vehiculo.linea = objeto4.name
-              // }
-
-              // console.log(datos.carroceria);
-
-
-              // var carropro = datos.carroceria.toString();
-              // carropro = carropro.replace(/\s/g, "");
-              // const objeto = this.dataCarroc.find((objeto: any) => objeto.name === datos.carroceria);
-              // if (objeto == undefined) {
-              //   this.vehiculo.carroceria = ''
-              //   this.vehiculo.codigoCarroceria = ''
-              //   this.formNewVehicle.patchValue({
-              //     carroceria: ''
-              //   })
-
-              //   validate = false;
-              //   mensaje += '<li>Carroceria</li>'
-
-              // } else {
-              //   this.vehiculo.codigoCarroceria = objeto?.id;
-              //   this.vehiculo.carroceria = carropro;
-              // }
-
-              // }
-
-              // })
-
-
-              this.getSatelital().then(
-                data => {
-
-                }
-              )
-
-
-
-              // this.claseVehiculo = datos.claseVehiculo;
-              // this.marca = datos.marca;
-              // this.linea = datos.clase_linea
-              // this.color = datos.color
-
-              // this.fechaSoat = datos.vigencia_soat;
-              // this.fechaTecno = datos.vigencia_tecnomecanica;
-              // this.modelo = datos.modelo;
-
-              if (datos.modelo) { this.vehiculo.modelo = datos.modelo; }
-              else { validate = false; mensaje += '<li>Modelo </li>' }
-              if (datos.vigencia_soat) { this.vehiculo.fechaSoat = datos.vigencia_soat; }
-              // else { validate = false; mensaje += '<li> Vencimiento SOAT </li>' }
-              if (datos.vigencia_tecnomecanica) { this.vehiculo.fechaTecno = datos.vigencia_tecnomecanica; }
-              // else { validate = false; mensaje += '<li> Vencimienton Tecnomecanica </li>' }
-
-
-
-              if (datos.tipo_vehiculo == "ARTICULADO") {
-                this.vehiculo.articulado = true
-
-              } else {
-                this.vehiculo.articulado = false
-              }
-
-
-              mensaje += "</ul>"
-
-              if (!validate) {
-                this.incompletoVehiculo = true;
-                this.checkVehicle = false;
-                this.setOpenVeh(true)
-                this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
-                this.loadingData.dismiss();
-              } else {
-
-
-                const tipos: any = [];
-
-                this.documents_vehiculo.forEach((documento: any) => {
-                  documento.docs.forEach((doc: any) => {
-                    tipos.push(doc.codigo);
-                  });
-                });
-
-                const cadena = tipos.join(',');
-
-                this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
-                  data => {
-                    this.loadingData.dismiss();
-                    if (data.code == '201') {
-                      this.openDocs = true
-                      this.openDocumentController(this.vehiculo.placa, 'placa', true, this.documents_vehiculo);
-                    } else {
-                      this.incompletoVehiculo = false;
-                      this.checkVehicle = true;
-                      this.newVehicle = false;
-                    }
-                  }
-                )
-
-              }
-
-              //  this.getDataVehculo();
-
-              this.newVehicle = false;
-
-            } else {
-              this.newVehicle = true;
-              this.checkVehicle = false;
-              // this.modal.present();
-              // this.presentAlert("Alerta","","Vehiculo","Cerrar")
-            }
-
-          },
-            err => {
-
-              this.newVehicle = true;
-              this.incompletoVehiculo = false;
-              this.checkVehicle = false;
-
-              console.log("ERROR", err);
-
-              this.loadingData.dismiss();
-
-
-              this.getClases().then(
-                data => {
-
-                }
-              )
-
-              this.getMarcas().then(
-                data => { }
-              )
-
-              this.getColores().then(
-                data => {
-
-                }
-              )
-
-              this.getSatelital().then(
-                data => {
-
-                }
-              )
-
-            })
-        });
-
-
+          })
+      }
     }
+  }
+
+  async validateDocuments(codigo: any, array: any, tipo: any) {
+    const tipos: any = [];
+    const docsFinal: any = []
+
+
+    array.forEach((documento: any) => {
+      if (documento.articulado && !this.vehiculo.articulado) return;
+      documento.docs.forEach((doc: any) => {
+        tipos.push(doc.codigo);
+      });
+    });
+
+    const cadena = tipos.join(',')
+
+    try {
+      const b = await this.photo.getFotosTercero(codigo, cadena, tipo, this.vehiculo.remolque).toPromise();
+
+      const data = this.removeMatchingKeys(b)
+
+      this.loadingData.dismiss();
+
+      if (data.code === 201) {
+        const docsFinal = [];
+
+        for (const a in data.data) {
+          const status = data.data[a];
+
+          if (!status) {
+            const doc = this.user.buscarCodigoEnDocumentos(a);
+            if (doc) {
+              docsFinal.push(doc);
+            }
+          }
+        }
+
+        return { status: false, data: docsFinal };
+
+      } else {
+        return { status: true, data: docsFinal };
+      }
+    } catch (error) {
+      this.loadingData.dismiss();
+      console.error("Error al obtener fotos del tercero:", error);
+      return true;
+    }
+
   }
 
 
@@ -1581,7 +1578,7 @@ export class RegistroPage implements OnInit {
 
     this.loadingData.present();
 
-    if (cc.length > 7) {
+    if (cc.length >= 6) {
       this.aceptTermData = false;
       let cedula = cc
       this.conductor.cedula = cc;
@@ -1596,7 +1593,7 @@ export class RegistroPage implements OnInit {
                 // console.log(data.status);
                 if (data.status) {
                   this.aceptTermData = true;
-                  this.getDriverApi3sL(this.conductor.cedula);
+                  this.getDriverApi3sL(this.conductor.cedula, false);
                   // this.searchConductor(cedula, true)
                 } else {
                   this.setOpenTermsData(true)
@@ -1607,11 +1604,29 @@ export class RegistroPage implements OnInit {
             }
           } else if (data.access_token == 0) {
 
-            this.presentAlert("Alerta", "", "Conductor ya registra en el app", "Cerrar")
-            this.router.navigate(['/login']);
-            this.checkTercero = false;
-            this.alertTercero = true;
+            const buttons = [
+              {
+                text: 'Cambiar vehículo',
+                handler: () => {
+                  console.log('Cambiar vehículo seleccionado');
+                  this.getDriverApi3sL(this.conductor.cedula, true)
+                },
+              },
+              {
+                text: 'Iniciar sesión',
+                handler: () => {
+                  this.router.navigate(['/login']);
+                  this.checkTercero = false;
+                  this.alertTercero = true;
+                },
+              },
+            ]
+
             this.loadingData.dismiss()
+            this.presentAlertButtons("Alerta", "", "Conductor ya registra en el app", "Cerrar",
+              buttons
+            )
+
 
           }
         }
@@ -1624,12 +1639,8 @@ export class RegistroPage implements OnInit {
 
   }
 
-  getDriverApi3sL(cedula: any) {
+  getDriverApi3sL(cedula: any, validate: boolean) {
 
-    var validate = true;
-    var validateDocs = true;
-    var mensaje = '<ul>';
-    var documentsFinal: any = [];
 
     // this.getParentesco();
     this.formNewDriver.reset();
@@ -1656,148 +1667,43 @@ export class RegistroPage implements OnInit {
 
       this.getParentesco().then(
         data => {
-
-          const objeto2 = this.dataParentes.find((objeto2: any) => objeto2.name === cc.data[0].nombreParentes);
-          // console.log(objeto2);
-
-          if (objeto2 != undefined) {
-            this.conductor.codigoParentesco = objeto2.id;
-            this.conductor.parentesco = objeto2.name
-
-          } else {
-            validate = false;
-            mensaje += '<li>Parentesco </li>'
-          }
-
         }
       )
 
-
       const placa = cc.data[0].numeroPlacaxxx;
 
+      if (placa && !validate) {
+
+        const buttons = [
+          {
+            text: 'Cambiar vehículo',
+            handler: () => {
+              console.log('Cambiar vehículo seleccionado');
+              this.processDataApi(cc)
+            },
+          },
+          {
+            text: 'Iniciar sesión',
+            handler: () => {
+              this.router.navigate(['/login']);
+              this.checkTercero = false;
+              this.alertTercero = true;
+            },
+          },
+        ]
 
 
-      if (placa) {
-
-        this.presentAlert("Alerta", "", "Conductor ya registra en el app", "Cerrar")
-        this.router.navigate(['/login']);
-        this.checkTercero = false;
-        this.alertTercero = true;
+        this.loadingData.dismiss()
+        this.presentAlertButtons("Alerta", "", "Conductor ya registra en el app", "Cerrar",
+          buttons
+        )
 
       } else {
-
-        this.newTercero = false;
-        if (cc.data[0].nombreTercerox) { this.conductor.nombres = cc.data[0].nombreTercerox }
-        else { validate = false; mensaje += '<li>Nombres</li>' }
-        if (cc.data[0].apell1Tercerox || cc.data[0].apell2Tercerox) { this.conductor.apellidos = cc.data[0].apell1Tercerox + ' ' + cc.data[0].apell2Tercerox }
-        else { validate = false; mensaje += '<li>Apellidos</li>' }
-        if (cc.data[0].emailxTercerox) { this.conductor.correo = cc.data[0].emailxTercerox }
-        else { validate = false; mensaje += '<li>Correo</li>' }
-        if (cc.data[0].movilxContacto) { this.conductor.celular = cc.data[0].movilxContacto }
-        else { validate = false; mensaje += '<li>Celular </li>' }
-        if (cc.data[0].direccTercerox) { this.conductor.direccion = cc.data[0].direccTercerox }
-        else { validate = false; mensaje += '<li>Direccion </li>' }
-        if (cc.data[0].fechaxNacimien) { this.conductor.fechaNacimiento = cc.data[0].fechaxNacimien }
-        else { validate = false; mensaje += '<li>Fecha Nacoimiento </li>' }
-        if (cc.data[0].nombreContacto) { this.conductor.nombreContacto = cc.data[0].nombreContacto }
-        else { validate = false; mensaje += '<li>Nombre Contacto</li>' }
-        if (cc.data[0].movilxContacto) { this.conductor.celularContacto = cc.data[0].movilxContacto }
-        else { validate = false; mensaje += '<li>Celular Contacto</li>' }
-        if (cc.data[0].nombreParentes) { this.conductor.parentesco = cc.data[0].nombreParentes }
-        else { validate = false; mensaje += '<li>Parentesco</li>' }
-
-        if (cc.data[0].fechaxLicencia) { this.conductor.fechaLicencia = cc.data[0].fechaxLicencia }
-
-        this.terms['con_rec_pub'] = cc.data[0].AppConrecpub
-        this.terms['grd_pod_pub'] = cc.data[0].AppGrdpodpub
-        this.terms['rec_pub_gnr'] = cc.data[0].AppRecpubgnr
-        this.terms['vin_per_pub'] = cc.data[0].AppVinperpub
-        this.terms['per_tri_eco'] = cc.data[0].AppPertrieco
-        this.terms['gre_rec_pub'] = cc.data[0].AppGrerecpub
-        this.terms['gre_rec_pub_pro'] = cc.data[0].AppGrerecpubPro
-        this.terms['gre_rec_pub_ten'] = cc.data[0].AppGrerecpubTen
-
-        mensaje += "</ul>"
-
-        if (!validate) {
-          this.incompletoTercero = true;
-          this.checkTercero = false;
-          this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
-          this.setOpenTer(true)
-          this.loadingData.dismiss()
-        } else {
-          var statusDoc = true;
-          interface Document {
-            [key: string]: string;
-          }
-          var docs: any;
-
-          var text: any = '<ul>'
-          var docsFinal: any = []
-          this.docsFailDriver = [];
-          var docsVehiculo = false;
-          var status: any = true;
-          statusDoc = cc.data[0].documents.status;
-
-
-          if (!cc.data[0].documents.status) {
-            docs = cc.data[0].documents.documents;
-            for (let a = 0; a < docs.length; a++) {
-              const element = docs[a];
-              const palabra = this.user.separarCamelCase(element.name);
-              text += "<li>" + palabra + "</li>"
-              const doc = this.user.buscarCodigoEnDocumentos(element.name);
-              if (doc) {
-                console.log('push');
-                docsFinal.push(doc);
-              } else {
-                docsVehiculo = true
-              }
-            }
-            text += '<ul>';
-
-          }
-
-          // console.log(this.documents_conductor);
-
-          const tipos: any = [];
-
-          this.documents_conductor.forEach((documento: any) => {
-            documento.docs.forEach((doc: any) => {
-              tipos.push(doc.codigo);
-            });
-          });
-
-          const cadena = tipos.join(',');
-
-          this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
-            data => {
-              this.loadingData.dismiss()
-              if (data.code == '201' || !statusDoc) {
-                for (const a in data.data) {
-                  const status = data.data[a];
-                  if (!status) {
-                     const doc = this.user.buscarCodigoEnDocumentos(a);
-                     if (doc) {
-                      docsFinal.push(doc);
-                    }
-                  }
-                }
-                this.openDocs = true;
-                this.openDocumentController(this.conductor.cedula, 'cedula', statusDoc, docsFinal);
-              } else {
-                this.incompletoTercero = false;
-                this.checkTercero = true;
-                this.setOpenTer(false)
-              }
-              // this.getDriverApi(cedula, false);
-
-            }
-          )
-
-        }
-
+        this.processDataApi(cc)
       }
+
+      this.loadingData.dismiss()
+
 
     },
       err => {
@@ -1805,7 +1711,139 @@ export class RegistroPage implements OnInit {
         this.getDriverApi(cedula, true);
       })
 
+  }
 
+
+  async processDataApi(cc: any) {
+
+    const loading = await this.loading.create({
+      message: 'Buscado Cedula...',
+    });
+
+    loading.present()
+
+    var validate = true;
+    var validateDocs = true;
+    var mensaje = '<ul>';
+    var documentsFinal: any = [];
+
+
+    this.newTercero = false;
+    if (cc.data[0].nombreTercerox) { this.conductor.nombres = cc.data[0].nombreTercerox }
+    else { validate = false; mensaje += '<li>Nombres</li>' }
+    if (cc.data[0].apell1Tercerox || cc.data[0].apell2Tercerox) { this.conductor.apellidos = cc.data[0].apell1Tercerox + ' ' + cc.data[0].apell2Tercerox }
+    else { validate = false; mensaje += '<li>Apellidos</li>' }
+    if (cc.data[0].emailxTercerox) { this.conductor.correo = cc.data[0].emailxTercerox }
+    else { validate = false; mensaje += '<li>Correo</li>' }
+    if (cc.data[0].movilxContacto) { this.conductor.celular = cc.data[0].movilxContacto }
+    else { validate = false; mensaje += '<li>Celular </li>' }
+    if (cc.data[0].direccTercerox) { this.conductor.direccion = cc.data[0].direccTercerox }
+    else { validate = false; mensaje += '<li>Direccion </li>' }
+    if (cc.data[0].fechaxNacimien) { this.conductor.fechaNacimiento = cc.data[0].fechaxNacimien }
+    else { validate = false; mensaje += '<li>Fecha Nacoimiento </li>' }
+    if (cc.data[0].nombreContacto) { this.conductor.nombreContacto = cc.data[0].nombreContacto }
+    else { validate = false; mensaje += '<li>Nombre Contacto</li>' }
+    if (cc.data[0].movilxContacto) { this.conductor.celularContacto = cc.data[0].movilxContacto }
+    else { validate = false; mensaje += '<li>Celular Contacto</li>' }
+    if (cc.data[0].nombreParentes) {
+      this.conductor.parentesco = cc.data[0].nombreParentes
+      this.formNewDriver.get('parentesco')?.setValue(cc.data[0].nombreParentes)
+    }
+    else { validate = false; mensaje += '<li>Parentesco</li>' }
+
+    if (cc.data[0].fechaxLicencia) { this.conductor.fechaLicencia = cc.data[0].fechaxLicencia }
+
+    this.terms['con_rec_pub'] = cc.data[0].AppConrecpub
+    this.terms['grd_pod_pub'] = cc.data[0].AppGrdpodpub
+    this.terms['rec_pub_gnr'] = cc.data[0].AppRecpubgnr
+    this.terms['vin_per_pub'] = cc.data[0].AppVinperpub
+    this.terms['per_tri_eco'] = cc.data[0].AppPertrieco
+    this.terms['gre_rec_pub'] = cc.data[0].AppGrerecpub
+    this.terms['gre_rec_pub_pro'] = cc.data[0].AppGrerecpubPro
+    this.terms['gre_rec_pub_ten'] = cc.data[0].AppGrerecpubTen
+
+    mensaje += "</ul>"
+
+    if (!validate) {
+      this.incompletoTercero = true;
+      this.checkTercero = false;
+      this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
+      this.setOpenTer(true)
+      loading.dismiss()
+    } else {
+      var statusDoc = true;
+      interface Document {
+        [key: string]: string;
+      }
+      var docs: any;
+
+      var text: any = '<ul>'
+      var docsFinal: any = []
+      this.docsFailDriver = [];
+      var docsVehiculo = false;
+      var status: any = true;
+      statusDoc = cc.data[0].documents.status;
+
+
+      if (!cc.data[0].documents.status) {
+        docs = cc.data[0].documents.documents;
+        for (let a = 0; a < docs.length; a++) {
+          const element = docs[a];
+          const palabra = this.user.separarCamelCase(element.name);
+          text += "<li>" + palabra + "</li>"
+          const doc = this.user.buscarCodigoEnDocumentos(element.name);
+          if (doc) {
+            docsFinal.push(doc);
+          } else {
+            docsVehiculo = true
+          }
+        }
+        text += '<ul>';
+
+      }
+
+      // console.log(this.documents_conductor);
+
+      const tipos: any = [];
+
+      this.documents_conductor.forEach((documento: any) => {
+        documento.docs.forEach((doc: any) => {
+          tipos.push(doc.codigo);
+        });
+      });
+
+      const cadena = tipos.join(',');
+
+      this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
+        a => {
+          const data = this.removeMatchingKeys(a)
+          loading.dismiss()
+          if (data.code == '201' || !statusDoc) {
+            docsFinal = []
+            for (const a in data.data) {
+              const status = data.data[a];
+              if (!status) {
+                const doc = this.user.buscarCodigoEnDocumentos(a);
+                if (doc) {
+                  docsFinal.push(doc);
+                }
+              }
+            }
+            this.openDocs = true;
+            this.openDocumentController(this.conductor.cedula, 'conductor', statusDoc, docsFinal);
+            loading.dismiss()
+          } else {
+            this.incompletoTercero = false;
+            this.checkTercero = true;
+            this.setOpenTer(false)
+            loading.dismiss()
+          }
+          // this.getDriverApi(cedula, false);
+
+        }
+      )
+
+    }
   }
 
   getDriverApi(cedula: any, nuevo: any) {
@@ -1816,6 +1854,11 @@ export class RegistroPage implements OnInit {
     this.user.getTerceroByCedula(cedula).subscribe(data => {
       console.log('Metodo Busqueda Siat');
       if (data.code == 200 && data.rows > 0) {
+
+        this.getParentesco().then(
+          data => {
+          }
+        )
 
         //  console.log(data);
         const datos = data.data[0];
@@ -1894,6 +1937,7 @@ export class RegistroPage implements OnInit {
 
 
         if (!validate) {
+          this.loadingData.dismiss()
           this.incompletoTercero = true;
           this.checkTercero = false;
           this.presentAlert("Alerta", "Es necesario ingresar:", mensaje, "Cerrar")
@@ -1915,9 +1959,11 @@ export class RegistroPage implements OnInit {
             data => {
               this.loadingData.dismiss()
               if (data.code == '201') {
+                this.loadingData.dismiss()
                 this.openDocs = true;
-                this.openDocumentController(this.conductor.cedula, 'cedula', true, []);
+                this.openDocumentController(this.conductor.cedula, 'conductor', true, []);
               } else {
+                this.loadingData.dismiss()
                 this.incompletoTercero = false;
                 this.checkTercero = true;
                 this.setOpenTer(false)
@@ -1939,6 +1985,7 @@ export class RegistroPage implements OnInit {
           this.incompletoTercero = true;
           this.checkTercero = false;
         }
+        this.loadingData.dismiss()
       }
 
     },
@@ -1980,6 +2027,41 @@ export class RegistroPage implements OnInit {
   }
 
 
+  removeMatchingKeys(json: any): any {
+    console.log(json);
+
+
+    const keysToCheck = [
+      ['cedula1', 'cedula2'],
+      ['licencia1', 'licencia2'],
+      ['tarjePro1', 'tarjePro2'],
+      ['fotoremol', 'tarjePror1', 'tarjePror2'],
+      ['fotovehi1', 'fotovehi2', 'fotovehi3', 'fotovehi4']
+    ];
+
+    keysToCheck.forEach(keys => {
+      let allFalse = true;
+
+      // Verificar si todos los valores del grupo son false
+      keys.forEach(key => {
+        console.log(key);
+        if (json.data[key] !== false) {
+          allFalse = false;
+        }
+      });
+
+      // Si todos los valores son false, eliminar todos menos uno
+      if (allFalse) {
+
+        keys.slice(1).forEach(key => {
+          delete json.data[key];
+        });
+      }
+    });
+
+    console.log(json);
+    return json;
+  }
 
   nuevoVehiculo() {
     this.setOpenVeh(true);
@@ -2027,17 +2109,14 @@ export class RegistroPage implements OnInit {
 
 
   checkPropietario() {
-    var item = document.getElementById('propietario') as HTMLIonCardElement;
 
     if (!this.isPropietario) {
-      item.classList.add('select-card');
       this.isPropietario = true;
       this.checkPropi = true;
       if (this.isTenedor) {
         this.completeData = true;
       }
     } else {
-      item.classList.remove('select-card');
       this.isPropietario = false;
       this.checkPropi = false;
       this.completeData = false;
@@ -2047,17 +2126,14 @@ export class RegistroPage implements OnInit {
 
 
   checkTenedor() {
-    var item = document.getElementById('tenedor') as HTMLIonCardElement;
 
     if (!this.isTenedor) {
-      item.classList.add('select-card');
       this.isTenedor = true;
       this.checkTened = true;
       if (this.isPropietario) {
         this.completeData = true;
       }
     } else {
-      item.classList.remove('select-card');
       this.isTenedor = false;
       this.checkTened = false;
       this.completeData = false;
@@ -2327,8 +2403,8 @@ export class RegistroPage implements OnInit {
       if (cedula == this.conductor.cedula) {
         this.presentAlert("Alerta", "El Tenedor y el conductor son la misma persona", "", "Cerrar");
         this.isTenedor = true;
-          this.incompletoTenedor = false;
-          this.checkTened = true;
+        this.incompletoTenedor = false;
+        this.checkTened = true;
         this.registroForm.patchValue({
           tenedor: ''
         })
@@ -2450,7 +2526,7 @@ export class RegistroPage implements OnInit {
     var validateDocs = true;
     var jsonApi: any = {}
     jsonApi['placa'] = this.vehiculo.placa;
-    console.log(this.vehiculo);
+    // console.log(this.formNewVehicle.value);
 
     // if (!this.formNewVehicle.valid) {
     //   this.presentAlert("Error", "", "Todos los campos son requeridos", "Cerrar");
@@ -2545,61 +2621,67 @@ export class RegistroPage implements OnInit {
         docsFinal = this.documents_vehiculo;
       }
 
+      loading.present();
+
+
+      await this.reg.sendDataVehiculo(jsonApi).then(
+        data => {
+          loading.dismiss();
+        }
+      );
+
       loading2.present();
 
+      const response: any = await this.validateDocuments(this.vehiculo.placa, this.documents_vehiculo, 'vehiculo')
 
 
-      const tipos: any = [];
+      if (response['status']) {
+        this.setOpenVeh(false)
+        this.incompletoVehiculo = false
+        this.newVehicle = false
+        this.checkVehicle = true;
+      } else {
+        this.openDocs = true;
+        this.openDocumentController(this.vehiculo.placa, 'vehiculo', true, response['data']);
+      }
 
-      this.documents_vehiculo.forEach((documento: any) => {
-        documento.docs.forEach((doc: any) => {
+      loading2.dismiss();
 
-          console.log(doc);
+      // const tipos: any = [];
 
-          tipos.push(doc.codigo);
-        });
-      });
+      // this.documents_vehiculo.forEach((documento: any) => {
+      //   if (documento.articulado && !this.vehiculo.articulado) return;
+      //   documento.docs.forEach((doc: any) => {
+      //     tipos.push(doc.codigo);
+      //   });
+      // });
 
-      const cadena = tipos.join(',');
+      // const cadena = tipos.join(',');
 
-      this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
-        data => {
-          if (data.code == '201' || !status) {
-            this.openDocs = true
+      // this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
+      //   data => {
+      //     if (data.code == '201' || !status) {
+      //       this.openDocs = true
 
-            console.log(docsFinal);
+      //       console.log(docsFinal);
 
-            this.openDocumentController(this.vehiculo.placa, 'placa', true, docsFinal);
-          } else {
+      //       this.openDocumentController(this.vehiculo.placa, 'vehiculo', true, docsFinal);
+      //     } else {
 
-            loading.present();
-
-            this.reg.sendDataVehiculo(jsonApi).then(
-              data => {
-
-                loading.dismiss();
-                this.setOpenVeh(false)
-
-              },
-              err => {
-                this.setOpenVeh(true)
-                loading.dismiss();
-              }
-            );
-
+      //       this.setOpenVeh(false)
+      //       this.incompletoVehiculo = false;
+      //       this.checkVehicle = true;
+      //       this.newVehicle = false;
+      //     }
+      //     loading2.dismiss();
+      //   },
+      //   err => {
+      //     loading2.present();
+      //   }
+      // )
 
 
 
-            this.incompletoVehiculo = false;
-            this.checkVehicle = true;
-            this.newVehicle = false;
-          }
-          loading2.dismiss();
-        },
-        err => {
-          loading2.present();
-        }
-      )
 
 
       // this.saveDocumentVehicle();
@@ -2658,12 +2740,22 @@ export class RegistroPage implements OnInit {
         const cadena = tipos.join(',');
 
         this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
-          data => {
-
+          b => {
+            const data = this.removeMatchingKeys(b)
             loading.dismiss();
             if (data.code == '201') {
+              var docsFinal = []
+              for (const a in data.data) {
+                const status = data.data[a];
+                if (!status) {
+                  const doc = this.user.buscarCodigoEnDocumentos(a);
+                  if (doc) {
+                    docsFinal.push(doc);
+                  }
+                }
+              }
               this.openDocs = true
-              this.openDocumentController(this.conductor.cedula, 'cedula', true, []);
+              this.openDocumentController(this.conductor.cedula, 'conductor', true, docsFinal);
             } else {
               this.incompletoTercero = false;
               this.checkTercero = true;
@@ -2695,34 +2787,23 @@ export class RegistroPage implements OnInit {
 
     jsonApi['placa'] = this.vehiculo.placa
 
-    const data = await this.reg.sendDataVehiculo(jsonApi).then(
-      data => {
+    const data = await this.reg.sendDataVehiculo(jsonApi)
 
 
-        const tipos: any = [];
+    const response: any = await this.validateDocuments(this.vehiculo.placa, this.documents_vehiculo, 'vehiculo')
 
-        this.documents_vehiculo.forEach((documento: any) => {
-          documento.docs.forEach((doc: any) => {
-            tipos.push(doc.codigo);
-          });
-        });
+    if (response['status']) {
+      this.incompletoVehiculo = false;
+      this.checkVehicle = true;
+      this.newVehicle = false;
+      this.docsFailVehicle = [];
+    } else {
+      this.openDocs = true;
+      this.openDocumentController(this.vehiculo.placa, 'vehiculo', true, response['data']);
+    }
 
-        const cadena = tipos.join(',');
+    loading.dismiss();
 
-        this.photo.getFotosTercero(this.vehiculo.placa, cadena, 'vehiculo').toPromise().then(
-          data => {
-            loading.dismiss();
-            if (data.code == '201') {
-              this.openDocs = true
-              this.openDocumentController(this.vehiculo.placa, 'placa', true, []);
-            } else {
-              this.incompletoVehiculo = false;
-              this.checkVehicle = true;
-              this.newVehicle = false;
-              this.docsFailVehicle = [];
-            }
-          })
-      })
   }
 
 
@@ -2731,7 +2812,6 @@ export class RegistroPage implements OnInit {
     var validate = true;
     var validateDocs = true;
     var jsonApi: any = {};
-
 
     var text = "<ul>";
     for (const campo in this.formNewDriver.controls) {
@@ -2772,9 +2852,6 @@ export class RegistroPage implements OnInit {
 
     this.dataTercero['docs'] = this.documents_conductor;
 
-
-
-
     if (!validate) {
       this.incompletoTercero = true;
       this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
@@ -2787,9 +2864,8 @@ export class RegistroPage implements OnInit {
 
       this.isModalOpen2 = false;
       const data = await this.reg.sendDataTercero(jsonApi).then(
-        data => {
+        async data => {
 
-          loading.dismiss();
 
           const tipos: any = [];
 
@@ -2801,11 +2877,11 @@ export class RegistroPage implements OnInit {
 
           const cadena = tipos.join(',');
 
-          this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
+          await this.photo.getFotosTercero(this.conductor.cedula, cadena, 'conductor').toPromise().then(
             data => {
               if (data.code == '201') {
                 this.openDocs = true
-                this.openDocumentController(this.conductor.cedula, 'cedula', true, this.documents_conductor);
+                this.openDocumentController(this.conductor.cedula, 'conductor', true, this.documents_conductor);
               } else {
                 this.incompletoTercero = false;
                 this.checkTercero = true;
@@ -2813,6 +2889,9 @@ export class RegistroPage implements OnInit {
               }
             }
           )
+
+          loading.dismiss();
+
 
         },
         err => {
@@ -3132,8 +3211,8 @@ export class RegistroPage implements OnInit {
     this.loadingData = await this.loading.create({
       message: 'Guradando Foto..'
     });
+    this.loadingData.present();
     this.photo.addNewToCamera(name).then((da) => {
-      this.loadingData.present();
       this.processImage(da, name, rotate);
     });
   }
@@ -3189,7 +3268,7 @@ export class RegistroPage implements OnInit {
     const firma = await this.user.firmaContrato(1, this.conductor.cedula, '', this.token);
     console.log(firma);
     // this.searchConductor(this.conductor.cedula, true);
-    this.getDriverApi3sL(this.conductor.cedula);
+    this.getDriverApi3sL(this.conductor.cedula, false);
   }
 
   async acept2() {
@@ -3224,14 +3303,20 @@ export class RegistroPage implements OnInit {
     });
   }
 
-  async getDataCode(cedula:any, placa:any)
-  {
+  async getDataCode(cedula: any, placa: any) {
     const data = await this.reg.getDataCode(cedula, placa, this.token);
     return data;
   }
 
 
   async sendCodeValidation() {
+
+    const loadingData = await this.loading.create({
+      message: 'Generando Codigo..'
+    });
+
+    loadingData.present()
+
     const json = {
       cedula: this.conductor.cedula,
       placa: this.vehiculo.placa,
@@ -3240,44 +3325,97 @@ export class RegistroPage implements OnInit {
 
     const data = await this.reg.sendCode(json, this.token).then(
       data => {
-        if (data.status_sms == 202 || data.code) {
+        if (data.status_sms == 202 || data.code == '205') {
+          this.codeValidation = true;
+        } else {
+          this.presentAlert(
+            'Novedad',
+            'Error al enviar mensaje',
+            data.data,
+            'Reintentar'
+          );
           this.codeValidation = true;
         }
+        loadingData.dismiss()
+
       }
-    )
+    ).catch(err => {
+      loadingData.dismiss()
+      if (err.status == 401) {
+        this.auth.logout()
+      } else {
+        this.presentAlert(
+          'Error',
+          'Fallo al cargar',
+          err.message || 'Ha ocurrido un error inesperado.',
+          'Reintentar'
+        );
+      }
+    })
 
   }
 
-  async approveCode()
-  {
+  async approveCode() {
+
+    const loadingData = await this.loading.create({
+      message: 'Verificando Codigo..'
+    });
+
+    loadingData.present();
+
     const json = {
       cedula: this.conductor.cedula,
       placa: this.vehiculo.placa,
       codigo: this.formSendCode.value.codigo
     }
 
-       const data = await this.reg.validateCode(json, this.token);
+    const data = await this.reg.validateCode(json, this.token);
 
-       if (data.status) {
-         var vehicle: any = {target:{value:this.vehiculo.placa}}
-         this.searchVehicle(vehicle);
-         //  jsonAprove['placa'] = this.vehiculo.placa
-         //  jsonAprove['cedula'] = this.user.getCedula();
-        //  await this.changeVehicleApi(jsonAprove);
-         this.setOpenCode(false);
-        }
+    if (data.status) {
+      var vehicle: any = { target: { value: this.vehiculo.placa } }
+      this.codeValidation = true;
+      this.searchVehicle(vehicle);
+      //  jsonAprove['placa'] = this.vehiculo.placa
+      //  jsonAprove['cedula'] = this.user.getCedula();
+      //  await this.changeVehicleApi(jsonAprove);
+      this.setOpenCode(false);
+    }
+    loadingData.dismiss()
+
   }
 
 
- async changeVehicleApi(json:any)
- {
-   await this.reg.changeDataVehicle(json, this.token).then(
-     data => {
-       this.presentAlert("Vehiculo Asignado", "Por favor iniciar Sesion con el nuevo Vehiculo", "", "Cerrar");
-       this.auth.logout();
-     }
-   )
- }
+  async changeVehicleApi(json: any) {
+    await this.reg.changeDataVehicle(json, this.token).then(
+      data => {
+        this.presentAlert("Vehiculo Asignado", "Por favor iniciar Sesion con el nuevo Vehiculo", "", "Cerrar");
+        this.auth.logout();
+      }
+    )
+  }
+
+  validateBirthDate(date: any) {
+
+    const birthdate = new Date(date.target.value)
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDifference = today.getMonth() - birthdate.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
+      age--;
+    }
+
+    if (age >= 18) {
+      return true;
+    } else {
+      this.presentAlert("Error", "", "Debe ser mayor de 18 años", "Cerrar");
+      this.formNewDriver.patchValue({
+        fechaNacimiento: ''
+      })
+      this.conductor.fechaNacimiento = ''
+      return false;
+    }
+  }
 
 
   async presentAlert(title: String, subheader: String, desc: String, botton: String) {
@@ -3286,6 +3424,17 @@ export class RegistroPage implements OnInit {
       subHeader: '' + subheader,
       message: '' + desc,
       buttons: ['' + botton],
+    });
+
+    await alert.present();
+  }
+
+  async presentAlertButtons(title: String, subheader: String, desc: String, p0: string, buttons: { text: string; handler: () => void; }[]) {
+    const alert = await this.alertController.create({
+      header: '' + title,
+      subHeader: '' + subheader,
+      message: '' + desc,
+      buttons: buttons,
     });
 
     await alert.present();

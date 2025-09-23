@@ -3,15 +3,21 @@ import { UserService } from '../api/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { log } from 'console';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AlertController, IonModal, LoadingController, ModalController } from '@ionic/angular';
+import { AlertController, IonModal, LoadingController, ModalController, Platform } from '@ionic/angular';
 import { GeodataService } from '../api/geodata.service';
-import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { AppComponent } from '../app.component';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PhotoService } from '../api/photo.service';
 import { AuthService } from '../api/auth.service';
-
-
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Browser } from '@capacitor/browser';
+import { environment } from 'src/environments/environment';
+import { NotificationService } from '../api/notificaciones.service';
+import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
+import { LocalNotificationService } from '../api/local-notification.service';
+import { AlertService } from '../api/alert.service';
+import { TurnosService } from '../api/turnos.service';
+import { Turno } from '../models/turno.model';
 
 
 @Component({
@@ -22,20 +28,6 @@ import { AuthService } from '../api/auth.service';
 export class HomePage implements OnInit {
   @ViewChild(IonModal) modalTurno!: IonModal;
   @ViewChild(IonModal) modalTurno2!: IonModal;
-
-  constructor(
-    public userService: UserService,
-    public auth: AuthService,
-    private router: Router,
-    private modalController: ModalController,
-    private photo: PhotoService,
-    private formBuilder: FormBuilder,
-    private geolocation: Geolocation,
-    private geodata: GeodataService,
-    private alert: AlertController,
-    private app: AppComponent,
-    private loading: LoadingController
-  ) { }
 
   turnoExistente: boolean = false;
   statusDoc: boolean = true
@@ -55,6 +47,8 @@ export class HomePage implements OnInit {
   listTurnos: any = [];
   conductor: any;
   estado: any = false;
+  botonInactivo: any = false;
+  botonDocumentos: any = false;
   event: any; //variable para cuenta regresiva
   marca: any;
   carroceria: any;
@@ -90,144 +84,293 @@ export class HomePage implements OnInit {
   token: any;
   docs: any = []
   estadoBoton: any;
+  permissionAttempts: any = 0;
+  permissionStatus: any;
+  loadingData: any;
+  isSubmitting: any = false;
 
   get f() {
     return this.turnoForm.controls;
   }
 
-  public regionales = [
-    { nombre: 'REGIONAL ARAUCA' },
-    { nombre: 'REGIONAL ARMENIA' },
-    { nombre: 'REGIONAL BARRANQUILLA' },
-    { nombre: 'REGIONAL BOGOTA' },
-    { nombre: 'REGIONAL BUCARAMANGA' },
-    { nombre: 'REGIONAL BUENAVENTURA' },
-    { nombre: 'REGIONAL CALI' },
-    { nombre: 'REGIONAL CARTAGENA' },
-    { nombre: 'REGIONAL CUCUTA' },
-    { nombre: 'REGIONAL FLORENCIA' },
-    { nombre: 'REGIONAL IBAGUE' },
-    { nombre: 'REGIONAL IPIALES' },
-    { nombre: 'REGIONAL MANIZALES' },
-    { nombre: 'REGIONAL MEDELLIN' },
-    { nombre: 'REGIONAL MONTERIA' },
-    { nombre: 'REGIONAL NEIVA' },
-    { nombre: 'REGIONAL PASTO' },
-    { nombre: 'REGIONAL PEREIRA' },
-    { nombre: 'REGIONAL PERU' },
-    { nombre: 'REGIONAL POPAYAN' },
-    { nombre: 'REGIONAL RIOHACHA' },
-    { nombre: 'REGIONAL RIONEGRO' },
-  ];
+
+  constructor(
+    public userService: UserService,
+    public auth: AuthService,
+    private router: Router,
+    private modalController: ModalController,
+    private photo: PhotoService,
+    private formBuilder: FormBuilder,
+    private geodata: GeodataService,
+    private alert: AlertService,
+    public turno: TurnosService,
+    private loading: LoadingController,
+    private platform: Platform,
+    private localNoti: LocalNotificationService
+  ) {
+
+    this.turnoForm = this.formBuilder.group({
+      origen: [this.ciudad, [Validators.required]],
+      destino1: ['', [Validators.required]],
+      destino2: ['', [Validators.required]],
+      destino3: ['', [Validators.required]],
+      remolque: [''], 
+      vehiculovac: [false, [Validators.required]], 
+      nuevo: [false, [Validators.required]], 
+    });
+
+
+    this.token = this.userService.getToken();
+    this.permissionStatus = this.userService.getItem('permissionNotify');
+    this.placa = this.userService.getPlaca();
+    this.placaLetras = this.placa.substr(0, 3);
+    this.placaNum = this.placa.substr(3, 5);
+  }
+
 
   async ngOnInit() {
 
-    this.token = this.userService.getToken();
+    this.initializeApp()
 
-    if (this.userService.getToken() == null) {
+    if (!this.token || this.userService.getToken() == null) {
+      this.auth.logout();
       this.router.navigate(['/login']);
     }
 
-    this.estadoBoton = 'Cargando....'
-
-
-    const loadingData = await this.loading.create({
+    this.loadingData = await this.loading.create({
       message: 'Generando perfil.....',
     });
 
-    loadingData.present();
+    this.estadoBoton = 'Cargando....'
 
+    this.loadingData.present();
 
-    const permissions = await LocalNotifications.checkPermissions();
-    console.log(permissions);
+    try {
 
-    if (permissions.display !== 'granted') {
-      const newPermissions = await LocalNotifications.requestPermissions();
-      console.log('requestPermissions result:', newPermissions);
-      if (newPermissions.display === 'denied') {
-        // Always ends up here, without showing any notification permission prompt
-        console.log(`No permission to show notifications`);
+      if (this.permissionStatus !== 'granted') {
+        this.initPushNotifications()
       }
+
+      await this.validateFechas();
+
+      await this.getData3SL()
+
+      await this.userService.validateCap()
+
+      this.loadingData.dismiss();
+
+    } catch (err: any) {
+
+      this.loadingData.dismiss();
+
+
+      if (err.status == 401) {
+        this.loadingData.dismiss()
+        this.auth.logout()
+      } else {
+
+        this.estadoBoton = 'Error al cargar.. Deslice para recargar..'
+
+        this.alert.presentAlertRedirect(
+          'Error',
+          'Fallo al cargar',
+          err.message || 'Ha ocurrido un error inesperado.',
+          'Reintentar',
+          '/home'
+        );
+      }
+    } finally {
+      this.loadingData.dismiss();
     }
 
-    // this.executeNotification(1, 'Viaja Con aldia', 'Documentos pendientes')
-    // this.app.ngOnInit()
+  } // ngOninit
 
 
-    this.app.getFechas().then(
-      data => {
+  async getData3SL() {
 
-        this.placa = this.userService.getPlaca();
-        this.placaLetras = this.placa.substr(0, 3);
-        this.placaNum = this.placa.substr(3, 5);
+    const data = await this.userService.getTercero3sL(this.token);
 
-        this.userService.getTercero3sL(this.token).subscribe(
-          (data) => {
+    if (!data || !data['data'] || data['data'].length === 0) {
+      throw new Error('No se encontraron datos.');
+    }
 
-            const datos = data['data'][0];
+    const datos = data['data'][0];
 
-            this.cedula = datos.codigoTercerox
-            this.nombres = datos.nombreTercerox
-            this.apellidos = datos.apell1Tercerox + ' ' + datos.apell2Tercerox
-            this.correo = datos.emailxTercerox
-            this.celular = datos.movilxTercerox
-            this.direccion = datos.direccTercerox
-            this.fecha = datos.fechaxNacimien
-            this.ciudad = datos.ciudadCreacion
-            this.statusDoc = this.app.statusDoc
-            this.docs = this.app.docs
+    this.cedula = datos.codigoTercerox
+    this.nombres = datos.nombreTercerox
+    this.apellidos = datos.apell1Tercerox + ' ' + datos.apell2Tercerox
+    this.correo = datos.emailxTercerox
+    this.celular = datos.movilxTercerox
+    this.direccion = datos.direccTercerox
+    this.fecha = datos.fechaxNacimien
+    this.ciudad = datos.ciudadCreacion
 
-            console.log(datos.numeroEstadoxx);
-
-            this.getDocument(this.cedula, 'fotoperfil', 'conductor').then(
-              (doc: any) => {
-                if (doc['code'] !== '204') {
-                  console.log(doc);
-
-
-                  this.fotoUser = doc.data.fotoperfil;
-                }
-              }
-            )
-
-
-            console.log(this.app.statusDoc);
-
-
-
-
-
-            if (this.app.statusDoc) {
-              if (datos.numeroEstadoxx = '1') {
-                this.estado = true
-                this.getTurnoTecero();
-              } else {
-                this.estado = false
-                this.turnoExistente = false;
-                this.estadoBoton = 'Inactivo';
-                // this.clase_estado = 'color-red';
-              }
-            }else{
-              this.router.navigateByUrl('/datos')
-            }
-
-          },
-          (err) => {
-            if (err.status == 401) {
-              this.auth.logout()
-            }
-          }
-
-        )
-      },
-      err => {
-        if (err.status == 401) {
-          this.auth.logout()
+    this.getDocument(this.cedula, 'fotoperfil', 'conductor').then(
+      (doc: any) => {
+        if (doc['code'] !== '204') {
+          this.fotoUser = doc.data.fotoperfil;
         }
       }
-    );
+    )
 
-    loadingData.dismiss();
+    if (this.statusDoc) {
+      if (datos.numeroEstadoxx == 'ACTIVO') {
+        this.estado = true
+        this.getTurnoTecero();
+      } else {
+        this.estado = false
+        this.turnoExistente = false;
+        this.botonInactivo = true;
+        this.estadoBoton = 'Inactivo';
+        this.clase_estado = 'color-red';
+      }
+    } else {
+      this.estadoBoton = 'Documentos Vencidos';
+      this.botonDocumentos = true
+      this.router.navigateByUrl('/datos')
+    }
+
+    // } catch (err: any) {
+    //   console.log(err);
+
+    //   this.loadingData.dismiss();
+
+    //   this.presentAlert(
+    //     'Error',
+    //     'Fallo al cargar',
+    //     err.message || 'Ha ocurrido un error inesperado.',
+    //     'Reintentar'
+    //   );
+    // } finally {
+    //   this.loadingData.dismiss();
+    // }
+  }
+
+  async validateFechas() {
+    await this.userService.getFechasDocs(this.token).then(
+      (fechas: any) => {
+        this.docs = fechas.docs
+        this.statusDoc = fechas.status
+      }
+    )
+    //   .catch((error: any) => {
+
+    //     if (error.status == 401) {
+    //       this.loadingData.dismiss()
+    //       this.auth.logout()
+    //     }
+
+    //     this.presentAlert(
+    //       'Error',
+    //       'Fallo al cargar',
+    //       error.error.data,
+    //       'Cerrar'
+    //     );
+    //   }
+    // );
+
+  }
+
+  async initPushNotifications() {
+    try {
+      // Verificar permisos
+      const permissionStatus: PermissionStatus = await PushNotifications.checkPermissions();
+
+      if (permissionStatus.receive !== 'granted') {
+        const requestPermission = await PushNotifications.requestPermissions();
+        if (requestPermission.receive !== 'granted') {
+          console.warn('Permisos de notificaciones no concedidos');
+          return;
+        }
+      }
+
+      // Registrar notificaciones
+      await PushNotifications.register();
+
+      PushNotifications.addListener('registration', async (token) => {
+        // console.log('Token FCM obtenido:', token.value);
+        const json = { email: this.cedula, token_mobile: token.value }
+        await this.userService.laodTokenMobile(json, this.token);
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Error al registrar FCM:', error);
+      });
+
+      // Listener para recibir notificaciones
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Notificación recibida en foreground:', notification);
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('Acción realizada con la notificación:', action);
+      });
+
+    } catch (error) {
+      console.error('Error en la configuración de notificaciones push:', error);
+    }
+  }
+
+
+  async permissionsAlerts(permissionAttempts: any) {
+    const permissions = await LocalNotifications.checkPermissions();
+
+    if (permissions.display !== 'granted') {
+      if (permissionAttempts < 2) {
+        const newPermissions = await LocalNotifications.requestPermissions();
+        console.log('requestPermissions result:', newPermissions);
+
+        if (newPermissions.display === 'denied') {
+          permissionAttempts++;
+          await this.alert.presentAlert('Alerta', 'Para continuar', 'Debe aceptar permisos de notificaciones', 'Cerrar');
+          await this.permissionsAlerts(permissionAttempts); // Volver a intentar
+        }
+
+        else {
+          // await this.getFCMToken();
+        }
+
+
+      } else {
+
+        const buttons = [
+          {
+            text: 'Aceptar Permisos',
+            handler: async () => {
+              this.userService.setItem('permissionNotify', 'granted')
+            }
+          },
+          {
+            text: 'Continuar sin Notificaciones',
+            role: 'cancel',
+            handler: () => {
+              this.userService.setItem('permissionNotify', 'granted')
+            }
+          }
+        ]
+
+        this.alert.presentAlertButtons('Permisos de Notificación', '', 'Has rechazado los permisos varias veces. ¿Deseas continuar sin recibir notificaciones?', '', buttons);
+
+      }
+    } else {
+      // await this.getFCMToken();
+    }
+  }
+
+
+  initializeApp() {
+    this.platform.ready().then(() => {
+      console.log('ready');
+      // this.setStatusBarColor();
+    });
+  }
+
+  setStatusBarColor() {
+    if (this.platform.is('android')) {
+      StatusBar.setBackgroundColor({ color: '#3c8ccd' });
+    } else if (this.platform.is('ios')) {
+      StatusBar.setStyle({ style: Style.Dark });
+    }
   }
 
   async executeNotification(id: any, title: any, body: any) {
@@ -246,18 +389,27 @@ export class HomePage implements OnInit {
 
   }
 
-  onSubmit() {
+  async onSubmit() {
+
     console.log(this.turnoForm.value);
 
-    if (this.turnoForm.value.origen != null) {
+    if (this.turnoForm.invalid || this.isSubmitting) {
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+
       const ciudad = this.turnoForm.value.origen
-        .normalize('NFD') // Normalizamos para obtener los códigos
-        .replace(/[\u0300-\u036f|.,\/#!$%\^&\*;:{}=\-_`~()]/g, '') // Quitamos los acentos y símbolos de puntuación
-        .replace(/ +/g, '-') // Reemplazamos los espacios por guiones
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f|.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+        .replace(/ +/g, '-')
         .toLowerCase();
 
-      const placa = localStorage.getItem('placa')?.toUpperCase();
-      const turno = {
+      const placa = (localStorage.getItem('placa') || '').toUpperCase();
+
+      const turno: Turno = {
         placa: placa,
         ciudad_origen: ciudad,
         ciudad_destino1: this.turnoForm.value.destino1,
@@ -265,26 +417,43 @@ export class HomePage implements OnInit {
         ciudad_destino3: this.turnoForm.value.destino3,
         desacorasado: this.turnoForm.value.vehiculovac,
         estado_trailer: this.turnoForm.value.remolque,
+        nuevo: this.turnoForm.value.nuevo,
       };
-      this.geodata.turnoCreacion(turno).subscribe((data) => {
-        this.respuesta = JSON.stringify(data);
-        this.respuesta = JSON.parse(this.respuesta);
-        this.presentAlert(
-          'Respuesta enturnamiento',
-          '',
-          this.respuesta.data,
-          'Aceptar'
-        );
-        this.turnoForm.reset();
-        this.ngOnInit();
-      });
+
+      await this.turno.createTurno(turno)
+
+      this.isSubmitting = false;
+      this.turnoForm.reset();
+      this.loadingData.dismiss();
+      this.modalTurno.dismiss();
+      // this.ngOnInit();
+
+    } catch (err: any) {
+
+      this.isSubmitting = false;
+
+      // Si es error 401, cerrar sesión
+      if (err.status === 401) {
+        this.loadingData.dismiss();
+        this.auth.logout();
+        return;
+      }
+
+      this.alert.presentAlert(
+        'Error',
+        'Fallo al cargar',
+        err.error.data,
+        'Cerrar'
+      );
+
     }
   }
 
   async getTurnoTecero() {
-    const data: any = await this.userService.getTurnoUser().toPromise()
-    if (data['code'] == '200') {
 
+    const data: any = await this.userService.getTurnoUser()
+
+    if (data['code'] == '200') {
       this.clase_estado = 'color-green';
       this.listTurnos = data;
       // console.log(this.listTurnos);
@@ -305,7 +474,7 @@ export class HomePage implements OnInit {
       this.turnoExistente = false;
       this.estadoBoton = 'Enturnase';
       this.clase_estado = 'color-red';
-      this.presentAlert(
+      this.alert.presentAlert(
         'Sin turnos',
         '',
         'Puedes agregar un turno en opcion',
@@ -315,134 +484,89 @@ export class HomePage implements OnInit {
     }
 
   }
-  nuevoTurno() {
-
-    this.turnoForm = this.formBuilder.group({
-      origen: ['', [Validators.required]],
-      destino1: ['', [Validators.required]],
-      destino2: ['', [Validators.required]],
-      destino3: ['', [Validators.required]],
-      remolque: ['', [Validators.required]],
-      vehiculovac: ['', [Validators.required]],
-    });
-
-    this.geolocation
-      .getCurrentPosition()
-      .then((resp) => {
-        this.geolocationService(resp.coords.latitude, resp.coords.longitude);
-      })
-      .catch((error) => {
-        console.log('Error getting location', error);
-      });
-
-    console.log('nuevo turno ejecutado');
+  async nuevoTurno() {
 
     this.modalTurno.present();
+
+    await this.getLocation()
+
   }
 
-  getTurno() {
+  async getTurno() {
 
-    // console.log('funcion que muestra modal con los turnos cargados');
+    const data: any = await this.userService.getTurnoUser();
+    this.listTurnos = data;
 
-    this.turnoForm = this.formBuilder.group({
-      origen: ['', [Validators.required]],
-      destino1: ['', [Validators.required]],
-      destino2: ['', [Validators.required]],
-      destino3: ['', [Validators.required]],
-      remolque: ['', [Validators.required]],
-      vehiculovac: ['', [Validators.required]],
-    });
+    this.modalTurno.present();
 
-    const listTurnos = this.userService.getTurnoUser().subscribe((data) => {
-      this.listTurnos = data;
+    this.loadForm(data);
 
-      this.geolocation
-        .getCurrentPosition()
-        .then((resp) => {
-          this.geolocationService(resp.coords.latitude, resp.coords.longitude);
-        })
-        .catch((error) => {
-          console.log('Error getting location', error);
-        });
+    await this.getLocation();
 
-      this.modalTurno.present();
-
-      this.loadForm(data);
-    });
   }
+
 
   redirect(page: any) {
     this.router.navigate(['/' + page]);
   }
 
-  async geolocationService(lat: Number, lon: Number) {
-    this.geodata.getCityByLatLon(lat, lon).subscribe((data) => {
-      this.longitud = data.results.length;
+  async getLocation() {
+    try {
+      const ciudad = await this.geodata.getCityFromCurrentLocation(this.token);
+      this.nombre = ciudad
 
-      if (data.results[this.longitud - 1].address_components.length > 2) {
-        this.nombre =
-          data.results[this.longitud - 1].address_components[0].long_name;
-      } else if (
-        data.results[this.longitud - 2].address_components.length > 2
-      ) {
-        this.nombre =
-          data.results[this.longitud - 2].address_components[0].long_name;
-      } else if (
-        data.results[this.longitud - 3].address_components.length > 2
-      ) {
-        this.nombre =
-          data.results[this.longitud - 3].address_components[0].long_name;
-      }
-
-      const origenLabel = document.getElementById(
-        'origenLabel'
-      ) as HTMLInputElement | null;
-
-      if (origenLabel != null) {
-
-        this.getZona(this.nombre).then(
-          (data: any) => {
-            if (data.status) {
-              console.log(data.data.ciudad_oigen_entrada);
-              this.nombre = data.data.ciudad_oigen_final
-              origenLabel.innerHTML =
-                "<ion-icon name='location'> </ion-icon> <strong>" +
-                this.nombre +
-                '</strong>';
-            } else {
-              console.log('ERROR');
-              console.log(data.data.ciudad_oigen_final);
-            }
+      const buttons = [
+        {
+          text: 'Nuevo turno',
+          handler: async () => {
+            this.turnoForm.patchValue({
+              nuevo: true
+            })
+            console.log(this.turnoForm.value);
+            
           }
-        )
-      } else {
-        this.presentAlert('Error GPS', '', this.nombre, 'Cerrar');
+        },
+        {
+          text: 'Cancelar',
+          handler: async () => {
+            this.modalTurno.dismiss();
+          }
+        }
+      ]
+
+
+      if (this.origen && (this.origen != this.nombre)) {
+        this.alert.presentAlertButtons("Novedad GPS", "", "Tiene un turno activo para " + this.origen + " y su ubicacion actual es " + this.nombre, '', buttons)
       }
-    });
+
+      const origenLabel = document.getElementById('origenLabel') as HTMLInputElement | null;
+
+      if (ciudad) {
+        this.nombre = ciudad;
+        origenLabel!.innerHTML =
+          "<ion-icon name='location'> </ion-icon> <strong>" +
+          ciudad +
+          '</strong>';
+      } else {
+        origenLabel!.innerHTML =
+          "<ion-icon name='location'> </ion-icon> <strong> Sin Ubicacion </strong>";
+      }
+    } catch (error: any) {
+      this.alert.presentAlertRedirect(
+        'Error',
+        'GPS Desactivado',
+        error.message,
+        'Reintentar',
+        '/home'
+      );
+    }
   }
 
-  async presentAlert(
-    title: String,
-    subheader: String,
-    desc: String,
-    botton: String
-  ) {
-    const alert = await this.alert.create({
-      header: '' + title,
-      subHeader: '' + subheader,
-      message: '' + desc,
-      buttons: ['' + botton],
-    });
-
-    await alert.present();
-  }
 
   validateDocs() {
     if (!this.statusDoc) {
       console.log(this.docs);
       this.router.navigate(['/datos'])
-
-
     }
   }
 
@@ -465,6 +589,13 @@ export class HomePage implements OnInit {
     } catch (error) {
       throw error
     }
+  }
+
+  handleRefresh(event: any) {
+    setTimeout(() => {
+      window.location.reload();
+      event.target.complete();
+    }, 2000);
   }
 
 

@@ -1,7 +1,4 @@
-ion-menu-button {
-    color: var(--ion-color-primary);
-  }
-  
+
   #container {
     text-align: center;
     position: absolute;
@@ -10,19 +7,40 @@ ion-menu-button {
     top: 50%;
     transform: translateY(-50%);
   }
-  
+
   #container strong {
     font-size: 20px;
     line-height: 26px;
   }
-  
+
   #container p {
     font-size: 16px;
     line-height: 22px;
     color: #8c8c8c;
     margin: 0;
   }
-  
+
   #container a {
     text-decoration: none;
   }
+
+  ion-toolbar {
+    --background: #3C8CCD;
+    --color: white;
+  }
+
+  ion-title {
+    --margin-start: 15px;
+  }
+
+  .custom-title {
+    text-align: center;
+    width: 100%;
+  }
+
+  ion-menu-button {
+    color: var(white);
+  }
+
+
+

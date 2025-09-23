@@ -13,6 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": ["@tensorflow/tfjs-core"],
             "outputPath": "www",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -29,6 +30,11 @@
                 "glob": "**/*.svg",
                 "input": "node_modules/ionicons/dist/ionicons/svg",
                 "output": "./svg"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/.well-known",
+                "output": ".well-known/"
               }
             ],
             "styles": [

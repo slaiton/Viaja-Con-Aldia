@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { AlertController, IonModal, LoadingController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { PhotoService } from '../../api/photo.service';
 import { UserService } from '../../api/user.service';
@@ -22,6 +22,10 @@ export class Documentos2Component implements OnInit {
   // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
   // @Input() dataTercero: any;
   @Input() public dataTercero: any;
+  @ViewChild(IonModal) modalType!: IonModal;
+  codeImageSelect:any;
+  rotateImageSelect:any;
+  modalTypeInput: any = false;
   listEvents: Array<any> = [];
   overCanvas: any;
   documentActive: any;
@@ -103,6 +107,7 @@ export class Documentos2Component implements OnInit {
 
                   this.datos.hubImag[code].webviewPath = doc['data'][code];
                   this.documents[a].docs[b].imagen = doc['data'][code];
+                  this.documents[a].docs[b].status = true;
                   // this.documents[a].status = true;
                 } else {
                   // this.documents[a].status = false;
@@ -132,8 +137,27 @@ export class Documentos2Component implements OnInit {
     }
   }
 
+  setModalType(isOpen: any) {
+    this.modalTypeInput = isOpen;
+  }
+
+  dimmissModalType(e:any)
+  {
+    this.modalTypeInput = false;
+    console.log(e);
+
+  }
+
+  selectTypeDocument(code:any, rotate:any)
+  {
+    this.codeImageSelect = code
+    this.rotateImageSelect = rotate
+    this.setModalType(true)
+  }
+
   backdata() {
     this.datos.openDocs = false;
+    this.datos.ngOnInit();
   }
 
   setModal(isOpen: any) {
@@ -146,8 +170,7 @@ export class Documentos2Component implements OnInit {
     this.codeDocumentActive = a;
   }
 
-  async addToGalery(name: any) {
-
+  async addToGalery(name: any, rotate: any) {
 
     this.loadingData = await this.loading.create({
       message: 'Guradando Foto..'
@@ -156,11 +179,11 @@ export class Documentos2Component implements OnInit {
 
     this.photo.addNewToGallery(name).then((da) => {
       this.loadingData.present();
-      this.processImage(da, name);
+      this.processImage(da, name, rotate);
     });
   }
 
-  async addToCamera(name: any) {
+  async addToCamera(name: any, rotate: any) {
 
     this.loadingData = await this.loading.create({
       message: 'Guradando Foto..'
@@ -168,16 +191,22 @@ export class Documentos2Component implements OnInit {
 
     this.photo.addNewToCamera(name).then((da) => {
       this.loadingData.present();
-      this.processImage(da, name);
+      this.processImage(da, name, rotate);
       // loading.dismiss()
     });
 
   }
 
-  async processImage(da: any, name: any) {
+  async processImage(da: any, name: any, rotate:any) {
     try {
 
-      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, 90);
+      var rot = 0;
+
+      if (rotate) {
+        rot = 90;
+      }
+
+      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, rot);
 
       const dataPhoto1: Photo = {
         webPath: processedImagerotate,
@@ -211,6 +240,48 @@ export class Documentos2Component implements OnInit {
     }
   }
 
+   async onFileSelected(event: any, name:any ) {
+    this.loadingData = await this.loading.create({
+      message: 'Guradando Foto..'
+    });
+
+    this.loadingData.present();
+
+    const file = event.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      this.processPdf(file,name);
+    }
+  }
+
+  triggerFileInput() {
+    const fileInput = document.getElementById('pdfInput') as HTMLElement;
+    fileInput.click();  
+  }
+
+  // Procesar y guardar PDF
+  private async processPdf(file: File, name:any) {
+    const da:any = {};
+
+    console.log(name);
+    
+    const base64Data = await this.photo.convertFileToBase64(file);
+
+
+
+    da.webviewPath = 'assets/icon/pdf.png';
+    da.base64 = base64Data
+
+    this.datos.hubImag[name] = da;
+
+    this.loadingData.dismiss();
+
+    // const savedPdfFile = {
+    //   fileName: `${file.name}`,
+    //   fileData: base64Data
+    // };
+
+    // this.fotos.unshift(savedPdfFile);
+  }
 
 
   async checkDocument() {
@@ -280,7 +351,6 @@ export class Documentos2Component implements OnInit {
       } else if (!this.documentActive.fecha && this.documentActive.fechaTag) {
         if (this.documentActive.type == 'conductor') {
           const fecha = new Date();
-          fecha.setMonth(fecha.getMonth() + 1); // Agregar un mes
           this.documents[this.codeDocumentActive]['value'] = fecha.toISOString().slice(0, 10);
           jsonApiConductor['codigoTercerox'] = this.dataTercero.cedula
           jsonApiConductor['conductor'] = true;
@@ -288,12 +358,9 @@ export class Documentos2Component implements OnInit {
         }
       }
 
-
       mensaje += '</ul>'
 
       if (validate) {
-
-
 
         if (this.documentActive.type == 'vehiculo' && jsonApiVehiculo.placa) {
           const envio = await this.reg.sendDataVehiculo(jsonApiVehiculo);
@@ -310,6 +377,15 @@ export class Documentos2Component implements OnInit {
             files: [],
           };
 
+
+
+          if(data.length == 0)
+          {
+            this.isModalOpen = false;
+          }
+
+
+
           for (let b = 0; b < data.length; b++) {
             const doctipe = data[b];
 
@@ -323,7 +399,16 @@ export class Documentos2Component implements OnInit {
 
               jsonDocs.files.push(dataDoc);
             }
+
           }
+
+
+          if(jsonDocs.files.length == 0)
+            {
+              this.isModalOpen = false;
+              loading.dismiss();
+              return;
+            }
 
           this.user.cargaDocumentos(jsonDocs).subscribe(
             (data) => {
@@ -363,42 +448,14 @@ export class Documentos2Component implements OnInit {
   }
 
   async documentValidate() {
-    const data = this.documents
-    var doc = ''
-    var tipo = ''
-    var validate = true
-    var jsonApiVehiculo: any = {}
-    var jsonApiConductor: any = {}
-
-    // this.loadingData = await this.loading.create({
-    //   message: 'Revisando Datos..'
-    // });
-
-    // this.loadingData.present();
-
-    for (const document of data) {
-      if (!document.status) {
-        validate = false
-      }
-    }
-
-    if (validate) {
-
+    // const data = this.documents
       this.datos.openDocs = false;
       this.datos.ngOnInit();
-
-    } else {
-      this.presentAlert("Error", "Hay documentos pendientes por cargar", "", "Cerrar")
-    }
-    // this.loadingData.dismiss();
-
-
-
   }
 
 
   async getFechas() {
-    const data = await this.user.getFechas(this.token).toPromise();
+    const data = await this.user.getFechas(this.token);
     return data;
   }
 
@@ -414,9 +471,11 @@ export class Documentos2Component implements OnInit {
   select(e: any) {
 
   }
+
   onChange(e: any) {
 
   }
+
   onFocused(e: any) {
 
   }

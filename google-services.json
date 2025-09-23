@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "90014663158",
+    "project_id": "viaja-con-aldia-97c5b",
+    "storage_bucket": "viaja-con-aldia-97c5b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90014663158:android:160d7e5e387e4e287547d7",
+        "android_client_info": {
+          "package_name": "io.ionic.viajaconaldia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATSjleEycUXfdCqJr3gnA9Rnb3b-kImho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

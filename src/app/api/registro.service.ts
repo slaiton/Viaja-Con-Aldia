@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs-compat/Observable";
+import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
@@ -135,7 +137,7 @@ changeDataVehicle(json:any, token:any): Promise<any>
 
 
 
-getDataVehiculo(placa:any): Observable<any>
+getDataVehiculo(placa:any): Promise<any>
 {
   const params = new HttpParams({
     fromString: 'placa=' + placa
@@ -149,6 +151,14 @@ getDataVehiculo(placa:any): Observable<any>
   const requestOptions = { headers: headers, params: params };
 
   return this.http.get("https://api.3slogistica.com/api/vehiculo", requestOptions)
+            .pipe(
+              timeout(5000),
+              retry(2),
+              catchError((err: any) => {
+                 return throwError(() => err);
+              })
+            )
+            .toPromise()
 }
 
 getSatelital(token:any) : Observable<any>{

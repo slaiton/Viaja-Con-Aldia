@@ -112,9 +112,7 @@ export class PreformPage implements OnInit {
   }
 
   ngOnInit() {
-    if (localStorage.getItem('token') == null) {
-      this.router.navigate(['/login']);
-    }
+
 
     // Obtener la placa del vehículo del usuario logueado
     this.placa = this.userService.getPlaca();

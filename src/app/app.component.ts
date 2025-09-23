@@ -7,9 +7,13 @@ import { AuthService } from './api/auth.service';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { Network } from '@capacitor/network';
 import { PluginListenerHandle } from '@capacitor/core';
+import { App,  URLOpenListenerEvent } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { UserService } from './api/user.service';
 import { Platform } from '@ionic/angular';
+import { PhotoService } from './api/photo.service';
+import { log } from 'console';
+
 
 
 
@@ -44,12 +48,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private user: UserService,
     private router: Router,
-    private cookies: CookieService,
+    private photo: PhotoService,
     private ngZone: NgZone,
     private platform: Platform
   ) {
     defineCustomElements(window)
     this.isMobile = this.platform.is('mobile');
+    this.initialize()
   }
 
   conductor: any;
@@ -61,8 +66,27 @@ export class AppComponent implements OnInit, OnDestroy {
   clase_vehiculo: any;
   clase_estado: any;
   token: any;
-  fotoUser: any = false;
+  public fotoUser: any = '';
   model: any = {}
+
+
+  initialize() {
+    App.addListener('appUrlOpen', (event: URLOpenListenerEvent) => {
+      this.ngZone.run( () => {
+
+        const domain = 'www.3slogistica.com';
+        this.user.validateCap()
+        const pathArray = event.url.split(domain);
+        const appPath = pathArray.pop();
+
+        if(appPath)
+        {
+          this.router.navigateByUrl(appPath)
+        }
+
+      })
+    })
+  }
 
 
 
@@ -81,16 +105,9 @@ export class AppComponent implements OnInit, OnDestroy {
     const status = await Network.getStatus();
     this.chageNetWorkStatus(status);
 
-    this.auth.onChange.subscribe(
-      (data) => {
-        this.token = this.auth.getToken();
-      }
-    );
+    console.log(this.router.url);
 
-
-    if (localStorage.getItem("token") != null) {
-      this.getDataUser();
-    }
+      await this.getData();
 
     LocalNotifications.addListener('localNotificationActionPerformed', (res) => {
       console.log(res);
@@ -102,70 +119,51 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.networkListener) this.networkListener.remove();
   }
 
-  async getFechas() {
-    this.docs = []
-    var text:any = []
-    const data =  await this.user.getFechas(this.token).toPromise()
-    if (data.status)  {
-      this.statusDoc = true;
-      this.docs = {}
-      text = []
-    }else{
-      this.statusDoc = false;
-
-      if (data.data.vehiculo && data.data.vehiculo.length > 0) {
-        for (let a = 0; a < data.data.vehiculo.length; a++) {
-          const element  = data.data.vehiculo[a];
-
-          const json = {
-            nombre: element.nombre,
-            fecha: element.fecha
-          }
-
-          const palabra = this.separarCamelCase(element.nombre);
-          text.push(palabra);
-          this.docs.push(json);
-        }
+ async getData()
+  {
+    this.auth.onChange.subscribe(
+      (data) => {
+        this.token = this.auth.getToken();
       }
+    );
 
-      if (data.data.conductor && data.data.conductor.length > 0) {
-        for (let a = 0; a < data.data.conductor.length; a++) {
-          const element  = data.data.conductor[a];
-
-          const json = {
-            nombre: element.nombre,
-            fecha: element.fecha
-          }
-
-          const palabra = this.separarCamelCase(element.nombre);
-          text.push(palabra);
-          this.docs.push(json);
-        }
-      }
-
-      if (text.length > 0) {
-        this.executeNotification(1,"IMPORTANTE","Documentos Vencidos",text.join(','), "Actualiza tus documentos para continuar");
-      }
-    }
+     await this.getDataUser();
   }
 
-  getDataUser() {
+
+ async getDataUser() {
     // this.router.navigate(['/login']);
-    this.auth.getUser3sL(this.token).subscribe(data => {
+
+    try {
+    const data = await this.auth.getUser3sL(this.token)
+
       const datos = data.data[0];
       this.conductor = datos.nombreTercerox.toLowerCase();
       this.nombre = this.conductor.split(' ')[0];
       // this.estado = datos.estado;
+
       this.placa = datos.numeroPlacaxxx;
       // this.carroceria = datos.carroceria;
       // this.marca = datos.marca;
       // this.clase_vehiculo = datos.clase_vehiculo;
-      this.fotoUser = datos.apiFotoConductor;
+      // this.fotoUser = datos.apiFotoConductor;
 
-      this.placa = this.placa.substr(0, 3) + " - " + this.placa.substr(3, 5);
+     await this.getDocument(datos.codigoTercerox, 'fotoperfil', 'conductor').then(
+        (doc: any) => {
+          if (doc['code'] !== '204') {
+            console.log(doc.data.fotoperfil);
 
 
-      if (datos.numeroEstadoxx == '1') {
+            this.fotoUser = doc.data.fotoperfil;
+          }
+        }
+      )
+      console.log(this.placa);
+
+      this.placa = datos.numeroPlacaxxx.substr(0, 3) + " - " + datos.numeroPlacaxxx.substr(3, 5);
+
+
+      if (datos.numeroEstadoxx == 'ACTIVO') {
         this.estado = 'ACTIVO';
         this.clase_estado = "badge text-bg-success";
       } else {
@@ -173,9 +171,18 @@ export class AppComponent implements OnInit, OnDestroy {
         this.clase_estado = "badge text-bg-danger";
         this.appPages[2].hidden = true;
       }
-      console.log(this.statusNet)
-    });
+
+    } catch (err: any) {
+      console.error('Error en getData3SL:', err);
+    } 
+
   }
+
+  async getDocument(codigo: any, tipo: any, tipoRegistro: any): Promise<any> {
+    const resp: any = await this.photo.getFotoTercero(codigo, tipo, tipoRegistro).toPromise()
+    return resp;
+  }
+
 
 
   checkStatus(status: any) {
@@ -218,14 +225,6 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-
-   separarCamelCase(cadena: any): string {
-    const regex = /([a-z])([A-Z])/g;
-    let nuevaCadena:any = cadena.replace(regex, '$1 $2');
-    nuevaCadena = nuevaCadena.toLowerCase();
-    nuevaCadena = nuevaCadena.charAt(0).toLowerCase() + nuevaCadena.slice(1);
-    return nuevaCadena;
-}
 
 
   statusLogin() {

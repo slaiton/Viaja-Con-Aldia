@@ -10,7 +10,7 @@
       <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
         <img
           class="mb-4"
-          src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png"
+          src="../../assets/icon/favicon.png"
           alt=""
           height="150"
         />
@@ -41,11 +41,11 @@
           <label for="floatingPassword">Placa</label>
         </div>
 
-        <button class="btn btn-primary" type="submit">Iniciar Sesion</button>
+        <button class="btn btn-primary" type="submit" [disabled]="submitClick"> {{ submitClick ? 'Cargando...' : 'Iniciar Sesion' }}</button>
         <div class="registro mt-2">
           <a href="/registro" class="link">Registrarse</a>
         </div>
-        <p class="mt-5 mb-3 text-muted">Viaja Con Aldia &copy;{{ fechaActual }}</p>
+        <p class="mt-5 mb-3 text-muted">Viaja Con Aldia V.{{version}} &copy;{{ fechaActual }}</p>
       </form>
     </main>
   </div>

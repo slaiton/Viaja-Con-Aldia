@@ -154,7 +154,7 @@
         <ion-toolbar>
           <ion-title class="ml-2">Datos Vechiculo</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="onSubmitNewVehicle()">Cerrar</ion-button>
+            <ion-button (click)="onSubmitNewVehicle()">Guardar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -168,30 +168,27 @@
 
               <div class="container-prop">
                 <div class="prop-flotante">
-                  <ion-row class="mt-4">
+                  <ion-row class="ion-align-items-center mt-4">
 
-                    <ion-col class="mr-2 col-n" size="6" (click)="checkPropietario()">
-                      <ion-card class="{{isPropietario ? 'select-card' : '' }}" id="propietario">
-                        <ion-card-content>
+                    <ion-col size="12" size-sm="6" class="mb-2">
 
-                          <div>
-                            <span>Soy el Propietario</span>
-                          </div>
+                      <ion-item lines="none">
+                        <ion-label>{{ isPropietario ? 'Soy el Propietario' : 'No soy el Propietario' }}</ion-label>
+                        <ion-toggle slot="end" [checked]="isPropietario" (ionChange)="checkPropietario()"></ion-toggle>
+                      </ion-item>
 
-                        </ion-card-content>
-                      </ion-card>
+
                     </ion-col>
 
+                    <ion-col size="12" size-sm="6">
 
-                    <ion-col class="ml-2 col-n" size="6" (click)="checkTenedor()">
-                      <ion-card class="{{isTenedor ? 'select-card' : '' }}" id="tenedor">
-                        <ion-card-content>
-                          <div>
-                            <span>Soy el Tenedor</span>
-                          </div>
-                        </ion-card-content>
-                      </ion-card>
+                      <ion-item lines="none">
+                       <ion-label>{{ isTenedor ? 'Soy el Tenedor' : 'No soy el Tenedor' }}</ion-label>
+                        <ion-toggle slot="end" [checked]="isTenedor" (ionChange)="checkTenedor()"></ion-toggle>
+                      </ion-item>
+
                     </ion-col>
+
 
                   </ion-row>
                 </div>
@@ -230,7 +227,8 @@
                     <ng-autocomplete formControlName="claseVehiculo" [ngModel]="vehiculo.claseVehiculo"
                       [data]="dataClases" [searchKeyword]="keyword" placeholder="" (selected)='selectEvent($event)'
                       (inputChanged)='onChangeSearch($event)' (inputFocused)='onFocused($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurClase($event)" [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
 
                   </div>
@@ -241,13 +239,14 @@
               <ion-row>
                 <ion-col>
 
-                  <div class="autocomplete-container2 mb-4 col-md-12">
+                  <div #autocompleteContainer class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Marca</ion-label>
 
                     <ng-autocomplete formControlName="marca" [ngModel]="vehiculo.marca" [data]="dataMarcas"
                       [searchKeyword]="keyword" placeholder="" (selected)='selectMarca($event)'
-                      (inputChanged)='onChangeMarca($event)' (inputFocused)='onFocusedMarca($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurMarca($event)" (inputChanged)='onChangeMarca($event)'
+                      (inputFocused)='onFocusedMarca($event)' [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
                   </div>
 
@@ -262,8 +261,9 @@
 
                     <ng-autocomplete formControlName="linea" [ngModel]="vehiculo.linea" [data]="dataLineas"
                       [searchKeyword]="keyword" placeholder="" (selected)='selectLinea($event)'
-                      (inputChanged)='onChangeLinea($event)' (inputFocused)='onFocusedLinea($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurLinea($event)" (inputChanged)='onChangeLinea($event)'
+                      (inputFocused)='onFocusedLinea($event)' [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
                   </div>
 
@@ -278,8 +278,9 @@
 
                     <ng-autocomplete formControlName="carroceria" [ngModel]="vehiculo.carroceria" [data]="dataCarroc"
                       [searchKeyword]="keyword" placeholder="" (selected)='selectCarroceria($event)'
-                      (inputChanged)='onChangeCarroceria($event)' (inputFocused)='onFocusedCarroceria($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurCarroceria($event)" (inputChanged)='onChangeCarroceria($event)'
+                      (inputFocused)='onFocusedCarroceria($event)' [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
                   </div>
 
@@ -294,15 +295,16 @@
 
                     <ng-autocomplete formControlName="color" [ngModel]="vehiculo.color" [data]="dataColores"
                       [searchKeyword]="keyword" placeholder="" (selected)='selectColor($event)'
-                      (inputChanged)='onChangeColor($event)' (inputFocused)='onFocusedColor($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurColor($event)" (inputChanged)='onChangeColor($event)'
+                      (inputFocused)='onFocusedColor($event)' [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
                   </div>
 
                 </ion-col>
               </ion-row>
 
-              <ion-row *ngIf="vehiculo.articulado">
+              <ion-row *ngIf="vehiculo.articulado" class="mb-4">
                 <ion-col>
                   <label for="">Placa Remolque</label>
                   <input type="text" [ngModel]="vehiculo.remolque" formControlName="remolque" class="input-registro">
@@ -317,9 +319,9 @@
 
                     <ng-autocomplete formControlName="empresaSatelital" [ngModel]="vehiculo.empresaSatelital"
                       [data]="dataSatelital" [searchKeyword]="keyword" placeholder=""
-                      (selected)='selectSatelital($event)' (inputChanged)='onChangeSatelital($event)'
-                      (inputFocused)='onFocusedSatelital($event)' [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                      (focusout)="onBlurSatelital($event)" (selected)='selectSatelital($event)'
+                      (inputChanged)='onChangeSatelital($event)' (inputFocused)='onFocusedSatelital($event)'
+                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
                     </ng-autocomplete>
                   </div>
 
@@ -355,7 +357,7 @@
 
               <div *ngIf="checkVehicle" class="mt-5 p-2 d-flex justify-content-center">
                 <ion-text color="primary"
-                  (click)="openDocumentController(vehiculo.placa, 'placa', vehiculo.articulado, documents_vehiculo)">
+                  (click)="openDocumentController(vehiculo.placa, 'vehiculo', vehiculo.articulado, documents_vehiculo)">
                   <h3> Verficar Fotos </h3>
                 </ion-text>
               </div>
@@ -384,7 +386,7 @@
         <ion-toolbar>
           <ion-title class="ml-2">Datos Conductor</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="onSubmitNewDriver()">Cerrar</ion-button>
+            <ion-button (click)="onSubmitNewDriver()">Guardar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -446,8 +448,8 @@
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Fecha nacimeinto</label>
-                  <input type="date" [ngModel]="conductor.fechaNacimiento" id="fechaNacimiento"
-                    formControlName="fechaNacimiento" class="input-registro">
+                  <input type="date" (input)="validateBirthDate($event)" [ngModel]="conductor.fechaNacimiento"
+                    id="fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
               </ion-row>
 
@@ -476,76 +478,55 @@
 
               <ion-row>
                 <ion-col>
-
-                  <div class="autocomplete-container2 mb-4 col-md-12">
-                    <ion-label position="floating">Parentesco </ion-label>
-
-                    <ng-autocomplete formControlName="parentesco" [ngModel]="conductor.parentesco" [data]="dataParentes"
-                      [searchKeyword]="keyword" placeholder="" (selected)='selectParente($event)'
-                      (inputChanged)='onChangeParente($event)' (inputFocused)='onFocusedParente($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
-                    </ng-autocomplete>
-                  </div>
+                  <label for="">Parentesco</label>
+                  <ion-select (ionChange)='onChangeParente($event)' [ngModel]="conductor.parentesco"
+                    formControlName="parentesco" class="input-registro" interface="action-sheet" label="Fixed label"
+                    label-placement="fixed"
+                    [placeholder]="conductor.parentesco ? conductor.parentesco : 'Seleccionar parentesco'">
+                    <ion-select-option *ngFor="let a of dataParentes" [value]="a.id">
+                      {{a.name}}
+                    </ion-select-option>
+                  </ion-select>
 
                 </ion-col>
               </ion-row>
 
 
-              <ng-template #itemTemplate let-item>
+              <!-- <ng-template #itemTemplate let-item>
                 <a [innerHTML]="item.name"></a>
               </ng-template>
 
               <ng-template #notFoundTemplate let-notFound>
                 <div [innerHTML]="notFound"></div>
-              </ng-template>
+              </ng-template> -->
 
-              <!-- <div formGroupName="terms">
 
-                <ion-item>
-                  <ion-label text-wrap>¿Por su cargo o actividad maneja recursos publicos?</ion-label>
-                  <ion-checkbox formControlName="con_rec_pub" [ngModel]="conductor.terms.con_rec_pub"
-                    slot="end"></ion-checkbox>
-                </ion-item>
+              <div formGroupName="terms">
+                <ion-list>
+                  <ion-item *ngFor="let question of questions" lines="full">
+                    <ion-label text-wrap>{{ question.text }}</ion-label>
+                    <ion-radio-group formControlName="{{ question.formControlName }}">
+                      <ion-item lines="none">
+                        <ion-label>Sí</ion-label>
+                        <ion-radio slot="end" value="true"></ion-radio>
+                      </ion-item>
 
-                <ion-item>
-                  <ion-label text-wrap>¿Por su cargo o actividad ejerce algun grado del poder publico?</ion-label>
-                  <ion-checkbox formControlName="grd_pod_pub" [ngModel]="conductor.terms.grd_pod_pub"
-                    slot="end"></ion-checkbox>
-                </ion-item>
+                      <ion-item lines="none">
+                        <ion-label>No</ion-label>
+                        <ion-radio slot="end" value="false"></ion-radio>
+                      </ion-item>
 
-                <ion-item>
-                  <ion-label text-wrap>¿Por su actividad u oficio goza usted de reconocimiento publico?</ion-label>
-                  <ion-checkbox formControlName="rec_pub_gnr" [ngModel]="conductor.terms.rec_pub_gnr"
-                    slot="end">SI</ion-checkbox>
+                    </ion-radio-group>
+                  </ion-item>
+                </ion-list>
+              </div>
 
-                  <ion-checkbox formControlName="rec_pub_gnr" [ngModel]="conductor.terms.rec_pub_gnr"
-                    slot="end">NO</ion-checkbox>
-                </ion-item>
 
-                <ion-item>
-                  <ion-label text-wrap>¿Existe algun vinculo entre usted y alguna persona publicamente expuesta?</ion-label>
-                  <ion-checkbox formControlName="vin_per_pub" [ngModel]="conductor.terms.vin_per_pub"
-                    slot="end"></ion-checkbox>
-                </ion-item>
-
-                <ion-item>
-                  <ion-label text-wrap>¿Es usted sujeto de obligaciones tributarias en otro pais o grupo de paises?</ion-label>
-                  <ion-checkbox formControlName="per_tri_eco" [ngModel]="conductor.terms.per_tri_eco"
-                    slot="end"></ion-checkbox>
-                </ion-item>
-
-                <ion-item>
-                  <ion-label text-wrap>¿Pertenece usted a gremios o asociaciones reconocidas?</ion-label>
-                  <ion-checkbox formControlName="gre_rec_pub" [ngModel]="conductor.terms.gre_rec_pub"
-                    slot="end"></ion-checkbox>
-                </ion-item>
-
-              </div> -->
 
 
               <div *ngIf="checkTercero" class="mt-5 p-2 d-flex justify-content-center">
                 <ion-text color="primary"
-                  (click)="openDocumentController(conductor.cedula, 'cedula', true, documents_conductor)">
+                  (click)="openDocumentController(conductor.cedula, 'conductor', true, documents_conductor)">
                   <h3> Verficar Fotos </h3>
                 </ion-text>
               </div>
@@ -1025,7 +1006,8 @@
                 organización <br> 3. Nunca ofrecer o tomar un soborno <br> 4. Evitar cualquier conflicto de interés <br>
                 5. Mostrar respeto por los demás. <br> 6. Evitar todo hecho, tentativa u omisión deliberada para obtener
                 un beneficio para sí o para terceros en detrimento de los principios organizacionales. <br> 7. Cumplir
-                con las normas de salud, la seguridad y el medio ambiente. </p>
+                con las normas de salud, la seguridad y el medio ambiente.
+              </p>
               <h5>5. ACEPTACIÓN ROLES Y RESPONSABILIDADES SGI / MANIFESTACION SUSCRITA</h5>
               <p>- Suministrar los documentos necesarios dentro del proceso de registro para ser avalado como conductor
                 tercero. <br> - Informar al área de registro de vehículos y tráfico el usuario y clave de su GPS
@@ -1112,8 +1094,7 @@
         <div class="container">
 
           <div class="mt-5 d-flex justify-content-center">
-            <img class="mb-2" src="https://3slogistica.com/tr_aldia/files/checklist/verification.png" alt=""
-              height="250" />
+            <img class="mb-2" src="../../assets/img/verification.png" alt="" height="250" />
           </div>
           <div class="mt-2">
             <div class="col-12 title align-center">
@@ -1122,7 +1103,8 @@
 
             <div class="mt-3 mb-5 col-12 align-center">
               <p>
-                Se enviara un mesnaje de texto al {{ vehiculo.celularPropietariox3 }} ****** {{ vehiculo.celularPropietarioLast }}
+                Se enviara un mesnaje de texto al {{ vehiculo.celularPropietariox3 }} ****** {{
+                vehiculo.celularPropietarioLast }}
               </p>
 
             </div>
@@ -1137,7 +1119,8 @@
 
               <div *ngIf="codeValidation" class="mt-5 col-12 d-flex justify-content-center">
                 <div class="form-group">
-                  <input formControlName="codigo" class="input-code" placeholder="* * *  * * *" maxlength="6">
+                  <input type="number" formControlName="codigo" class="input-code" placeholder="* * *  * * *"
+                    maxlength="6">
                 </div>
               </div>
 

@@ -116,9 +116,9 @@
                     <ion-img *ngIf="getImagen(c.codigo)" [src]="getImagen(c.codigo)"></ion-img>
                     <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
                   </div>
-                  <div *ngIf="documentActive.capture == 'galery'" (click)="addToGalery(c.codigo, documentActive.rotate)"
-                    class="container-upload mb-3">
-                    <ion-img *ngIf="getImagen(c.codigo)" [src]="getImagen(c.codigo)"></ion-img>
+                  <div slot="start" *ngIf="documentActive.capture == 'galery'"
+                    (click)="selectTypeDocument(c.codigo, documentActive.rotate)" class="container-upload mb-3">
+                    <ion-img id="open-modal" *ngIf="getImagen(c.codigo)" [src]="getImagen(c.codigo)"></ion-img>
                     <div *ngIf="!getImagen(c.codigo)" class="camera"></div>
                   </div>
                 </ion-item>
@@ -164,6 +164,51 @@
       </ion-footer>
 
 
+    </ng-template>
+  </ion-modal>
+
+
+  <ion-modal
+  #modalType
+  trigger="open-modal"
+  [isOpen]="modalTypeInput"
+  [initialBreakpoint]="0.25"
+  [breakpoints]="[0, 0.25, 0.5, 0.75]"
+  handleBehavior="cycle"
+  (ionModalDidDismiss)="dimmissModalType($event)"
+  >
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title class="ml-3">Tipo Carga</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+
+        <ion-list>
+          <ion-item
+          (click)="addToCamera(codeImageSelect, rotateImageSelect); setModalType(false)"
+          >
+            <ion-icon  class="mr-3" name="camera-outline"></ion-icon>
+            Camara
+          </ion-item>
+          <ion-item
+          (click)="addToGalery(codeImageSelect, rotateImageSelect); setModalType(false)"
+          >
+            <ion-icon class="mr-3" name="image-outline"></ion-icon>
+            Galeria
+          </ion-item>
+
+          <ion-item (click)="triggerFileInput()">
+            <input type="file" id="pdfInput" accept=".pdf" (change)="onFileSelected($event,codeImageSelect); setModalType(false)" style="display: none;">
+            <ion-icon class="mr-3" name="clipboard-outline"></ion-icon>
+            <span>Archivo</span>
+          </ion-item>
+
+
+        </ion-list>
+
+      </ion-content>
     </ng-template>
   </ion-modal>
 

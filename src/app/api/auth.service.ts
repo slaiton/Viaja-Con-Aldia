@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs-compat/Observable";
 import { BehaviorSubject, tap } from 'rxjs';
 import { CookieService } from "ngx-cookie-service";
 import { User } from "../models/user.model";
+import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { LoadingController, MenuController } from '@ionic/angular';
 
 
@@ -47,7 +49,7 @@ export class AuthService {
     return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
   }
 
-  getUser3sL(token:any):Observable<any> {
+  getUser3sL(token:any):Promise<any> {
 
     const params = new HttpParams({
       fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
@@ -61,6 +63,14 @@ export class AuthService {
     const requestOptions = { headers: headers, params: params };
 
     return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
+          .pipe(
+            timeout(5000),
+            retry(2),
+            catchError((err: any) => {
+               return throwError(() => err);
+            })
+          )
+          .toPromise()
   }
 
   setToken(token: any) {
@@ -105,10 +115,15 @@ delToken(jsonToken:any) :Observable<any>
         localStorage.removeItem("token");
         localStorage.removeItem("placa");
         this.menu.enable(false);
-        this.router.navigate(['/login']);
+        // this.router.navigate(['/login']);
+        location.href = '/login'
       },
       err => {
-        throw err;
+        loadingData.dismiss();
+
+        // this.router.navigateByUrl('/login');
+        location.href = '/login'
+        // throw err;
       }
     )
   }

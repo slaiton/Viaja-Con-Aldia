@@ -111,6 +111,22 @@ body {
     margin-bottom: 0 !important;
   }
 
+  .mr-2 {
+    margin-right: 0.5rem;
+  }
+
+  .mr-3 {
+    margin-right: 1rem;
+  }
+
+  .mr-4 {
+    margin-right: 1.5rem;
+  }
+
+  .mr-5 {
+    margin-right: 1.5rem;
+  }
+
   .ml-2 {
     margin-left: 0.5rem;
   }
@@ -286,10 +302,16 @@ ul.list-unstyled li h3 {
   }
 
   .panel-turno {
+    position: relative;
     background-color: #3C8CCD;
     height: 10vh;
     border-bottom-left-radius: 15%;
     border-bottom-right-radius: 15%;
+    // top: -25px;
+  }
+
+  .panel-turno label {
+    font-size: 25px;
   }
 
   .icon-select  {
@@ -355,11 +377,22 @@ ul.list-unstyled li h3 {
       height: 80%;
       padding: 2rem;
       background-color: #b7b7b78b;
-      background-image: url('https://3slogistica.com/tr_aldia/files/checklist/camara_q.png');
+      background-image: url('assets/icon/camara_q.png');
       background-position:center;
       background-repeat:no-repeat;
       border-radius: 10px;
+  }
 
+
+  .container-upload .pdf {
+      width: 80%;
+      height: 80%;
+      padding: 2rem;
+      background-color: #b7b7b78b;
+      background-image: url('assets/icon/pdf.png');
+      background-position:center;
+      background-repeat:no-repeat;
+      border-radius: 10px;
   }
 
   .container-upload ion-img {
@@ -375,7 +408,7 @@ ul.list-unstyled li h3 {
    width:45px;
    height:45px;
    background-color: #FFF;
-  //  background-image: url('https://3slogistica.com/tr_aldia/files/checklist/camara_min.png');
+  //  background-image: url('assets/icon/camara_q.png');
   //  background-position:center;
   //  background-repeat:no-repeat;
   // background-size: contain;
@@ -393,7 +426,7 @@ ul.list-unstyled li h3 {
     width:70px !important;
     height:50px !important;
     position: absolute;
-    left: 5%;
+    left: 10%;
     top: 3%;
   }
 
@@ -401,7 +434,7 @@ ul.list-unstyled li h3 {
     width:45px;
     height:45px;
     background-color: #FFF;
-   //  background-image: url('https://3slogistica.com/tr_aldia/files/checklist/camara_min.png');
+   //  background-image: url('assets/icon/camara_q.png');
    //  background-position:center;
    //  background-repeat:no-repeat;
    // background-size: contain;
@@ -427,7 +460,7 @@ ul.list-unstyled li h3 {
     width:45px;
     height:45px;
     background-color: #FFF;
-   //  background-image: url('https://3slogistica.com/tr_aldia/files /checklist/camara_min.png');
+   //  background-image: url('assets/icon/camara_q.png');
    //  background-position:center;
    //  background-repeat:no-repeat;
    // background-size: contain;
@@ -833,3 +866,67 @@ font-weight: bold;
  font-weight: bold;
 }
 
+ion-radio {
+  --border-radius: 4px;
+  --inner-border-radius: 4px;
+
+  --color: #ddd;
+  --color-checked: #0083CB;
+}
+
+ion-radio.ios::part(container) {
+  width: 20px;
+  height: 20px;
+
+  border: 2px solid #ddd;
+  border-radius: 4px;
+}
+
+.radio-checked.ios::part(container) {
+  border-color: #0083CB;
+}
+
+.card-preview {
+  display: flex;
+  padding: 0.5rem;
+}
+
+.card-preview ion-card-header {
+  padding: 1rem;
+}
+
+.card-preview ion-card-header ion-card-title {
+  font-size: 25px;
+}
+
+.card-preview ion-card-header ion-card-subtitle {
+  font-size: 15px;
+}
+
+
+ion-toggle {
+  padding: 12px;
+  width: 50px;
+
+  --track-background: #ddd;
+  --track-background-checked: #ddd;
+
+  --handle-background: #eb7769;
+  --handle-background-checked: #446399;
+
+  --handle-width: 20px;
+  --handle-height: 27px;
+  --handle-max-height: auto;
+  --handle-spacing: 6px;
+
+  --handle-border-radius: 15px;
+  --handle-box-shadow: none;
+}
+
+ion-toggle::part(track) {
+  height: 10px;
+  width: 65px;
+
+  /* Required for iOS handle to overflow the height of the track */
+  overflow: visible;
+}

@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  version: 8,
   maps: {
     apikey : 'AIzaSyC9OhpXTbpB4i_jXgf49uhwvX2QovLpnUU'
   }

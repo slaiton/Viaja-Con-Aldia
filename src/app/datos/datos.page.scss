@@ -60,3 +60,70 @@ ion-col {
     position: absolute;
   }
 
+  ion-toolbar {
+    --background: #3C8CCD;
+    --color: white;
+  }
+
+  ion-title {
+    --margin-start: 15px;
+  }
+
+  .custom-title {
+    text-align: center;
+    width: 100%;
+  }
+
+  ion-menu-button {
+    color: var(white);
+  }
+
+  .icon-edit {
+    position: relative;
+  }
+
+  .icon {
+    position: absolute;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+    right: 20px;
+    top: 25px;
+  }
+
+  .icon-calendar {
+    position: absolute;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+    right: 20px;
+    top: 30px;
+  }
+
+  .group-icons {
+
+    position: absolute;
+    right: 20px;
+    top: 25px;
+
+  }
+
+  .icon-a{
+    cursor: pointer;
+    color: #007bff;
+    font-size: 25px;
+  }
+
+  .write h2, .write h1, .write h3 {
+   color:#FFF;
+  }
+  .autocomplete-container2 {
+    position: relative;
+  }
+  .col-n {
+    flex: revert-layer !important;
+  }
+
+
+
+

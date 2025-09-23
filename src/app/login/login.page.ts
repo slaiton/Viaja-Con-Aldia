@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
+import { StatusBar, Style } from '@capacitor/status-bar';
 import {
   FormControl,
   FormBuilder,
@@ -17,6 +17,10 @@ import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { AppComponent } from '../app.component';
 
 import { App } from '@capacitor/app';
+import { UserService } from '../api/user.service';
+import { environment } from 'src/environments/environment';
+import { Browser } from '@capacitor/browser';
+
 
 
 @Component({
@@ -26,7 +30,9 @@ import { App } from '@capacitor/app';
 })
 export class LoginPage implements OnInit {
   loginForm: any = FormGroup;
-  fechaActual:any;
+  fechaActual: any;
+  submitClick: any;
+  version: any;
 
   constructor(
     private app: AppComponent,
@@ -36,20 +42,34 @@ export class LoginPage implements OnInit {
     private userService: AuthService,
     private cookies: CookieService,
     private router: Router,
-    private platform: Platform
-  ) {}
+    private platform: Platform,
+    private user: UserService
+  ) {
+    this.version = environment.version
+    this.initializeApp();
+
+  }
   get f() {
     return this.loginForm.controls;
   }
 
   onLogin() {
+
+    if (this.submitClick) {
+      return;
+    }
+
+    this.submitClick = true;
+
     const user = {
       numeroPlacaxxx: this.loginForm.value.password.toUpperCase(),
       codigoTercerox: this.loginForm.value.username,
+      version: environment.version
     };
 
     this.userService.login(user).subscribe(
       (data) => {
+
         this.presentAlert(
           'Alerta',
           'Bienvenido',
@@ -63,6 +83,7 @@ export class LoginPage implements OnInit {
         );
 
         this.userService.setToken(data.access_token);
+        this.submitClick = false;
 
         localStorage.setItem('conductor', this.loginForm.value.username);
         this.menu.enable(true);
@@ -77,31 +98,29 @@ export class LoginPage implements OnInit {
           err.error.data,
           'Cerrar'
         );
+        this.submitClick = false;
       }
     );
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+
+    this.submitClick = false;
+
     if (localStorage.getItem('placa') != null && localStorage.getItem('token')) {
 
       const token = this.userService.getToken();
 
       const json = {
-        'token' : token
+        'token': token
       }
 
       this.userService.tokenValidate(json).subscribe(
         data => {
           this.router.navigate(['/home']);
-        },
-        err => {
-          this.userService.logout();
         }
       )
-
-
     }
-
 
     this.platform.backButton.subscribeWithPriority(10, () => {
       App.exitApp();
@@ -113,6 +132,41 @@ export class LoginPage implements OnInit {
       username: ['', [Validators.required]],
       password: ['', [Validators.required]],
     });
+
+    await this.validateVersion()
+
+  }
+
+
+  async validateVersion() {
+    await this.user.getDataApi('', '', 'api/version/latest').then(
+      data => {
+        if (data.version_number > environment.version) {
+          const appPackage = 'io.ionic.viajaconaldia';
+          const playStoreUrl = `https://play.google.com/store/apps/details?id=${appPackage}`;
+          this.presentAlertFun("Alerta", "", "Se requiere actualizacion para continuar", "Actualizar").then(
+            () => {
+              Browser.open({ url: playStoreUrl });
+            }
+
+          )
+        }
+      }
+    )
+  }
+
+  initializeApp() {
+    this.platform.ready().then(() => {
+      this.setStatusBarColor();
+    });
+  }
+
+  setStatusBarColor() {
+    if (this.platform.is('android')) {
+      StatusBar.setBackgroundColor({ color: '#5C8CDF' }); // Cambia a tu color deseado en formato hexadecimal
+    } else if (this.platform.is('ios')) {
+      StatusBar.setStyle({ style: Style.Dark }); // Estilos disponibles: Dark, Light, Default
+    }
   }
 
   async presentAlert(
@@ -129,5 +183,31 @@ export class LoginPage implements OnInit {
     });
 
     await alert.present();
+  }
+
+  async presentAlertFun(
+    title: string,
+    subheader: string,
+    desc: string,
+    button: string
+  ): Promise<void> {
+    return new Promise(async (resolve) => {
+      const alert = await this.alertController.create({
+        header: title,
+        subHeader: subheader,
+        message: desc,
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: button,
+            handler: () => {
+              resolve(); // Resuelve la promesa cuando se presiona el botón
+            }
+          }
+        ]
+      });
+
+      await alert.present();
+    });
   }
 }
