@@ -18,10 +18,6 @@ import { EmptyScreenComponent } from './empty-screen/empty-screen.component';
 
 
 
-
-
-
-
 @NgModule({
   declarations: [AppComponent,DashboardComponent, TipoDocumentoDirective, VehiculoComponent, EmptyScreenComponent],
   imports: [
