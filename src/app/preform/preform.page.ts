@@ -1,6 +1,6 @@
 import { Component, OnInit,ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../api/user.service';
 import { AlertController } from '@ionic/angular';
 import { PhotoService } from '../api/photo.service';
@@ -25,6 +25,7 @@ export class PreformPage implements OnInit {
     private formBuilder: FormBuilder,
     private userService: UserService,
     private alertController: AlertController,
+    private route: ActivatedRoute,    
     private photo: PhotoService
   ) {
     this.preformForm = this.formBuilder.group({
@@ -96,6 +97,7 @@ export class PreformPage implements OnInit {
           }
         );
       } else {
+        
         this.presentAlert('Formulario no válido','Revisar','Algunas respuestas son "No Cumple"','Volver');
         // alert(
         //   'Formulario no válido. Algunas respuestas no son "Cumple".'
@@ -112,6 +114,15 @@ export class PreformPage implements OnInit {
   }
 
   ngOnInit() {
+        this.route.queryParams.subscribe(async params =>{
+
+          if (params && params['placa']) {
+            this.placa = params['placa'];
+            console.log('Placa recibida en preform:', this.placa);
+          }
+
+
+        })
 
 
     // Obtener la placa del vehículo del usuario logueado

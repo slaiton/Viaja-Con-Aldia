@@ -792,7 +792,7 @@ export class UserService {
 
 
     const requestOptions = { headers: headers };
-    const url = 'https://siat.aldialogistica.com:8000/api/maestros/preoperacional';
+    const url = 'https://api.aldialogistica.com/api/tercero/preoperacional';
 
     return this.http.post(url, params, requestOptions)
   }
