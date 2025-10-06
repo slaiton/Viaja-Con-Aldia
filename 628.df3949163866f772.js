@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkapp=self.webpackChunkapp||[]).push([[628],{628:(p,n,e)=>{e.r(n),e.d(n,{InAppReviewWeb:()=>_});var s=e(5861),t=e(7423);class _ extends t.Uw{requestReview(){var o=this;return(0,s.Z)(function*(){throw o.unimplemented("Not implemented on web.")})()}}}}]);
