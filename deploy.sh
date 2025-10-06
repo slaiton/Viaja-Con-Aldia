@@ -17,7 +17,7 @@ if [[ -n $(git status --porcelain) ]]; then
 fi
 
 # 2️⃣ Generar build de Ionic
-ionic build --prod
+ionic build --prod -- --base-href /Viaja-Con-Aldia/
 
 # 3️⃣ Crear una carpeta temporal para guardar el build
 TEMP_DIR=$(mktemp -d)
@@ -33,7 +33,7 @@ find . -maxdepth 1 ! -name ".git" ! -name "." -exec rm -rf {} \;
 cp -r $TEMP_DIR/* .
 
 # 7️⃣ Eliminar carpeta temporal
-rm -rf $TEMP_DIR
+rm -rf $TEMP_DIR    
 
 # 8️⃣ Commit y push
 git add .
