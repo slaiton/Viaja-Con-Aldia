@@ -1,0 +1,9 @@
+# .gitignore en la rama deploy
+/*
+.angular/
+!.well-known/
+!index.html
+!assets/
+!manifest.webmanifest
+!favicon.ico
+!.gitignore
