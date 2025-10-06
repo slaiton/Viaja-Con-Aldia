@@ -36,8 +36,7 @@ const routes: Routes = [
   },
   {
     path: 'preform',
-    loadChildren: () => import('./preform/preform.module').then( m => m.PreformPageModule),
-    canActivate: [LoginGuard]
+    loadChildren: () => import('./preform/preform.module').then( m => m.PreformPageModule)
   },
   {
     path: 'pruebas',
