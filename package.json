@@ -42,7 +42,8 @@
     "@ng-bootstrap/ng-bootstrap": "^14.0.0",
     "@popperjs/core": "^2.11.8",
     "@syncfusion/ej2-angular-dropdowns": "^23.2.6",
-    "@tensorflow/tfjs-node": "3.1.0",
+    "@tensorflow/tfjs": "^3.9.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/lodash": "^4.14.202",
     "@types/webgl2": "^0.0.11",
     "angular-ng-autocomplete": "^2.0.12",
@@ -61,7 +62,7 @@
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^15.0.0",
+    "@angular-devkit/build-angular": "^15.2.10",
     "@angular-eslint/builder": "^14.0.0",
     "@angular-eslint/eslint-plugin": "^14.0.0",
     "@angular-eslint/eslint-plugin-template": "^14.0.0",

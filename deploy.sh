@@ -3,7 +3,6 @@ set -e
 
 echo "🏗️  Construyendo proyecto en rama main..."
 git checkout main
-git pull origin main
 ionic build --prod
 
 echo "🚀 Pasando build a rama deploy..."
