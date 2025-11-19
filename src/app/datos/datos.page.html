@@ -619,8 +619,8 @@
                         <ion-label>
                           {{ vehiculo.isPropietario ? 'Soy el Propietario' : 'No soy el Propietario' }}
                         </ion-label>
-                        <ion-toggle slot="end" [checked]="vehiculo.isPropietario"
-                          (ionChange)="changePropietario()"></ion-toggle>
+  <ion-toggle slot="end" [checked]="vehiculo.isPropietario"
+    (ionChange)="changePropietario($event)"></ion-toggle>
                       </ion-item>
                     </ion-col>
 
@@ -630,7 +630,7 @@
                           {{ vehiculo.isTenedor ? 'Soy el Tenedor' : 'No soy el Tenedor' }}
                         </ion-label>
                         <ion-toggle slot="end" [checked]="vehiculo.isTenedor"
-                          (ionChange)="changeTenedor()"></ion-toggle>
+                          (ionChange)="changeTenedor($event)"></ion-toggle>
                       </ion-item>
                     </ion-col>
 

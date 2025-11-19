@@ -185,7 +185,7 @@ export class UserService {
         }
       ]
     },
-     {
+    {
       nombre: 'Remolque',
       position: 6,
       status: false,
@@ -209,12 +209,12 @@ export class UserService {
           nombre: 'Tarjeta de propiedad remolque',
           codigo: 'tarjePror2'
         }
-        
+
       ]
     }
   ]
 
-  documents_remolque:any = [
+  documents_remolque: any = [
     {
       nombre: 'Remolque',
       position: 6,
@@ -239,7 +239,7 @@ export class UserService {
           nombre: 'Tarjeta de propiedad remolque',
           codigo: 'tarjePror'
         }
-        
+
       ]
     }
   ]
@@ -247,11 +247,10 @@ export class UserService {
   public onLoginChange = new Subject();
 
   constructor(
-    private menu: MenuController, 
-    private http: HttpClient, 
-    private cookies: CookieService, 
-    private router: Router) 
-    { }
+    private menu: MenuController,
+    private http: HttpClient,
+    private cookies: CookieService,
+    private router: Router) { }
 
   login(user: User): Observable<any> {
     return this.http.post("https://api.aldialogistica.com/api/auth/login-external", user);
@@ -283,8 +282,7 @@ export class UserService {
     return this.http.get("https://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
   }
 
-  laodTokenMobile(params:any ,token:any): Promise<any>
-  {
+  laodTokenMobile(params: any, token: any): Promise<any> {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -295,14 +293,14 @@ export class UserService {
     const requestOptions = { headers: headers };
 
     return this.http.post("https://api.3slogistica.com/api/load/token", params, requestOptions)
-    .pipe(
-      timeout(5000),
-      retry(2),
-      catchError((err: any) => {
-        return throwError(() => err);
-      })
-    )
-    .toPromise()
+      .pipe(
+        timeout(5000),
+        retry(2),
+        catchError((err: any) => {
+          return throwError(() => err);
+        })
+      )
+      .toPromise()
 
   }
 
@@ -579,14 +577,14 @@ export class UserService {
     const requestOptions = { headers: headers, params: params };
 
     return this.http.get("https://api.aldialogistica.com/api/enturnamiento", requestOptions)
-    .pipe(
-      timeout(5000),
-      retry(2),
-      catchError((err: any) => {
-        return throwError(() => err);
-      })
-    )
-    .toPromise()
+      .pipe(
+        timeout(5000),
+        retry(2),
+        catchError((err: any) => {
+          return throwError(() => err);
+        })
+      )
+      .toPromise()
 
   }
 
@@ -604,14 +602,14 @@ export class UserService {
 
     const requestOptions = { headers: headers, params: params };
     return this.http.get("https://api.3slogistica.com/" + url, requestOptions)
-    .pipe(
-      timeout(5000),
-      retry(2),
-      catchError((err: any) => {
-        return throwError(() => err);
-      })
-    )
-    .toPromise()
+      .pipe(
+        timeout(5000),
+        retry(2),
+        catchError((err: any) => {
+          return throwError(() => err);
+        })
+      )
+      .toPromise()
   }
 
   setToken(token: any) {
@@ -685,7 +683,7 @@ export class UserService {
     return undefined;
   }
 
-   loginUser(cedula: any, placa: any): Promise<any> {
+  loginUser(cedula: any, placa: any): Promise<any> {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -786,8 +784,8 @@ export class UserService {
   postPreoperacionalData(params: any): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'usuario': 'USUSEGINT',
-      'clave': '12249'
+      'user': 'USUSEGINT',
+      'password': '12249'
     });
 
 
@@ -796,6 +794,10 @@ export class UserService {
 
     return this.http.post(url, params, requestOptions)
   }
+
+trackByPregunta(_: number, item: any) {
+  return item.index + '-' + Math.random(); // fuerza reemplazo
+}
 
 
 }

@@ -525,6 +525,8 @@ SOFTWARE.
 
 ionic-loader
 
+ionicons/icons
+
 ionicpwaelements-loader
 
 ngx-cookie-service

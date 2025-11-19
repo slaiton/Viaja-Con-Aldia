@@ -18,6 +18,22 @@
     </ion-fab-button>
   </ion-fab> -->
 
+  <div *ngIf="showAlerts" class="container mt-4 animate-section">
+
+    <ion-list lines="none">
+      <ion-item
+      *ngFor="let articulo of articulos"
+      button
+      detail="false"
+      (click)="verArticulo(articulo)"
+      class="alerta-item"
+    >
+      <ion-icon [icon]="alertIcon" slot="start" color="warning"></ion-icon>
+      <ion-label class="alerta-titulo">{{ articulo.titulo }}</ion-label>
+    </ion-item>
+  </ion-list>
+</div>
+  
   <div class="container panel-user-home">
     <div class="row p-3">
       <div class="containerPhoto col col-12 p-2 d-flex justify-content-center">

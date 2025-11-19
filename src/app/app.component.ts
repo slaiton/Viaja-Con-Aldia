@@ -38,6 +38,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { title: 'Mis datos', url: '/datos', icon: 'person-circle', hidden: false },
     { title: 'Turnos', url: '/turnos', icon: 'archive', hidden: false },
     { title: 'Mis Vehiculos', url: '/vehiculos', icon: 'briefcase' },
+    { title: 'Pre Operacional', url: '/preform', icon: 'clipboard' },
     // { title: 'Pruebas', url: '/pruebas', icon: 'flashlight' },
     // { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
     // { title: 'Trash', url: '/folder/Trash', icon: 'trash' },

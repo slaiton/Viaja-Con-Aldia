@@ -1166,12 +1166,12 @@ export class DatosPage implements OnInit {
 
   }
 
-  changePropietario() {
-    this.vehiculo.isPropietario = !this.vehiculo.isPropietario
-  }
+  changePropietario(event: any) {
+  this.vehiculo.isPropietario = event.detail.checked;
+}
 
-  changeTenedor() {
-    this.vehiculo.isTenedor = !this.vehiculo.isTenedor
+  changeTenedor(event: any) {
+    this.vehiculo.isTenedor = event.detail.checked;
   }
 
   setOpenPropietario(isOpen: boolean) {
@@ -1615,87 +1615,105 @@ export class DatosPage implements OnInit {
     loadingData.present();
 
 
-    if (this.vehiculo.isPropietario) {
-      this.formVehicle.patchValue({
-        codigoPropietario: ''
-      })
-    }
+    try {
 
-    if (this.vehiculo.isTenedor) {
-      this.formVehicle.patchValue({
-        codigoTenedor: ''
-      })
-    }
 
-    var text = "<ul>";
+      if (this.vehiculo.isPropietario) {
+        this.formVehicle.patchValue({
+          codigoPropietario: ''
+        })
+      }
 
-    for (const campo in this.formVehicle.controls) {
-      if (this.formVehicle.controls[campo].invalid) {
-        validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+      if (this.vehiculo.isTenedor) {
+        this.formVehicle.patchValue({
+          codigoTenedor: ''
+        })
+      }
+
+      var text = "<ul>";
+
+      for (const campo in this.formVehicle.controls) {
+        if (this.formVehicle.controls[campo].invalid) {
+          validate = false;
+          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        } else {
+
+          this.vehiculo[campo] = this.formVehicle.value[campo]
+          jsonApi[campo] = this.formVehicle.value[campo]
+        }
+      }
+
+
+
+      if (this.vehiculo.articulado) {
+
+        if (!this.formVehicle.value.remolque) {
+          validate = false;
+          text += "<li> Placa Remolque </li>";
+        } else {
+          this.vehiculo.remolque = this.formVehicle.value.remolque
+        }
+
+
+        if (!this.hubImag.remolque.tarjePro1.webviewPath) {
+          validate = false;
+          text += "<li> Terjeta de propiedad Remolque Frontal </li>";
+        }
+
+        if (!this.hubImag.remolque.tarjePro2.webviewPath) {
+          validate = false;
+          text += "<li> Terjeta de propiedad Remolque Posterior </li>";
+        }
+
+
+        if (!this.hubImag.remolque.fotoremol.webviewPath) {
+          validate = false;
+          text += "<li> Foto Remolque </li>";
+        }
+
+      }
+
+      if (this.vehiculo.articulado && validate) {
+        // console.log(this.hubImag);
+        await this.saveDocumentVehicle()
+      }
+
+
+      text += "</ul>";
+
+      console.log(this.hubImag);
+
+
+       
+        this.hubImag.cedula_pro1 = {}
+        this.hubImag.cedula_pro2 = {}
+        this.hubImag.remolque = {}
+      
+
+
+
+      if (validate) {
+        const envio = await this.reg.sendDataVehiculo(jsonApi);
+        this.checkVehicle = true;
+        this.onDismissChange(true);
+        this.setOpenVehiculo(false)
       } else {
-
-        this.vehiculo[campo] = this.formVehicle.value[campo]
-        jsonApi[campo] = this.formVehicle.value[campo]
-      }
-    }
-
-
-
-    if (this.vehiculo.articulado) {
-
-      if (!this.formVehicle.value.remolque) {
-        validate = false;
-        text += "<li> Placa Remolque </li>";
-      } else {
-        this.vehiculo.remolque = this.formVehicle.value.remolque
+        this.checkVehicle = false;
+        this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
       }
 
+    } catch (e) {
+      console.error("Error en onSubmitVehicle", e);
+      this.presentAlert("Error", "Ocurrió un error inesperado.", "", "Cerrar");
+    } finally {
 
-      if (!this.hubImag.remolque.tarjePro1.webviewPath) {
-        validate = false;
-        text += "<li> Terjeta de propiedad Remolque Frontal </li>";
-      }
-
-      if (!this.hubImag.remolque.tarjePro2.webviewPath) {
-        validate = false;
-        text += "<li> Terjeta de propiedad Remolque Posterior </li>";
-      }
-
-
-      if (!this.hubImag.remolque.fotoremol.webviewPath) {
-        validate = false;
-        text += "<li> Foto Remolque </li>";
-      }
-
-    }
-
-    if (this.vehiculo.articulado && validate) {
-      // console.log(this.hubImag);
-      loadingData.dismiss()
-      this.saveDocumentVehicle()
-    }
-
-
-    text += "</ul>";
-
-
-    if (validate) {
-      const envio = await this.reg.sendDataVehiculo(jsonApi);
-      this.checkVehicle = true;
-      loadingData.dismiss();
-      this.onDismissChange(true);
-      this.setOpenVehiculo(false)
-    } else {
-      this.checkVehicle = false;
-      this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
       loadingData.dismiss();
     }
 
   }
 
 
-  saveDocumentVehicle() {
+  async saveDocumentVehicle() {
     let status = false;
     this.jsonDocs = {
       files: [],
@@ -1904,47 +1922,49 @@ export class DatosPage implements OnInit {
 
     loadingData.present();
 
-    var validate = true;
-    var jsonApi: any = {};
+    try {
 
-    var text = "<ul>";
-    for (const campo in this.formNewProp.controls) {
-      if (this.formNewProp.controls[campo].invalid) {
-        validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
-      } else {
-        this.propietario[campo] = this.formNewProp.value[campo]
-        jsonApi[campo] = this.formNewProp.value[campo]
-      }
-    }
+      var validate = true;
+      var jsonApi: any = {};
 
-    if (!validate) {
-
-      this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
-      loadingData.dismiss();
-
-    } else {
-
-      jsonApi['codigoTercerox'] = this.formNewProp.value['cedula']
-      jsonApi['conductor'] = true
-
-
-      const data = await this.reg.sendDataTercero(jsonApi).then(
-        data => {
-          loadingData.dismiss()
-          this.formVehicle.patchValue({
-            codigoPropietario: this.formNewProp.value['cedula']
-          })
-          this.setOpenPropietario(false)
-          this.vehiculo.isPropietario = false;
-        },
-        err => {
-          loadingData.dismiss()
-          this.presentAlert("Error", "Error al Enviar", err.error.message, "Cerrar");
+      var text = "<ul>";
+      for (const campo in this.formNewProp.controls) {
+        if (this.formNewProp.controls[campo].invalid) {
+          validate = false;
+          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        } else {
+          this.propietario[campo] = this.formNewProp.value[campo]
+          jsonApi[campo] = this.formNewProp.value[campo]
         }
-      )
-      this.saveDocumentTercero('cedula_pro1', 'cedula_pro2', this.formNewProp.value['cedula']);
+      }
 
+      if (!validate) {
+
+        this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
+
+      } else {
+
+        jsonApi['codigoTercerox'] = this.formNewProp.value['cedula']
+        jsonApi['conductor'] = true
+
+
+        await this.reg.sendDataTercero(jsonApi)
+
+        this.formVehicle.patchValue({
+          codigoPropietario: this.formNewProp.value['cedula']
+        })
+        this.setOpenPropietario(false)
+        this.vehiculo.isPropietario = false;
+
+        await this.saveDocumentTercero('cedula_pro1', 'cedula_pro2', this.formNewProp.value['cedula']);
+
+      }
+
+    } catch (err: any) {
+      this.presentAlert("Error", "", err.error?.message || "Error inesperado", "Cerrar");
+
+    } finally {
+      loadingData.dismiss();
     }
   }
 
@@ -1956,52 +1976,56 @@ export class DatosPage implements OnInit {
 
     loadingData.present();
 
-    var validate = true;
-    var jsonApi: any = {};
+    try {
 
-    var text = "<ul>";
-    for (const campo in this.formNewTene.controls) {
-      if (this.formNewTene.controls[campo].invalid) {
-        validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
-      } else {
-        this.conductor[campo] = this.formNewTene.value[campo]
-        jsonApi[campo] = this.formNewTene.value[campo]
-      }
-    }
 
-    if (!validate) {
-      this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
-      loadingData.dismiss();
+      var validate = true;
+      var jsonApi: any = {};
 
-    } else {
-
-      jsonApi['codigoTercerox'] = this.formNewTene.value['cedula']
-      jsonApi['conductor'] = true
-
-      const data = await this.reg.sendDataTercero(jsonApi).then(
-        data => {
-          loadingData.dismiss()
-          this.formVehicle.patchValue({
-            codigoTenedor: this.formNewTene.value['cedula']
-          })
-          this.setOpenTenedor(false)
-          this.vehiculo.isTenedor = false;
+      var text = "<ul>";
+      for (const campo in this.formNewTene.controls) {
+        if (this.formNewTene.controls[campo].invalid) {
+          validate = false;
+          text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        } else {
+          this.conductor[campo] = this.formNewTene.value[campo]
+          jsonApi[campo] = this.formNewTene.value[campo]
         }
-      )
+      }
 
-      this.saveDocumentTercero('cedula_ten1', 'cedula_ten2', this.formNewTene.value['cedula']);
+      if (!validate) {
+        this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
 
+      } else {
+
+        jsonApi['codigoTercerox'] = this.formNewTene.value['cedula']
+        jsonApi['conductor'] = true
+
+        await this.reg.sendDataTercero(jsonApi)
+
+        this.formVehicle.patchValue({
+          codigoTenedor: this.formNewTene.value['cedula']
+        })
+
+        this.setOpenTenedor(false)
+
+        this.vehiculo.isTenedor = false;
+
+        await this.saveDocumentTercero('cedula_ten1', 'cedula_ten2', this.formNewTene.value['cedula']);
+
+      }
+
+    } catch (err: any) {
+      this.presentAlert("Error", "", err.error?.message || "Error inesperado", "Cerrar");
+
+    } finally {
+      loadingData.dismiss(); // SOLO UNA VEZ
     }
   }
 
   async saveDocumentTercero(name: string, name2: any, cedula: any) {
     const jsonDocs: any = { files: [] }
-    const loadingData = await this.loading.create({
-      message: 'Guardando Fotos...',
-    });
 
-    loadingData.present();
 
     if (this.hubImag[name].base64) {
       const dataDoc = {
@@ -2024,22 +2048,15 @@ export class DatosPage implements OnInit {
     }
 
 
-    this.userService.cargaDocumentos(jsonDocs).subscribe(
-      (data) => {
-        loadingData.dismiss();
-        const files = data.data;
-
-      },
-      (err) => {
-        loadingData.dismiss();
-        this.presentAlert(
-          'Error al cargan documentos',
-          '',
-          'Por favor validar documentos',
-          'Cerrar'
-        );
-      }
-    );
+    return new Promise((resolve, reject) => {
+      this.userService.cargaDocumentos(jsonDocs).subscribe(
+        (data) => resolve(data),
+        (err) => {
+          this.presentAlert('Error al cargar documentos', '', 'Por favor validar documentos', 'Cerrar');
+          reject(err);
+        }
+      );
+    });
 
   }
 
@@ -2845,7 +2862,7 @@ export class DatosPage implements OnInit {
   addToCameraRemolque(name: any) {
     this.photo.addNewToCamera(name).then((da) => {
       console.log(da);
-      
+
       this.hubImag.remolque[name] = da;
     });
   }

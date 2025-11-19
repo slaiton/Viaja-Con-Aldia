@@ -18,6 +18,7 @@ import { LocalNotificationService } from '../api/local-notification.service';
 import { AlertService } from '../api/alert.service';
 import { TurnosService } from '../api/turnos.service';
 import { Turno } from '../models/turno.model';
+import { alertCircleOutline } from 'ionicons/icons';
 
 
 @Component({
@@ -29,6 +30,7 @@ export class HomePage implements OnInit {
   @ViewChild(IonModal) modalTurno!: IonModal;
   @ViewChild(IonModal) modalTurno2!: IonModal;
 
+  showAlerts: boolean = false;
   turnoExistente: boolean = false;
   statusDoc: boolean = true
   posicionTurno1: any;
@@ -93,6 +95,17 @@ export class HomePage implements OnInit {
     return this.turnoForm.controls;
   }
 
+   alertIcon:any = alertCircleOutline;
+
+    articulos = [
+    {
+      titulo: 'Es requerido el preoperacional, Click para continuar',
+      descripcion: 'Para continuar con el viaje debe realizar el preoperacional',
+      fecha: new Date(),
+      imagen: 'assets/img/userDefault.png',
+    }
+  ];
+
 
   constructor(
     public userService: UserService,
@@ -106,7 +119,8 @@ export class HomePage implements OnInit {
     public turno: TurnosService,
     private loading: LoadingController,
     private platform: Platform,
-    private localNoti: LocalNotificationService
+    private localNoti: LocalNotificationService,
+    private alertController: AlertController
   ) {
 
     this.turnoForm = this.formBuilder.group({
@@ -159,6 +173,10 @@ export class HomePage implements OnInit {
 
       this.loadingData.dismiss();
 
+        setTimeout(() => {
+        this.showAlerts = true;
+      }, 400);
+
     } catch (err: any) {
 
       this.loadingData.dismiss();
@@ -184,6 +202,25 @@ export class HomePage implements OnInit {
     }
 
   } // ngOninit
+
+
+  async verArticulo(articulo: any) {
+    const alert = await this.alertController.create({
+      header: 'Alerta',
+      message: articulo.titulo,
+      buttons: [
+        {
+          text: 'Cerrar',
+          handler: () => {
+            // 🔹 Redirige al cerrar
+            this.router.navigateByUrl('/preform');
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
 
 
   async getData3SL() {
