@@ -3,7 +3,6 @@ workflows:
     name: Viaja con Aldia iOS
 
     environment:
-      flutter: false
       node: 20
       npm: 10
       cocoapods: default
@@ -11,43 +10,36 @@ workflows:
       vars:
         BUILD_DIR: "ios/App"
 
-      # Firma para App Store
       ios_signing:
         distribution_type: app_store
         bundle_identifier: "com.viajaconaldia.id"
 
     scripts:
-      # 1. Instalar dependencias del proyecto Angular
       - name: Install Node dependencies
         script: |
           npm install
           npm install -g @ionic/cli
 
-      # 2. Compilar Angular
       - name: Build Ionic Angular
         script: |
           ionic build
 
-      # 3. Sincronizar Capacitor → genera/actualiza proyecto iOS
       - name: Sync Capacitor with iOS
         script: |
           npx cap sync ios
 
-      # 4. Instalar pods necesarios para Xcode
       - name: Install Cocoapods
         working_directory: ios/App
         script: |
           pod install
 
-      # 5. Compilar app iOS en modo Release
       - name: Build iOS Release
         script: |
           xcodebuild \
             -workspace "ios/App/App.xcworkspace" \
             -scheme "App" \
             -configuration Release \
-            -archivePath $CM_BUILD_DIR/App.xcarchive \
-            archive \
+            -archivePath $CM_BUILD_DIR/App.xcarchive archive \
             DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
 
           xcodebuild \
