@@ -930,3 +930,82 @@ ion-toggle::part(track) {
   /* Required for iOS handle to overflow the height of the track */
   overflow: visible;
 }
+
+.estado-card {
+  overflow: hidden;
+  box-shadow: 0px 5px 15px rgba(0,0,0,0.12);
+}
+
+/* Encabezado */
+.header-estado {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  color: #fff;
+}
+
+.datos-right {
+  margin-left: auto;
+  text-align: right;
+}
+
+.dato {
+  line-height: 1.2;
+}
+
+.dato .valor {
+  font-weight: 600;
+  color: #fff;
+}
+
+.icon-estado {
+  font-size: 50px;
+  margin-right: 12px;
+}
+
+.titulo-estado h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.titulo-estado p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Filas de información */
+.fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.fila:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: bold;
+  color: #555;
+}
+
+.valor {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Estados */
+.estado-rojo .header-estado {
+  background-color: #d32f2f;
+}
+
+.estado-verde .header-estado {
+  background-color: #388e3c;
+}
+
+.datos-right {
+  text-align: right;
+}

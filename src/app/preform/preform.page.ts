@@ -6,6 +6,9 @@ import { AlertController } from '@ionic/angular';
 import { PhotoService } from '../api/photo.service';
 import { log } from 'console';
 import { Foto } from '../models/photo.interface';
+import { GlobalService } from '../api/global.service';
+import { environment } from 'src/environments/environment';
+
 
 
 @Component({
@@ -18,6 +21,7 @@ export class PreformPage implements OnInit {
 
   preformForm: FormGroup;
   apiResponseData: any;
+  isSubmitting:boolean = false;
   apiError: any = '';
   placa: any = ''; // Variable para almacenar la placa del vehículo
   car: any = '';
@@ -30,271 +34,14 @@ export class PreformPage implements OnInit {
   preguntasNoCumplen: any[] = [];
   indexActual: any = 0;
   preguntasCompletas: boolean = false
+  preguntas: any = []
+  secretsAldia: any = {}
 
-  preguntas = [
-    {
-      texto: "¿Cuenta con los documentos del vehículo y del conductor vigentes?",
-      descripcion: "Incluye licencia de tránsito, SOAT, revisión técnico-mecánica, licencia de conducción, cédula, certificado de luz negra (cuando aplique).",
-      categoria: "Documentación",
-      opcional: false
-    },
-    {
-      texto: "¿Los niveles de fluidos están en su nivel óptimo?",
-      descripcion: "Verifique aceite, refrigerante, agua del limpiaparabrisas, líquido de frenos y dirección.",
-      categoria: "Fluidos / Mecánica",
-      opcional: false
-    },
-    {
-      texto: "¿Los cinturones de seguridad de 3 puntos están instalados y funcionales?",
-      descripcion: "Debe tener retracción automática, sin deshilachados, con enganche/desenganche correcto.",
-      categoria: "Seguridad Pasiva",
-      opcional: false
-    },
-    {
-      texto: "¿Los espejos están instalados, ajustados y en buen estado?",
-      descripcion: "Incluye espejo izquierdo, derecho, retrovisor central y convexos sin obstrucciones.",
-      categoria: "Espejos / Visibilidad",
-      opcional: false
-    },
-    {
-      texto: "¿La alarma auditiva de reversa está instalada y funcional?",
-      descripcion: "Debe activarse automáticamente al usar marcha atrás.",
-      categoria: "Seguridad Activa",
-      opcional: false
-    },
-    {
-      texto: "¿El sistema de frenos está en buen estado y funcional?",
-      descripcion: "Sin fugas ni desgaste excesivo, mantenimiento al día según fabricante.",
-      categoria: "Fluidos / Mecánica",
-      opcional: false
-    },
-    {
-      texto: "¿Los airbags están instalados y funcionales?",
-      descripcion: "Aplica si los airbags vienen de fábrica. Si no aplica, seleccionar N/A.",
-      categoria: "Seguridad Pasiva",
-      opcional: true
-    },
-    {
-      texto: "¿El parabrisas y ventanas están en buen estado?",
-      descripcion: "Sin grietas, perforaciones. Ventanas funcionales.",
-      categoria: "Espejos / Visibilidad",
-      opcional: false
-    },
-    {
-      texto: "¿El sistema de limpiaparabrisas funciona correctamente?",
-      descripcion: "Ambas velocidades, aspersor operativo, escobillas en buen estado.",
-      categoria: "Espejos / Visibilidad",
-      opcional: false
-    },
-    {
-      texto: "¿Cuenta con protección contra impactos laterales (bicicleteros)?",
-      descripcion: "Obligatorio para camiones y remolques N2, N3, O3 y O4 con peso bruto > 3500 kg. (Cuando aplique)",
-      categoria: "Seguridad Pasiva",
-      opcional: true
-    },
-    {
-      texto: "¿La cabina está en buen estado?",
-      descripcion: "Limpia, sin objetos distractores, escalones y pasamanos firmes.",
-      categoria: "Carrocería / Cabina",
-      opcional: false
-    },
-    {
-      texto: "¿Las luces externas e internas están funcionales?",
-      descripcion: "Incluye altas, bajas, reversa, direccionales e internas de cabina.",
-      categoria: "Eléctrico / Luces",
-      opcional: false
-    },
-    {
-      texto: "¿Las luces de freno son funcionales?",
-      descripcion: "Debe funcionar las dos traseras y la tercera luz elevada si aplica.",
-      categoria: "Eléctrico / Luces",
-      opcional: false
-    },
-    {
-      texto: "¿El apoyacabezas del conductor está ajustable y en buen estado?",
-      descripcion: "Aplica para vehículos livianos.",
-      categoria: "Seguridad Pasiva",
-      opcional: true
-    },
-    {
-      texto: "¿La silla del conductor está en buen estado?",
-      descripcion: "Debe estar ajustable, sin rupturas, conforme a especificaciones del fabricante.",
-      categoria: "Carrocería / Cabina",
-      opcional: false
-    },
-    {
-      texto: "¿Las llantas (incluyendo repuesto) están en buen estado?",
-      descripcion: "Profundidad ≥ 3 mm, presión adecuada, sin cortes o deformaciones.",
-      categoria: "Llantas",
-      opcional: false
-    },
-    {
-      texto: "¿Las llantas reencauchadas cumplen con la normatividad?",
-      descripcion: "Deben ser curado en frío y ubicarse solo en ejes traseros. Si no aplica, marcar N/A.",
-      categoria: "Llantas",
-      opcional: true
-    },
-    {
-      texto: "¿El botiquín está completo y en buen estado?",
-      descripcion: "Debe incluir todos los elementos requeridos y con fechas vigentes.",
-      categoria: "Equipos de Emergencia",
-      opcional: false
-    },
-    {
-      texto: "¿El kit de carretera está completo y en buen estado?",
-      descripcion: "Incluye señales, cruceta, gato, herramientas, extintores, linterna, tacos, chalecos, repuesto, etc.",
-      categoria: "Equipos de Emergencia",
-      opcional: false
-    },
-    {
-      texto: "¿El vehículo cuenta con la señalización reglamentaria vigente?",
-      descripcion: "Incluye placas, reflectivos, avisos y rotulación según el tipo de carga.",
-      categoria: "Señalización / Accesorios",
-      opcional: false
-    },
-    {
-      texto: "¿El sistema GPS está instalado y operativo?",
-      descripcion: "Debe permitir localización y seguimiento.",
-      categoria: "GPS / Tecnología",
-      opcional: false
-    },
-    {
-      texto: "Si transporta químicos o mercancías peligrosas, ¿el kit de control de derrames está completo?",
-      descripcion: "Incluye barreras, absorbentes, guantes, herramientas, cinta, plástico, jabón, etc. Si no aplica, marcar N/A.",
-      categoria: "Materiales Peligrosos",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿La cisterna está en buen estado general?",
-      descripcion: "Sin daños, deformaciones. Si no aplica, marcar N/A.",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿Cuenta con tabla de aforo vigente?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿Los certificados de hermeticidad y presión están vigentes?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿Tapas, válvulas y desagües están cerrados y en buen estado?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿No hay fugas en válvulas, mangueras ni conexiones?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿El sistema de corte de emergencia es funcional?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo cisterna: ¿Las conexiones están en buen estado y seguras?",
-      descripcion: "",
-      categoria: "Cisterna",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿Las guías de seguridad no están deformadas ni rotas?",
-      descripcion: "",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿No hay óxido en la estructura?",
-      descripcion: "",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿Las rampas de paso están instaladas correctamente?",
-      descripcion: "",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿Las guayas no están deshilachadas ni rozan partes de la estructura?",
-      descripcion: "Incluye guardabarro, estructura, etc.",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿No hay fugas en mangueras de aire?",
-      descripcion: "",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos tipo niñera: ¿Cuenta con aviso de carga larga y reflectivos?",
-      descripcion: "",
-      categoria: "Ninera",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos con refrigeración: ¿El nivel de refrigerante es adecuado?",
-      descripcion: "",
-      categoria: "Refrigeracion",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos con refrigeración: ¿El radiador no presenta fugas ni corrosión?",
-      descripcion: "",
-      categoria: "Refrigeracion",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos con refrigeración: ¿Las mangueras están en buen estado?",
-      descripcion: "Sin grietas, burbujas o desgaste.",
-      categoria: "Refrigeracion",
-      opcional: true
-    },
-    {
-      texto: "Para vehículos con refrigeración: ¿El depósito de expansión está en buen estado y bien cerrado?",
-      descripcion: "",
-      categoria: "Refrigeracion",
-      opcional: true
-    },
-    {
-      texto: "¿Ha dormido al menos 7 horas y se siente alerta?",
-      descripcion: "Evalúa signos de fatiga antes de conducir.",
-      categoria: "Estado del Conductor",
-      opcional: false
-    },
-    {
-      texto: "¿En las últimas horas ha estado expuesto a factores que generen fatiga?",
-      descripcion: "Incluye comidas pesadas, medicamentos, turnos extendidos.",
-      categoria: "Estado del Conductor",
-      opcional: false
-    },
-    {
-      texto: "¿Su estado de salud es óptimo para conducir?",
-      descripcion: "Sin fatiga, somnolencia o malestar.",
-      categoria: "Estado del Conductor",
-      opcional: false
-    },
-    {
-      texto: "¿Ha tenido situaciones personales que puedan afectar su conducción?",
-      descripcion: "",
-      categoria: "Estado del Conductor",
-      opcional: false
-    }
-  ];
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
+    public globalService: GlobalService,
     public userService: UserService,
     private alertController: AlertController,
     private route: ActivatedRoute,
@@ -302,15 +49,25 @@ export class PreformPage implements OnInit {
   ) {
     this.placa = this.userService.getPlaca();
     this.preformForm = this.formBuilder.group({});
+    this.secretsAldia = {
+      'X-Client-Id': environment.aldia.client_id,
+      'X-Client-Secret': environment.aldia.client_secret
+    }
 
     // Crear controles dinámicos según número de preguntas
-    this.preguntas.forEach((_, index) => {
+
+  }
+
+  async ngOnInit() {
+
+    await this.getPreguntas();
+
+    this.preguntas.forEach((_: any, index: any) => {
       const controlName = 'pregunta' + (index + 1);
       this.preformForm.addControl(controlName, this.formBuilder.control(''));
     });
-  }
 
-  ngOnInit() {
+
     this.route.queryParams.subscribe(async params => {
 
       if (params && params['placa']) {
@@ -321,47 +78,66 @@ export class PreformPage implements OnInit {
     })
   }
 
+  async getPreguntas() {
+    try {
+      const response: any = await this.globalService.get(
+        environment.aldia.uri + 'tercero/preoperacional/preguntas?estado=ACTIVO',
+        {},
+        undefined,
+        this.secretsAldia
+      );
+
+      if (!response || !response.data) return [];
+
+      const ordenadas = response.data.sort(
+        (a: any, b: any) => a.subpreope_orden - b.subpreope_orden
+      );
+
+      // Mapear al formato final
+      const preguntasFinal = ordenadas.map((item: any) => ({
+        id: item.subpreope_codigo,
+        texto: item.subpreope_nombre,
+        descripcion: item.subpreope_descripcion,
+        categoria: item.subpreope_categoria,
+        opcional: item.subpreope_restrictivo === 'SI' ? true : false
+      }));
+
+      this.preguntas = preguntasFinal;
+      return preguntasFinal;
+
+    } catch (error: any) {
+      this.presentAlert('Error al consumir la API:', 'Error', error.data, 'Volver');
+      this.apiError = 'Error al cargar los datos desde el servidor.';
+    }
+
+  }
+
   cargarPreguntasVisibles() {
     this.visiblePreguntas = [];
-
-    // for (let i = 0; i < 1; i++) {
-    //   if (this.preguntas[this.indexActual + i]) {
-    //     this.visiblePreguntas.push({
-    //       texto: this.preguntas[this.indexActual + i].texto,
-    //       descripcion: this.preguntas[this.indexActual + i].descripcion,
-    //       index: this.indexActual + i,
-    //       respuesta: null
-    //     });
-    //   }
-    // }
 
     let p = this.preguntas[this.indexActual];
 
     if (!p) return;
 
     console.log(this.categoriasOpcionales);
-    
 
-    // 🔍 1. Si la pregunta es opcional, debemos revisar la categoría
     if (p.opcional) {
       const categoria = this.categoriasOpcionales.find(c => c.nombre === p.categoria);
 
       console.log(categoria);
-      
 
-      // ❓ 2. Si la categoría aún no tiene respuesta → mostrar pantalla de selección
+
       if (categoria && categoria.aplica === '') {
 
-        
         this.visiblePreguntas.push({
           tipo: 'categoria',        // <-- tipo especial
           categoria: categoria,
           index: this.indexActual
         });
-        return; // 🚫 No mostrar pregunta todavía
+        return;
       }
 
-      // ❌ 3. Si la categoría NO aplica → saltar pregunta
+      // 3. Si la categoría NO aplica → saltar regunta
       if (categoria && categoria.aplica === false) {
         this.indexActual++;
         this.cargarPreguntasVisibles();
@@ -370,6 +146,7 @@ export class PreformPage implements OnInit {
     }
 
     this.visiblePreguntas.push({
+      id: p.subpreope_codigo,
       tipo: 'pregunta',
       texto: p.texto,
       descripcion: p.descripcion,
@@ -428,15 +205,15 @@ export class PreformPage implements OnInit {
 
   setCategoria(categoria: any, event: any) {
 
-      const index = this.categoriasOpcionales.findIndex(c => c.nombre === categoria);
+    const index = this.categoriasOpcionales.findIndex(c => c.nombre === categoria);
 
-  if (index !== -1) {
-    const response =  event.detail.value === 'true' ? true : false
-    this.categoriasOpcionales[index].aplica = response;
-  }
+    if (index !== -1) {
+      const response = event.detail.value === 'true' ? true : false
+      this.categoriasOpcionales[index].aplica = response;
+    }
 
-  console.log(index);
-  
+    console.log(index);
+
 
     this.indexActual++;
     this.cargarPreguntasVisibles();
@@ -460,63 +237,69 @@ export class PreformPage implements OnInit {
     console.log('Archivo seleccionado:', file);
   }
 
-  submitForm() {
+  async submitForm() {
     if (this.preformForm.valid) {
       const formData = this.preformForm.value;
       console.log('Datos a enviar al servidor:', formData);
 
       // Validar que se tome la foto del vehiculo
       if (!this.car) {
-        this.presentAlert('Por favor, cargue una foto del vehículo.', 'Click a la camara', 'dddd', 'Volver');
+        this.presentAlert('Por favor, cargue una foto del vehículo.', 'Click a la camara', '', 'Volver');
         return;
       }
 
-      // Validar que todas las respuestas sean "Cumple" usando la función de validación
-      if (this.validarRespuestas(formData)) {
-        // Crear el JSON con los datos necesarios
-        const jsonEnvio = {
-          vehiculo: this.placa, // Utiliza la placa almacenada
-          confirmacion: 1,
+
+      const respuestas = this.preguntas.map((p: any, index: number) => {
+        const controlName = 'pregunta' + (index + 1);
+
+        
+
+        return {
+          id: this.preguntas[index].id,
+          respuesta: this.preformForm.value[controlName] != '' ? this.preformForm.value[controlName]?.toUpperCase() : 'NO CUMPLE'
         };
+      });
 
-        // Llama al servicio para consumir la API con el JSON de envío
-        this.userService.postPreoperacionalData(jsonEnvio).subscribe(
-          (response) => {
-            // alert('Respuesta de la API:'+ response.data);
-            this.presentAlert('¡¡Exito!!', 'Preoperacional cargado con exito', response.data, 'Confirmar')
-            console.log('Respuesta de la API:', response);
-            this.apiResponseData = response;
+      const confirmation = this.preguntasNoCumplen.length == 0 ? 1 : 0;
 
-            // Aquí puedes agregar lógica adicional para manejar la respuesta de la API
-            // Por ejemplo, mostrar un mensaje al usuario o redirigir a otra página.
+      const jsonEnvio = {
+        vehiculo: this.placa,
+        empresa: 1,
+        confirmacion: confirmation,
+        imagen : this.car.base64,
+        respuestas: respuestas
+      };
 
-            this.resetForm();
-          },
-          (error) => {
-            this.presentAlert('Error al consumir la API:', 'Error', error.data, 'Volver');
+      this.isSubmitting = true;
 
-            // Manejo de errores, por ejemplo, mostrar un mensaje de error al usuario.
-            this.apiError = 'Error al cargar los datos desde el servidor.';
-          }
-        );
-      } else {
+      try {
 
-        this.presentAlert('Formulario no válido', 'Revisar', 'Algunas respuestas son "No Cumple"', 'Volver');
-        // alert(
-        //   'Formulario no válido. Algunas respuestas no son "Cumple".'
-        // );
-        // Muestra un mensaje de error al usuario o realiza alguna otra acción de manejo de errores.
+        const response: any = await this.globalService.post(environment.aldia.uri + 'tercero/preoperacional', jsonEnvio, undefined, this.secretsAldia);
+
+
+        this.presentAlert('Mensaje de Aldia:', '', response.data, 'Confirmar', '/home')
+        this.apiResponseData = response;
+
+        // Aquí puedes agregar lógica adicional para manejar la respuesta de la API
+        // Por ejemplo, mostrar un mensaje al usuario o redirigir a otra página.
+
+        this.resetForm();
+
+
+      } catch (error: any) {
+        this.isSubmitting = false;
+        this.presentAlert('Error al consumir la API:', 'Error', error.data, 'Volver');
+        this.apiError = 'Error al cargar los datos desde el servidor.';
       }
+      
     } else {
-      alert('Formulario no válido. Revise los campos.');
+      this.presentAlert('Error al enviar', '', 'Complete todos los campos', 'Volver');
     }
   }
 
   resetForm() {
     this.preformForm.reset();
   }
-
-
 
   validarRespuestas(formData: any): boolean {
     for (const pregunta in formData) {
@@ -529,19 +312,26 @@ export class PreformPage implements OnInit {
 
 
   getPhotoCar() {
-    this.photo.addNewToGallery('car').then(da => {
+    this.photo.addNewToAll('car').then(da => {
       console.log(da);
       this.car = da;
     })
 
   }
 
-  async presentAlert(title: String, subheader: String, desc: String, botton: String) {
+  async presentAlert(title: String, subheader: String, desc: String, botton: String, route?: string) {
     const alert = await this.alertController.create({
       header: '' + title,
       subHeader: '' + subheader,
       message: '' + desc,
-      buttons: ['' + botton],
+      buttons: [ {
+          text: '' + botton,
+          handler: () => {
+            if (route) {
+          this.router.navigateByUrl(route);
+        }
+          },
+        }],
     });
     await alert.present();
   }

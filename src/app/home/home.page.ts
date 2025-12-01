@@ -19,6 +19,7 @@ import { AlertService } from '../api/alert.service';
 import { TurnosService } from '../api/turnos.service';
 import { Turno } from '../models/turno.model';
 import { alertCircleOutline } from 'ionicons/icons';
+import { GlobalService } from '../api/global.service';
 
 
 @Component({
@@ -95,20 +96,28 @@ export class HomePage implements OnInit {
     return this.turnoForm.controls;
   }
 
-   alertIcon:any = alertCircleOutline;
+  alertIcon: any = alertCircleOutline;
+  secretsAldia: any = {}
 
-    articulos = [
+  preoperacional: any = {}
+
+
+  articulos = [
     {
       titulo: 'Es requerido el preoperacional, Click para continuar',
       descripcion: 'Para continuar con el viaje debe realizar el preoperacional',
       fecha: new Date(),
+      hora: '',
       imagen: 'assets/img/userDefault.png',
+      aprobado: '',
+      placa: ''
     }
   ];
 
 
   constructor(
     public userService: UserService,
+    public globalService: GlobalService,
     public auth: AuthService,
     private router: Router,
     private modalController: ModalController,
@@ -122,15 +131,19 @@ export class HomePage implements OnInit {
     private localNoti: LocalNotificationService,
     private alertController: AlertController
   ) {
+    this.secretsAldia = {
+      'X-Client-Id': environment.aldia.client_id,
+      'X-Client-Secret': environment.aldia.client_secret
+    }
 
     this.turnoForm = this.formBuilder.group({
       origen: [this.ciudad, [Validators.required]],
       destino1: ['', [Validators.required]],
       destino2: ['', [Validators.required]],
       destino3: ['', [Validators.required]],
-      remolque: [''], 
-      vehiculovac: [false, [Validators.required]], 
-      nuevo: [false, [Validators.required]], 
+      remolque: [''],
+      vehiculovac: [false, [Validators.required]],
+      nuevo: [false, [Validators.required]],
     });
 
 
@@ -173,8 +186,9 @@ export class HomePage implements OnInit {
 
       this.loadingData.dismiss();
 
-        setTimeout(() => {
-        this.showAlerts = true;
+      setTimeout(async () => {
+        // this.showAlerts = true;
+        await this.getPreoperacional();
       }, 400);
 
     } catch (err: any) {
@@ -204,6 +218,36 @@ export class HomePage implements OnInit {
   } // ngOninit
 
 
+
+  async getPreoperacional() {
+
+    try {
+      const response: any = await this.globalService.get(
+        environment.aldia.uri + 'tercero/preoperacional/ultimo?vehiculo=' + this.placa,
+        {},
+        undefined,
+        this.secretsAldia
+      );
+
+      if (response.data) {
+        this.showAlerts = true
+      }
+
+
+      this.preoperacional = response.data.data
+
+
+      if (response.data.requerido == 'SI') {
+        this.router.navigateByUrl('/preform');
+      }
+
+    } catch (error: any) {
+      console.log(error);
+    }
+
+  }
+
+
   async verArticulo(articulo: any) {
     const alert = await this.alertController.create({
       header: 'Alerta',
@@ -220,6 +264,11 @@ export class HomePage implements OnInit {
     });
 
     await alert.present();
+  }
+
+
+  goToPreform() {
+    this.router.navigate(['/preform']);
   }
 
 
@@ -560,7 +609,7 @@ export class HomePage implements OnInit {
               nuevo: true
             })
             console.log(this.turnoForm.value);
-            
+
           }
         },
         {

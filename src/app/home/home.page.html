@@ -18,42 +18,49 @@
     </ion-fab-button>
   </ion-fab> -->
 
-  <div *ngIf="showAlerts" class="container mt-4 animate-section">
+ <!-- <div *ngIf="showAlerts" class="container mt-4 animate-section">
 
     <ion-list lines="none">
-      <ion-item
-      *ngFor="let articulo of articulos"
-      button
-      detail="false"
-      (click)="verArticulo(articulo)"
-      class="alerta-item"
-    >
-      <ion-icon [icon]="alertIcon" slot="start" color="warning"></ion-icon>
-      <ion-label class="alerta-titulo">{{ articulo.titulo }}</ion-label>
-    </ion-item>
-  </ion-list>
-</div>
-  
+      <ion-item *ngFor="let articulo of articulos" button detail="false" (click)="verArticulo(articulo)"
+        class="alerta-item">
+        <ion-icon [icon]="alertIcon" slot="start" color="warning"></ion-icon>
+        <ion-label class="alerta-titulo">{{ articulo.titulo }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </div> -->
+
+  <ion-card  *ngIf="showAlerts" class="estado-card" [ngClass]="preoperacional.aprobado === 'NO' ? 'estado-rojo' : 'estado-verde'" (click)="goToPreform()">
+
+    <div class="header-estado">
+      <ion-icon [name]="preoperacional.aprobado === 'NO' ? 'close-circle' : 'checkmark-circle'" class="icon-estado">
+      </ion-icon>
+
+      <div class="titulo-estado">
+        <h2>{{ preoperacional.aprobado === 'NO' ? 'RECHAZADO' : 'APROBADO' }}</h2>
+        <p>Último Preoperacional</p>
+      </div>
+      <div class="datos-right">
+
+        <div class="dato">
+          <span class="valor">{{ preoperacional.fecha }}</span>
+        </div>
+        <div class="dato">
+          <span class="valor">{{ preoperacional.hora }}</span>
+        </div>
+      </div>
+    </div>
+
+
+  </ion-card>
+
+
   <div class="container panel-user-home">
     <div class="row p-3">
       <div class="containerPhoto col col-12 p-2 d-flex justify-content-center">
-        <ion-avatar
-          [style.width]="'130px'"
-          [style.height]="'130px'"
-          slot="start"
-        >
-          <ion-img
-            alt="person"
-            *ngIf="fotoUser"
-            class="rounded-circle me-2"
-            [src]="fotoUser"
-          ></ion-img>
-          <ion-img
-            alt="person"
-            *ngIf="!fotoUser"
-            class="rounded-circle me-2"
-            src="../../assets/img/userDefault.png"
-          ></ion-img>
+        <ion-avatar [style.width]="'130px'" [style.height]="'130px'" slot="start">
+          <ion-img alt="person" *ngIf="fotoUser" class="rounded-circle me-2" [src]="fotoUser"></ion-img>
+          <ion-img alt="person" *ngIf="!fotoUser" class="rounded-circle me-2"
+            src="../../assets/img/userDefault.png"></ion-img>
         </ion-avatar>
       </div>
 
@@ -98,17 +105,12 @@
           </span>
         </li>
         <li class="mt-3 d-flex justify-content-center">
-           <ion-button
-              (click)="turnoExistente ? getTurno() : nuevoTurno()"
-              id="open-modal"
-              class="botontiemporestante"
-              expand="full"
-              shape="round"
-              [color]="turnoExistente ? 'success' : 'danger'">
-               <span class="ml-2 mb-0">
-                {{ estadoBoton }}
-               </span>
-           </ion-button>
+          <ion-button (click)="turnoExistente ? getTurno() : nuevoTurno()" id="open-modal" class="botontiemporestante"
+            expand="full" shape="round" [color]="turnoExistente ? 'success' : 'danger'">
+            <span class="ml-2 mb-0">
+              {{ estadoBoton }}
+            </span>
+          </ion-button>
 
         </li>
       </ul>
@@ -117,68 +119,53 @@
     <div *ngIf="!estado && !botonInactivo && !botonDocumentos">
       <span class="ml-2 mb-0">
         {{ estadoBoton }}
-       </span>
+      </span>
     </div>
 
 
     <div class="mt-3 mb-3 d-flex justify-content-center" *ngIf="botonInactivo">
-      <ion-button
-      id="open-modal"
-      class="botontiemporestante"
-      expand="full"
-      shape="round"
-      color="danger">
-       <span class="ml-2 mb-0">
-        {{ estadoBoton }}
-       </span>
-   </ion-button>
+      <ion-button id="open-modal" class="botontiemporestante" expand="full" shape="round" color="danger">
+        <span class="ml-2 mb-0">
+          {{ estadoBoton }}
+        </span>
+      </ion-button>
     </div>
 
 
 
     <div class="mt-3 mb-3 d-flex justify-content-center" *ngIf="botonDocumentos">
-      <ion-button
-      id="open-modal"
-      class="botontiemporestante"
-      expand="full"
-      shape="round"
-      color="danger">
-       <span class="ml-2 mb-0">
-        {{ estadoBoton }}
-       </span>
-   </ion-button>
+      <ion-button id="open-modal" class="botontiemporestante" expand="full" shape="round" color="danger">
+        <span class="ml-2 mb-0">
+          {{ estadoBoton }}
+        </span>
+      </ion-button>
     </div>
 
   </div>
 
+
+
   <div *ngIf="turnoExistente" class="container cont-turnos">
-    <div class="origen" style="text-align: center;"> <h1> Destinos </h1> </div>
+    <div class="origen" style="text-align: center;">
+      <h1> Destinos </h1>
+    </div>
     <div class="container-ticket">
 
       <div class="ticket">
         <p>{{destino1}}</p>
-        <img
-        src="../../assets/icon/tiket.png"
-        alt="ticket"
-        />
+        <img src="../../assets/icon/tiket.png" alt="ticket" />
         <span>{{posicionTurno1}}</span>
       </div>
 
       <div class="ticket">
         <p>{{destino2}}</p>
-        <img
-          src="../../assets/icon/tiket.png"
-          alt="ticket"
-        />
+        <img src="../../assets/icon/tiket.png" alt="ticket" />
         <span>{{posicionTurno2}}</span>
       </div>
 
       <div class="ticket">
         <p>{{destino3}}</p>
-        <img
-        src="../../assets/icon/tiket.png"
-        alt="ticket"
-          />
+        <img src="../../assets/icon/tiket.png" alt="ticket" />
         <span>{{posicionTurno3}}</span>
       </div>
 
@@ -187,21 +174,14 @@
 
 
 
- <ion-modal
-    #modalTurno
-    trigger="open-modal"
-    [initialBreakpoint]="0.70"
-    [breakpoints]="[0.7, 0.8, 0.9]"
-    handleBehavior="cycle"
-  >
+  <ion-modal #modalTurno trigger="open-modal" [initialBreakpoint]="0.70" [breakpoints]="[0.7, 0.8, 0.9]"
+    handleBehavior="cycle">
     <ng-template>
       <ion-content class="ion-padding">
         <div class="container-fluid">
           <div class="row d-flex justify-content-center">
             <div class="container panel-turno">
-              <div
-                class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white"
-              >
+              <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
                 <h3>Reenturnarse</h3>
               </div>
             </div>
@@ -210,98 +190,52 @@
               <form [formGroup]="turnoForm" (ngSubmit)="onSubmit()">
                 <div class="form-row p-2">
                   <div class="col-md-12 mt-2">
-                    <label id="origenLabel" for=""
-                      >Origen: <ion-spinner></ion-spinner
-                    ></label>
-                    <input
-                      [ngModel]="nombre"
-                      type="hidden"
-                      id="origen"
-                      formControlName="origen"
-                    />
+                    <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
+                    <input [ngModel]="nombre" type="hidden" id="origen" formControlName="origen" />
                   </div>
                   <ion-item class="col-md-12 mt-2">
-                    <ion-select
-                      formControlName="destino1"
-                      interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 1 ..."
-                    >
+                    <ion-select formControlName="destino1" interface="action-sheet"
+                      placeholder="* Selecciona la ciudad de destino 1 ...">
                       <ion-select-option></ion-select-option>
-                      <ion-select-option
-                        *ngFor="let p of turno.regionales"
-                        value="{{ p.nombre }}"
-                        >{{ p.nombre }}</ion-select-option
-                      >
+                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
+                        }}</ion-select-option>
                     </ion-select>
                   </ion-item>
                   <ion-item class="col-md-12 mt-2">
-                    <ion-select
-                      formControlName="destino2"
-                      interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 2 ..."
-                    >
+                    <ion-select formControlName="destino2" interface="action-sheet"
+                      placeholder="* Selecciona la ciudad de destino 2 ...">
                       <ion-select-option></ion-select-option>
-                      <ion-select-option
-                        *ngFor="let p of turno.regionales"
-                        value="{{ p.nombre }}"
-                        >{{ p.nombre }}</ion-select-option
-                      >
+                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
+                        }}</ion-select-option>
                     </ion-select>
                   </ion-item>
                   <ion-item class="col-md-12 mt-2">
-                    <ion-select
-                      formControlName="destino3"
-                      interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 3 ..."
-                    >
+                    <ion-select formControlName="destino3" interface="action-sheet"
+                      placeholder="* Selecciona la ciudad de destino 3 ...">
                       <ion-select-option></ion-select-option>
-                      <ion-select-option
-                        *ngFor="let p of turno.regionales"
-                        value="{{ p.nombre }}"
-                        >{{ p.nombre }}</ion-select-option
-                      >
+                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
+                        }}</ion-select-option>
                     </ion-select>
                   </ion-item>
 
                   <div class="col-md-12 mt-2 mb-3">
                     <label for="remolque">Tipo de Remolque</label>
-                    <ion-select
-                      interface="action-sheet"
-                      formControlName="remolque"
-                      id="remolque"
-                      required
-                    >
-                      <ion-select-option selected
-                        >Seleccionar</ion-select-option
-                      >
-                      <ion-select-option value="CONTENEDOR"
-                        >CONTENEDOR</ion-select-option
-                      >
-                      <ion-select-option value="PLANCHA"
-                        >PLANCHA</ion-select-option
-                      >
+                    <ion-select interface="action-sheet" formControlName="remolque" id="remolque" required>
+                      <ion-select-option selected>Seleccionar</ion-select-option>
+                      <ion-select-option value="CONTENEDOR">CONTENEDOR</ion-select-option>
+                      <ion-select-option value="PLANCHA">PLANCHA</ion-select-option>
                     </ion-select>
                   </div>
 
-                  <h6
-                    style="color: #db1824; font-size: 12px"
-                    id="labelPorcentaje"
-                  >
+                  <h6 style="color: #db1824; font-size: 12px" id="labelPorcentaje">
                     * De detectar que la información brindada no es cierta podrá
                     incurrir en sanciones drásticas por parte de la compañía.
                   </h6>
 
                   <div class="col-md-12 mt-4 mb-4">
                     <label for="">Vehiculo vacio</label>
-                    <ion-select
-                      interface="action-sheet"
-                      formControlName="vehiculovac"
-                      id="vehiculovac"
-                      required
-                    >
-                      <ion-select-option selected
-                        >Seleccionar</ion-select-option
-                      >
+                    <ion-select interface="action-sheet" formControlName="vehiculovac" id="vehiculovac" required>
+                      <ion-select-option selected>Seleccionar</ion-select-option>
                       <ion-select-option value="SI">SI</ion-select-option>
                       <ion-select-option value="NO">NO</ion-select-option>
                     </ion-select>

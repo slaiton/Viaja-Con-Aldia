@@ -105,7 +105,7 @@
       <input type="file" accept="image/*" (change)="onFileChange($event)">
     </ion-item> -->
     <hr>
-    <div *ngIf="preguntasCompletas && preguntasNoCumplen.length == 0">
+    <div *ngIf="preguntasCompletas">
 
       <ion-title class="ml-2 p-2">
         <strong>
@@ -139,7 +139,7 @@
       </ion-card>
 
       <!-- Botón para enviar el formulario -->
-      <ion-button expand="block" color="primary" type="submit" onsubmit=""> Enviar </ion-button>
+      <ion-button expand="block" color="primary" type="submit" onsubmit="" [disabled]="isSubmitting"> Enviar </ion-button>
 
     </div>
 
