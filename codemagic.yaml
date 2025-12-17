@@ -5,13 +5,10 @@ workflows:
     environment:
       node: 16
       cocoapods: default
-      xcode: latest
-      vars:
-        BUILD_DIR: "ios/App"
 
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: "com.viajaconaldia.id"
+        bundle_identifier: com.viajaconaldia.id
 
     scripts:
       - name: Install Node dependencies
@@ -20,9 +17,9 @@ workflows:
           npm install -D @angular/cli
           npm install -g @ionic/cli
 
-      - name: Build Ionic Angular
+      - name: Build Angular
         script: |
-          ionic build
+          npx ng build
 
       - name: Sync Capacitor with iOS
         script: |
@@ -33,29 +30,14 @@ workflows:
         script: |
           pod install
 
-      - name: Build iOS Release
-        script: |
-          xcodebuild \
-            -workspace "ios/App/App.xcworkspace" \
-            -scheme "App" \
-            -configuration Release \
-            -archivePath $CM_BUILD_DIR/App.xcarchive archive \
-            DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
-
-          xcodebuild \
-            -exportArchive \
-            -archivePath $CM_BUILD_DIR/App.xcarchive \
-            -exportPath $CM_BUILD_DIR/export \
-            -exportOptionsPlist exportOptions.plist
-
     artifacts:
-      - ios/App/build/**/*.ipa
-      - ios/App/build/**/*.xcarchive
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
 
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_API_KEY
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_app_store: false
         submit_to_testflight: true
+        submit_to_app_store: false
