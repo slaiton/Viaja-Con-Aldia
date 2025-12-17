@@ -1,9 +1,9 @@
 workflows:
   ios-workflow:
-    name: Viaja con Aldia iOS
+    name: Viaja con Aldia iOS (Prebuilt)
 
     environment:
-      node: 18
+      node: 16
       cocoapods: default
 
       ios_signing:
@@ -14,24 +14,33 @@ workflows:
       - name: Install Node dependencies
         script: |
           npm ci
-          npm install -g @ionic/cli@6
 
-      - name: Build Ionic Angular
-        script: |
-          npx ionic build --no-interactive --no-confirm
-
-      - name: Sync Capacitor with iOS
-        script: |
-          npx cap sync ios
-
-      - name: Install Cocoapods
+      - name: Install CocoaPods
         working_directory: ios/App
         script: |
           pod install
 
+      - name: Build iOS archive
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            archive \
+            DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
+
+      - name: Export IPA
+        script: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            -exportPath $CM_BUILD_DIR/export \
+            -exportOptionsPlist exportOptions.plist
+
     artifacts:
-      - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive
+      - $CM_BUILD_DIR/export/*.ipa
+      - $CM_BUILD_DIR/*.xcarchive
 
     publishing:
       app_store_connect:
