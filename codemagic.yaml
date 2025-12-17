@@ -18,7 +18,6 @@ workflows:
 
       - name: Build Ionic Angular
         script: |
-          npx ng version
           npx ionic build --no-interactive --no-confirm
 
       - name: Sync Capacitor with iOS
