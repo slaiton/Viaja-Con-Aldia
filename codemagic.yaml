@@ -4,7 +4,6 @@ workflows:
 
     environment:
       node: 16
-      npm: 10
       cocoapods: default
       xcode: latest
       vars:
