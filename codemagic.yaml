@@ -3,7 +3,7 @@ workflows:
     name: Viaja con Aldia iOS
 
     environment:
-      node: 20
+      node: 16
       npm: 10
       cocoapods: default
       xcode: latest
