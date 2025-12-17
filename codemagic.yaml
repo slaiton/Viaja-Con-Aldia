@@ -14,10 +14,10 @@ workflows:
       - name: Install Node dependencies
         script: |
           npm install
-          npm install -D @angular/cli@~12
-          npm install -g @ionic/cli
+          npm install -D @angular/cli@12.2.18
+          npm install -g @ionic/cli@6
 
-      - name: Build Angular
+      - name: Build Ionic Angular
         script: |
           npx ionic build --no-interactive --no-confirm
 
