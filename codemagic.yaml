@@ -3,7 +3,7 @@ workflows:
     name: Viaja con Aldia iOS (Prebuilt)
 
     environment:
-      node: 18
+      node: 20
       cocoapods: default
 
       ios_signing:
