@@ -33,9 +33,7 @@ workflows:
             -configuration Release \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             archive \
-            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM \
-            CODE_SIGN_STYLE=Manual \
-            PRODUCT_BUNDLE_IDENTIFIER=com.viajaconaldia.id
+            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM
 
       - name: Export IPA
         script: |
