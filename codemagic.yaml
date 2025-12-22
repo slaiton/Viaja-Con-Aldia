@@ -33,7 +33,8 @@ workflows:
             -configuration Release \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             archive \
-            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM
+            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM \
+            -allowProvisioningUpdates
 
       - name: Export IPA
         script: |
