@@ -45,7 +45,6 @@
     "@popperjs/core": "^2.11.8",
     "@syncfusion/ej2-angular-dropdowns": "^23.2.6",
     "@tensorflow/tfjs": "^3.9.0",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/lodash": "^4.14.202",
     "@types/webgl2": "^0.0.11",
     "angular-ng-autocomplete": "^2.0.12",
