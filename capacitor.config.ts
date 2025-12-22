@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.viajaconaldia',
+  appId: 'com.viajaconaldia.app',
   appName: 'Viaja con aldia',
   webDir: 'www',
   bundledWebRuntime: false,
