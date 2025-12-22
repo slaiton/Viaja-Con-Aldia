@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.viajaconaldia.app',
+  appId: 'com.viajaconaldia.id',
   appName: 'Viaja con aldia',
   webDir: 'www',
   bundledWebRuntime: false,

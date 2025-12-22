@@ -142,7 +142,7 @@ export class LoginPage implements OnInit {
     await this.user.getDataApi('', '', 'api/version/latest').then(
       data => {
         if (data.version_number > environment.version) {
-          const appPackage = 'com.viajaconaldia.app';
+          const appPackage = 'com.viajaconaldia.id';
           const playStoreUrl = `https://play.google.com/store/apps/details?id=${appPackage}`;
           this.presentAlertFun("Alerta", "", "Se requiere actualizacion para continuar", "Actualizar").then(
             () => {
