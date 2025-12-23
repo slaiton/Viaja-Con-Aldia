@@ -8,9 +8,6 @@ workflows:
 
       ios_signing:
         distribution_type: app_store
-        certificate: $IOS_CERTIFICATE_P12
-        certificate_passphrase: $IOS_CERTIFICATE_PASSWORD
-        provisioning_profile: $IOS_PROVISIONING_PROFILE
         bundle_identifier: com.viajaconaldia.id
 
       vars:
