@@ -32,10 +32,7 @@ workflows:
             -scheme App \
             -configuration Release \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
-            archive \
-            CODE_SIGN_STYLE="Manual" \
-            DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM \
-            PROVISIONING_PROFILE_SPECIFIER=$IOS_PROVISIONING_PROFILE_NAME
+            archive
 
       - name: Export IPA
         script: |
