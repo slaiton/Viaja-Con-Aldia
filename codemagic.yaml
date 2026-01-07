@@ -22,16 +22,15 @@ workflows:
         script: |
           pod install
 
-      - name: Build iOS archive
+      - name: Build iOS
         script: |
-          xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+          cd ios/App
+          xcodebuild clean archive \
+            -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -sdk iphoneos \
-            -archivePath $CM_BUILD_DIR/App.xcarchive \
-            archive \
-            -allowProvisioningUpdates
+            -destination generic/platform=iOS \
+            -archivePath $CM_BUILD_DIR/App.xcarchive
 
       - name: Export IPA
         script: |
