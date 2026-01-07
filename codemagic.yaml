@@ -10,9 +10,6 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.viajaconaldia.id
 
-      vars:
-        DEVELOPMENT_TEAM: 9JQ9RT4Q43
-
     scripts:
       - name: Install Node dependencies
         script: |
