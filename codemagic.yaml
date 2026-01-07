@@ -28,8 +28,11 @@ workflows:
             -workspace ios/App/App.xcworkspace \
             -scheme App \
             -configuration Release \
+            -sdk iphoneos \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
-            archive
+            archive \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=9JQ9RT4Q43
 
       - name: Export IPA
         script: |
