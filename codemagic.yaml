@@ -30,7 +30,8 @@ workflows:
             -scheme App \
             -configuration Release \
             -destination generic/platform=iOS \
-            -archivePath $CM_BUILD_DIR/App.xcarchive
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            -DEVELOPMENT_TEAM=$APPLE_TEAM_ID
 
       - name: Export IPA
         script: |
