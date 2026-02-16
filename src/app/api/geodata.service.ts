@@ -1,15 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs-compat/Observable";
 
-import { CookieService } from "ngx-cookie-service";
-import { environment } from 'src/environments/environment';
 import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 
 import { Geolocation } from '@capacitor/geolocation';
 
-import { AuthService } from './auth.service';
+import { AuthService } from '@core/services/auth.service';
 
 
 

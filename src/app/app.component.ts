@@ -3,15 +3,15 @@ import { Router } from '@angular/router';
 import { CookieService } from "ngx-cookie-service";
 import { Subject } from 'rxjs';
 import { tap, takeUntil } from 'rxjs/operators';
-import { AuthService } from './api/auth.service';
+import { AuthService } from '@core/services/auth.service';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { Network } from '@capacitor/network';
 import { PluginListenerHandle } from '@capacitor/core';
 import { App,  URLOpenListenerEvent } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { UserService } from './api/user.service';
+import { UserService } from './core/services/user.service';
 import { Platform } from '@ionic/angular';
-import { PhotoService } from './api/photo.service';
+import { PhotoService } from './core/services/photo.service';
 import { log } from 'console';
 
 

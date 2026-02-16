@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { LocalNotificationService } from './local-notification.service';
+import { LocalNotificationService } from '../core/services/local-notification.service';
 import { GeodataService } from './geodata.service';
 import { AlertController, LoadingController } from '@ionic/angular';
-import { AlertService } from './alert.service';
-import { HomePage } from '../home/home.page';
+import { AlertService } from '../core/services/alert.service';
+import { HomePage } from '../features/home/home.page';
 import { Router } from '@angular/router';
-import { Turno } from '../models/turno.model'; 
+import { Turno } from '../core/models/turno.model'; 
 
 @Injectable({
   providedIn: 'root'

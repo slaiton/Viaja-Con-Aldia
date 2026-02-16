@@ -1,13 +1,13 @@
 import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from '../core/services/user.service';
+import { UserService } from '../../core/services/user.service';
 import { AlertController } from '@ionic/angular';
-import { PhotoService } from '../core/services/photo.service';
+import { PhotoService } from '../../core/services/photo.service';
 import { log } from 'console';
-import { Foto } from '../core/models/photo.interface';
-import { GlobalService } from '../api/global.service';
-import { environment } from 'src/environments/environment';
+import { Foto } from '../../core/models/photo.interface';
+import { GlobalService } from '../../api/global.service';
+import { environment } from '@env/environment';
 
 
 
