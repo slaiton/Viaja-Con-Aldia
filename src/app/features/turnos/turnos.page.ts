@@ -15,6 +15,7 @@ import { InAppReview } from '@capacitor-community/in-app-review';
 import { AuthService } from '@core/services/auth.service';
 import { LocalNotificationService } from '@core/services/local-notification.service';
 import { AlertService } from '@core/services/alert.service';
+import { StorageService } from '@core/services/storage.service';
 
 
 
@@ -40,7 +41,7 @@ export class TurnosPage implements OnInit {
     private formBuilder: FormBuilder,
     private geolocation: Geolocation,
     private geodata: GeodataService,
-    private cookies: CookieService,
+    private storage: StorageService,
     private alertController: AlertController,
     private loading: LoadingController,
     private userService: UserService,
@@ -166,7 +167,7 @@ export class TurnosPage implements OnInit {
           .toLowerCase();
 
 
-        const placa = localStorage.getItem("placa")?.toUpperCase();
+        const placa = this.storage.get<string>("placa")?.toUpperCase();
 
         const turno = {
           "placa": placa,

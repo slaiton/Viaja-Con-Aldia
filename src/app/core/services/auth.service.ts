@@ -8,6 +8,7 @@ import { CookieService } from "ngx-cookie-service";
 import { User } from "@models/user.model";
 import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { LoadingController, MenuController } from '@ionic/angular';
+import { StorageService } from './storage.service';
 
 
 
@@ -22,6 +23,7 @@ export class AuthService {
   constructor(
     private menu: MenuController,
     private http: HttpClient,
+    private storage: StorageService,
     private cookies: CookieService,
     private router: Router,
    private loading: LoadingController) { }
@@ -32,10 +34,10 @@ export class AuthService {
   }
 
   getUser(): Observable<any>{
-    // console.log(localStorage.getItem("placa"));
+    // console.log(this.storage.get<string>("placa"););
 
     const params = new HttpParams({
-      fromString: 'placa='+localStorage.getItem("placa")
+      fromString: 'placa='+this.storage.get<string>("placa")
     });
 
     const headers = new HttpHeaders({
@@ -52,7 +54,7 @@ export class AuthService {
   getUser3sL(token:any):Promise<any> {
 
     const params = new HttpParams({
-      fromString: 'cedula='+localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
+      fromString: 'cedula='+this.storage.get<string>("conductor") + '&placa=' + this.storage.get<string>("placa")
     });
 
     const headers = new HttpHeaders({
@@ -74,11 +76,11 @@ export class AuthService {
   }
 
   setToken(token: any) {
-    localStorage.setItem("token", token);
+    this.storage.set('token', token);
   }
 
   getToken() {
-    return localStorage.getItem("token");
+    return this.storage.get<string>("token");
   }
 
 tokenValidate(jsonToken:any) :Observable<any> {
@@ -112,8 +114,9 @@ delToken(jsonToken:any) :Observable<any>
     this.delToken(jsontoken).subscribe(
       (data:any) => {
         loadingData.dismiss();
-        localStorage.removeItem("token");
-        localStorage.removeItem("placa");
+        this.storage.remove("token");
+        this.storage.remove("placa");
+        this.storage.remove("conductor");
         this.menu.enable(false);
         // this.router.navigate(['/login']);
         location.href = '/login'

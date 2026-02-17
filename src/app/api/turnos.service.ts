@@ -3,7 +3,6 @@ import { LocalNotificationService } from '../core/services/local-notification.se
 import { GeodataService } from './geodata.service';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { AlertService } from '../core/services/alert.service';
-import { HomePage } from '../features/home/home.page';
 import { Router } from '@angular/router';
 import { Turno } from '../core/models/turno.model'; 
 

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 
 @Injectable({
@@ -7,24 +8,48 @@ import { AlertController } from '@ionic/angular';
 export class AlertService {
 
   constructor(
-    private alert: AlertController
+    private alert: AlertController,
+    private router: Router
   ) { }
 
-  
-  async presentAlert(
-    title: String,
-    subheader: String,
-    desc: String,
-    botton: String
-  ) {
+
+  private async createAlert(options: {
+    title: string;
+    subheader: string;
+    desc: string;
+    buttons: any[];
+    backdropDismiss?: boolean;
+  }) {
     const alert = await this.alert.create({
-      header: '' + title,
-      subHeader: '' + subheader,
-      message: '' + desc,
-      buttons: ['' + botton],
+      header: options.title,
+      subHeader: options.subheader,
+      message: options.desc,
+      buttons: options.buttons,
+      backdropDismiss: options.backdropDismiss ?? true
     });
 
     await alert.present();
+    return alert;
+  }
+
+
+  async presentAlert(
+    title: string,
+    subheader: string,
+    desc: string,
+    botton: string
+  ) {
+    return this.createAlert({
+      title,
+      subheader,
+      desc,
+      buttons: [
+        {
+          text: botton,
+          role: 'confirm'
+        }
+      ]
+    });
   }
 
   async presentAlertRedirect(
@@ -32,36 +57,41 @@ export class AlertService {
     subheader: string,
     desc: string,
     button: string,
-    redirectTo?: string // nuevo parámetro opcional
+    redirectTo?: string
   ) {
-    const alert = await this.alert.create({
-      header: title,
-      subHeader: subheader,
-      message: desc,
-      buttons: [button],
+    const alert = await this.createAlert({
+      title,
+      subheader,
+      desc,
+      buttons: [
+        {
+          text: button,
+          role: 'confirm'
+        }
+      ]
     });
-  
-    await alert.present();
-  
+
     await alert.onDidDismiss();
-  
+
     if (redirectTo) {
-      location.href = redirectTo;
-      // this.router.navigateByUrl(redirectTo);
+      this.router.navigateByUrl(redirectTo);
     }
   }
 
-    async presentAlertButtons(title: String, subheader: String, desc: String, p0: string, buttons: { text: string; handler: () => void; }[]) {
-    const alert = await this.alert.create({
-      header: '' + title,
-      subHeader: '' + subheader,
-      message: '' + desc,
-      buttons: buttons,
+  async presentAlertButtons(
+    title: string,
+    subheader: string,
+    desc: string,
+    p0: string,
+    buttons: { text: string; handler: () => void }[]
+  ) {
+    return this.createAlert({
+      title,
+      subheader,
+      desc,
+      buttons,
       backdropDismiss: false
     });
-
-    await alert.present();
   }
-  
 
 }

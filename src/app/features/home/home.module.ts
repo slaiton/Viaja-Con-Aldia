@@ -7,7 +7,7 @@ import { IonicModule } from '@ionic/angular';
 import { HomePageRoutingModule } from './home-routing.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { HomePage } from './home.page';
+import { HomePage } from './pages/home.page';
 import { RouterModule } from '@angular/router';
 
 

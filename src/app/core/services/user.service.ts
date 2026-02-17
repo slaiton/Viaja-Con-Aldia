@@ -6,6 +6,7 @@ import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { CookieService } from "ngx-cookie-service";
 import { User } from "../models/user.model";
 import { MenuController } from '@ionic/angular';
+import { StorageService } from './storage.service';
 
 
 
@@ -249,7 +250,7 @@ export class UserService {
   constructor(
     private menu: MenuController,
     private http: HttpClient,
-    private cookies: CookieService,
+    private storage: StorageService,
     private router: Router) { }
 
   login(user: User): Observable<any> {
@@ -257,7 +258,7 @@ export class UserService {
   }
 
   getPlaca() {
-    const placa = localStorage.getItem("placa");
+    const placa =this.storage.get('placa');
     return placa ? placa : null;
   }
 
@@ -268,7 +269,7 @@ export class UserService {
   getUser(): Observable<any> {
 
     const params = new HttpParams({
-      fromString: 'placa=' + localStorage.getItem("placa") + '&digitales=true'
+      fromString: 'placa=' +this.storage.get('placa') + '&digitales=true'
     });
 
     const headers = new HttpHeaders({
@@ -355,7 +356,7 @@ export class UserService {
 
   getFechas(token: any): Promise<any> {
     const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
+      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
     });
 
     const headers = new HttpHeaders({
@@ -380,7 +381,7 @@ export class UserService {
   getTercero3sL(token: any): Promise<any> {
 
     const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' + localStorage.getItem("placa")
+      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
     });
 
     const headers = new HttpHeaders({
@@ -536,7 +537,7 @@ export class UserService {
       .toLowerCase();
 
 
-    const placa = localStorage.getItem("placa")?.toUpperCase();
+    const placa = this.storage.get('placa')
     const turno = {
       "view": "enturnamiento",
       "params": {
@@ -563,7 +564,7 @@ export class UserService {
 
   getTurnoUser(): Promise<any> {
 
-    const placa = localStorage.getItem("placa")?.toUpperCase();
+    const placa =this.storage.get('placa')
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
       'user': 'USUSEGINT',
@@ -621,12 +622,12 @@ export class UserService {
   }
 
   getItem(item: any) {
-    const itemm = localStorage.getItem(item);
+    const itemm = this.storage.get<string>(item);
     return itemm ? itemm : null;
   }
 
   getToken() {
-    const token = localStorage.getItem("token");
+    const token = this.storage.get<string>('token');
     return token ? token : null;
   }
 

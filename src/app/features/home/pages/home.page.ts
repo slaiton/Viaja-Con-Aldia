@@ -1,25 +1,26 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { UserService } from '../../core/services/user.service';
+import { UserService } from '../../../core/services/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { log } from 'console';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertController, IonModal, LoadingController, ModalController, Platform } from '@ionic/angular';
-import { GeodataService } from '../../api/geodata.service';
-import { AppComponent } from '../../app.component';
+import { GeodataService } from '../../../api/geodata.service';
+import { AppComponent } from '../../../app.component';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { PhotoService } from '../../core/services/photo.service';
+import { PhotoService } from '../../../core/services/photo.service';
 import { AuthService } from '@core/services/auth.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Browser } from '@capacitor/browser';
 import { environment } from '@env/environment';
-import { NotificationService } from '../../api/notificaciones.service';
+import { NotificationService } from '../../../api/notificaciones.service';
 import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
-import { LocalNotificationService } from '../../core/services/local-notification.service';
-import { AlertService } from '../../core/services/alert.service';
-import { TurnosService } from '../../api/turnos.service';
-import { Turno } from '../../core/models/turno.model';
+import { LocalNotificationService } from '../../../core/services/local-notification.service';
+import { AlertService } from '../../../core/services/alert.service';
+import { TurnosService } from '../../../api/turnos.service';
+import { Turno } from '../../../core/models/turno.model';
 import { alertCircleOutline } from 'ionicons/icons';
-import { GlobalService } from '../../api/global.service';
+import { GlobalService } from '../../../api/global.service';
+import { StorageService } from '@core/services/storage.service';
 
 
 @Component({
@@ -120,7 +121,7 @@ export class HomePage implements OnInit {
     public globalService: GlobalService,
     public auth: AuthService,
     private router: Router,
-    private modalController: ModalController,
+    private storage: StorageService,
     private photo: PhotoService,
     private formBuilder: FormBuilder,
     private geodata: GeodataService,
@@ -146,16 +147,15 @@ export class HomePage implements OnInit {
       nuevo: [false, [Validators.required]],
     });
 
-
-    this.token = this.userService.getToken();
-    this.permissionStatus = this.userService.getItem('permissionNotify');
-    this.placa = this.userService.getPlaca();
+    this.token = this.storage.get('token');
+    this.permissionStatus = this.storage.get('permissionNotify');
+    this.placa = this.storage.get('placa');
     this.placaLetras = this.placa.substr(0, 3);
     this.placaNum = this.placa.substr(3, 5);
   }
 
 
-  async ngOnInit() {
+  async ngOnInit() {    
 
     this.initializeApp()
 
@@ -197,8 +197,8 @@ export class HomePage implements OnInit {
 
 
       if (err.status == 401) {
-        this.loadingData.dismiss()
-        this.auth.logout()
+        // this.loadingData.dismiss()
+        // this.auth.logout()
       } else {
 
         this.estadoBoton = 'Error al cargar.. Deslice para recargar..'

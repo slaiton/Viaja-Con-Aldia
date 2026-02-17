@@ -93,7 +93,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
 
-    // console.log(localStorage.getItem("placa"));
+    // console.log(this.storage.get<string>("placa"););
     this.token = this.auth.getToken();
 
     const network = await Network.addListener('networkStatusChange', status => {
