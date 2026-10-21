@@ -9,6 +9,7 @@ import { User } from "@models/user.model";
 import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { LoadingController, MenuController } from '@ionic/angular';
 import { StorageService } from './storage.service';
+import { environment } from '@env/environment';
 
 
 
@@ -42,13 +43,13 @@ export class AuthService {
 
     const headers = new HttpHeaders({
       'Content-Type':'application/json; charset=utf-8',
-      'user':'USUSEGINT',
-      'password':'12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
   const requestOptions = { headers: headers, params: params };
 
-    return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
+    return this.http.get("https://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
   }
 
   getUser3sL(token:any):Promise<any> {

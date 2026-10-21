@@ -7,6 +7,8 @@ import { CookieService } from "ngx-cookie-service";
 import { User } from "../models/user.model";
 import { MenuController } from '@ionic/angular';
 import { StorageService } from './storage.service';
+import { AuthService } from './auth.service';
+import { environment } from '@env/environment';
 
 
 
@@ -251,7 +253,8 @@ export class UserService {
     private menu: MenuController,
     private http: HttpClient,
     private storage: StorageService,
-    private router: Router) { }
+    private router: Router,
+    private auth: AuthService) { }
 
   login(user: User): Observable<any> {
     return this.http.post("https://api.aldialogistica.com/api/auth/login-external", user);
@@ -263,7 +266,7 @@ export class UserService {
   }
 
   getCedula() {
-    return localStorage.getItem("conductor");
+    return this.storage.get<string>("conductor");
   }
 
   getUser(): Observable<any> {
@@ -274,8 +277,8 @@ export class UserService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const requestOptions = { headers: headers, params: params };
@@ -308,13 +311,13 @@ export class UserService {
   getConductor(): Observable<any> {
 
     const params = new HttpParams({
-      fromString: 'documento=' + localStorage.getItem("conductor")
+      fromString: 'documento=' + this.storage.get<string>("conductor")
     });
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
     const requestOptions = { headers: headers, params: params };
 
@@ -330,8 +333,8 @@ export class UserService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const requestOptions = { headers: headers, params: params };
@@ -346,8 +349,8 @@ export class UserService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
     const requestOptions = { headers: headers, params: params };
 
@@ -356,7 +359,7 @@ export class UserService {
 
   getFechas(token: any): Promise<any> {
     const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
+      fromString: 'cedula=' + this.storage.get<string>("conductor") + '&placa=' +this.storage.get('placa')
     });
 
     const headers = new HttpHeaders({
@@ -381,7 +384,7 @@ export class UserService {
   getTercero3sL(token: any): Promise<any> {
 
     const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
+      fromString: 'cedula=' + this.storage.get<string>("conductor") + '&placa=' +this.storage.get('placa')
     });
 
     const headers = new HttpHeaders({
@@ -461,8 +464,8 @@ export class UserService {
   cargaDocumentos(params: any): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const requestOptions = { headers: headers };
@@ -553,8 +556,8 @@ export class UserService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const requestOptions = { headers: headers };
@@ -567,8 +570,8 @@ export class UserService {
     const placa =this.storage.get('placa')
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const params = new HttpParams({
@@ -614,11 +617,11 @@ export class UserService {
   }
 
   setToken(token: any) {
-    localStorage.setItem("token", token);
+    this.storage.set('token', token);
   }
 
   setItem(item: any, value: any) {
-    localStorage.setItem(item, value);
+    this.storage.set(item, value);
   }
 
   getItem(item: any) {
@@ -632,11 +635,9 @@ export class UserService {
   }
 
   logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("placa");
-    localStorage.removeItem("conductor");
-    this.router.navigate(['/login']);
-    this.menu.enable(false);
+    // Delega en AuthService: es la única implementación que invalida el
+    // token contra el backend antes de limpiar la sesión local.
+    return this.auth.logout();
   }
 
   reloadComp(user: User) {
@@ -785,8 +786,8 @@ export class UserService {
   postPreoperacionalData(params: any): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
 

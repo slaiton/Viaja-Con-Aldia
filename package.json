@@ -74,6 +74,7 @@
     "@angular/language-service": "^15.0.0",
     "@capacitor/cli": "^7.4.4",
     "@ionic/angular-toolkit": "^10.0.0",
+    "@ionic/cli": "^7.2.1",
     "@types/jasmine": "~4.0.0",
     "@types/node": "^12.11.1",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -94,7 +95,7 @@
   },
   "description": "An Jhoan Laiton project",
   "engines": {
-    "node": "12.x",
+    "node": ">=18.13.0",
     "npm": "*"
   },
   "browser": {

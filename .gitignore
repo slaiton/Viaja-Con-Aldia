@@ -65,4 +65,43 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
-/src/environments/*
+
+# Environment files contain live API credentials — never commit them.
+# Copy src/environments/environment.example.ts to create your local ones.
+/src/environments/environment.ts
+/src/environments/environment.prod.ts
+.env
+.env.*
+!.env.example
+
+# Build web (lo genera `npm run build`; contiene el bundle compilado)
+/www
+
+# Firma y credenciales nativas: van en los secretos del CI, nunca en git
+*.keystore
+*.jks
+keystore.properties
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+google-services.json
+GoogleService-Info.plist
+
+# Binarios de distribución
+*.apk
+*.aab
+*.ipa
+*.xcarchive
+
+# Proyecto Android nativo cuando se agregue con `npx cap add android`
+/android/app/build
+/android/build
+/android/.gradle
+/android/local.properties
+/android/app/src/main/assets/public
+/android/app/src/main/assets/capacitor.config.json
+
+# Claude Code: la configuración del proyecto se versiona; la personal no
+.claude/settings.local.json
+.claude/worktrees/

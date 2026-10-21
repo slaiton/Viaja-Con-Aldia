@@ -7,6 +7,7 @@ import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { Geolocation } from '@capacitor/geolocation';
 
 import { AuthService } from '@core/services/auth.service';
+import { environment } from '@env/environment';
 
 
 
@@ -111,8 +112,8 @@ export class GeodataService {
   turnoCreacion(turno: any): Promise<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
 
     const requestOptions = { headers: headers };
@@ -136,6 +137,9 @@ export class GeodataService {
     });
 
     const requestOptions = { headers: headers };
+    // SEGURIDAD: este host:puerto no sirve HTTPS hoy (verificado: la conexión TLS
+    // falla, HTTP responde). Credenciales viajan en claro. Requiere que backend/infra
+    // habilite TLS en siat.aldialogistica.com:8000 antes de poder forzar https:// aqui.
     return this.http.post("http://siat.aldialogistica.com:8000/api/auth/login", user, requestOptions)
   }
 

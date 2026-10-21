@@ -5,6 +5,7 @@ import { Preferences } from '@capacitor/preferences';
 import { Foto } from '../models/photo.interface'
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Observable } from 'rxjs';
+import { environment } from '@env/environment';
 
 
 
@@ -26,8 +27,8 @@ export class PhotoService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
     const requestOptions = { headers: headers, params: params };
 
@@ -46,8 +47,8 @@ export class PhotoService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json; charset=utf-8',
-      'user': 'USUSEGINT',
-      'password': '12249'
+      'user': environment.aldia.authUser,
+      'password': environment.aldia.authPassword
     });
     const requestOptions = { headers: headers, params: params };
 

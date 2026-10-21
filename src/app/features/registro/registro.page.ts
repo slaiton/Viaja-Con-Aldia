@@ -1003,8 +1003,8 @@ export class RegistroPage implements OnInit {
       (data: any) => {
         this.loadingData.dismiss();
         this.user.setToken(data.access_token);
-        localStorage.setItem('conductor', this.conductor.cedula);
-        localStorage.setItem('placa', this.vehiculo.placa);
+        this.user.setItem('conductor', this.conductor.cedula);
+        this.user.setItem('placa', this.vehiculo.placa);
 
         this.user.onLoginChange.next(data.access_token);
         this.presentAlertButtons("Exito", "Usuario Creado", "Inicia Sesion", "Cerrar", buttons);

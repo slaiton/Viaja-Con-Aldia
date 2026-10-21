@@ -1,0 +1,1419 @@
+<title>Plan de refactor Viaja con Aldia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: informe de una columna con índice lateral fijo en escritorio; las maquetas van en filas teléfono + notas que se apilan en móvil */
+:root{
+  --bg:#F4F7FA; --surface:#FFFFFF; --surface-2:#E9EFF5; --fg:#0E1E2E; --muted:#526273; --line:#D3DCE6;
+  --accent:#0B72B9; --accent-soft:#E1EEF8; --accent-ink:#FFFFFF;
+  --crit:#B42318; --crit-bg:#FDECEA; --warn:#8A5300; --warn-bg:#FFF1D6; --ok:#1A7037; --ok-bg:#E4F3E8; --low:#526273; --low-bg:#E9EFF5;
+  --bar:#0B72B9; --target:#C2410C;
+  --bezel:#101A24;
+  --f-display:'Archivo','Arial Narrow',system-ui,sans-serif;
+  --f-body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  /* Paleta de la app propuesta: fija en claro, es la interfaz que se está diseñando */
+  --app-bg:#F3F6F9; --app-surface:#FFFFFF; --app-ink:#0D2236; --app-muted:#5B6B7B; --app-line:#DCE3EA; --app-neutral-bg:#E8EDF2;
+  --app-primary:#0B72B9; --app-primary-soft:#E3EFF8; --app-navy:#0D2A44; --app-on:#FFFFFF;
+  --app-ok:#1A7F37; --app-ok-bg:#E5F4EA; --app-warn:#9A5B00; --app-warn-fill:#F2A900; --app-warn-bg:#FFF2D6; --app-crit:#D3302F; --app-crit-bg:#FDE9E8;
+  --plate-bg:#FFFFFF; --plate-ink:#111111; --scrim:rgba(13,34,54,.45);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B151F; --surface:#111F2D; --surface-2:#172A3C; --fg:#E4ECF4; --muted:#93A4B6; --line:#233649;
+    --accent:#5AB0EC; --accent-soft:#12324A; --accent-ink:#06121D;
+    --crit:#FF8A80; --crit-bg:#3B1714; --warn:#F5BE5B; --warn-bg:#33260F; --ok:#6FD394; --ok-bg:#10301C; --low:#A9B8C8; --low-bg:#1C3044;
+    --bar:#5AB0EC; --target:#FB923C; --bezel:#02070C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B151F; --surface:#111F2D; --surface-2:#172A3C; --fg:#E4ECF4; --muted:#93A4B6; --line:#233649;
+  --accent:#5AB0EC; --accent-soft:#12324A; --accent-ink:#06121D;
+  --crit:#FF8A80; --crit-bg:#3B1714; --warn:#F5BE5B; --warn-bg:#33260F; --ok:#6FD394; --ok-bg:#10301C; --low:#A9B8C8; --low-bg:#1C3044;
+  --bar:#5AB0EC; --target:#FB923C; --bezel:#02070C;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,.mono{font-family:var(--f-mono);font-size:.84em}
+p code,li code,td code,.refs code{background:var(--surface-2);padding:.08em .35em;border-radius:4px;overflow-wrap:anywhere}
+.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 96px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 32px);align-self:start;display:flex;flex-direction:column;gap:2px;font-size:.88rem}
+.toc .toc-t{font-family:var(--f-display);font-stretch:85%;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;color:var(--muted);margin-bottom:8px}
+.toc a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--surface-2)}
+main{min-width:0;display:flex;flex-direction:column;gap:88px}
+@media (max-width:960px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:28px;padding-block:28px 72px}
+  .toc{position:static;flex-direction:row;flex-wrap:wrap;gap:6px}
+  .toc .toc-t{width:100%;margin-bottom:0}
+  .toc a{border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+  main{gap:64px}
+}
+
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,1.2rem + 3.6vw,3.9rem);font-weight:800;font-stretch:78%;line-height:.98;letter-spacing:-.01em}
+h2{font-size:clamp(1.7rem,1.3rem + 1.3vw,2.35rem);font-weight:760;font-stretch:84%;line-height:1.05}
+h3{font-size:1.3rem;font-weight:700;font-stretch:90%;line-height:1.2}
+h4{margin:0;font-size:.74rem;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--muted)}
+.eyebrow-t{font-family:var(--f-display);font-stretch:90%;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.74rem;color:var(--accent)}
+section{display:flex;flex-direction:column;gap:22px;scroll-margin-top:24px}
+.prose{max-width:68ch;display:flex;flex-direction:column;gap:12px}
+.prose p,.prose ul,.prose ol{margin:0}
+.lead{font-size:1.14rem;line-height:1.6;max-width:66ch;margin:0}
+.muted{color:var(--muted)}
+
+/* Cabecera */
+.head{display:flex;flex-direction:column;gap:18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.86rem;color:var(--muted)}
+.meta span{display:inline-flex;gap:6px;align-items:center}
+.meta b{color:var(--fg);font-weight:700}
+
+/* Cifras */
+.figs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.fig{padding:16px 14px 14px 0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fig + .fig{padding-left:14px;border-left:1px solid var(--line)}
+.fig b{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:2.1rem;line-height:1;font-variant-numeric:tabular-nums}
+.fig span{font-size:.84rem;color:var(--muted);line-height:1.35}
+@media (max-width:860px){.figs{grid-template-columns:repeat(3,minmax(0,1fr))}.fig:nth-child(4){border-left:0;padding-left:0}.fig:nth-child(n+4){border-top:1px solid var(--line)}}
+@media (max-width:480px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}.fig:nth-child(n){border-left:0;padding-left:0}.fig:nth-child(even){border-left:1px solid var(--line);padding-left:14px}.fig:nth-child(n+3){border-top:1px solid var(--line)}}
+
+.prio{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;counter-reset:p}
+.prio li{counter-increment:p;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.prio li::before{content:counter(p);font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:1.6rem;line-height:1;color:var(--accent)}
+.prio b{display:block}
+.prio span{color:var(--muted);font-size:.95rem}
+
+/* Positivos */
+.good{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 32px}
+.good li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+.good li .i{color:var(--ok);font-size:20px;margin-top:2px}
+.good li b{display:block}
+.good li span{color:var(--muted);font-size:.94rem}
+@media (max-width:720px){.good{grid-template-columns:minmax(0,1fr)}}
+
+/* Hallazgos */
+.cat{display:flex;flex-direction:column;gap:0}
+.cat > h3{padding-bottom:10px;border-bottom:2px solid var(--fg);margin-top:8px}
+.find{display:grid;grid-template-columns:86px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.find h5{margin:0 0 4px;font-size:1.02rem;font-weight:700}
+.find p{margin:0;max-width:72ch;color:var(--fg)}
+.find .fix{margin-top:6px;color:var(--muted);font-size:.94rem}
+.find .fix b{color:var(--fg)}
+.refs{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;font-size:.92rem}
+.sev{align-self:start;justify-self:start;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;white-space:nowrap}
+.sev.crit{background:var(--crit-bg);color:var(--crit)}
+.sev.high{background:var(--warn-bg);color:var(--warn)}
+.sev.mid{background:var(--accent-soft);color:var(--accent)}
+.sev.low{background:var(--low-bg);color:var(--low)}
+@media (max-width:560px){.find{grid-template-columns:minmax(0,1fr);gap:6px}}
+
+/* Gráfico de tamaño */
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:6px}
+.chart-h{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline;margin-bottom:8px}
+.chart-h b{font-size:1rem}
+.chart-h span{font-size:.84rem;color:var(--muted)}
+.bars{position:relative;display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr) 3.4rem;gap:12px;align-items:center;font-size:.84rem}
+.bar .lbl{font-family:var(--f-mono);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg)}
+.bar .trk{position:relative;height:14px}
+.bar .trk i{position:absolute;inset:0 auto 0 0;background:var(--bar);border-radius:0 3px 3px 0}
+.bar .trk::after{content:"";position:absolute;top:-4px;bottom:-4px;left:11.61%;border-left:2px dashed var(--target)}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:10px;background:var(--bar);border-radius:2px}
+.legend i.t{width:0;height:14px;border-left:2px dashed var(--target);background:none;border-radius:0}
+@media (max-width:560px){.bar{grid-template-columns:minmax(0,1fr) 3rem;row-gap:2px}.bar .lbl{grid-column:1 / -1}}
+
+/* Tablas */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;background:var(--surface-2);white-space:nowrap}
+.dup th:not(:first-child),.dup td:not(:first-child){text-align:center;width:62px}
+.dup td:first-child{min-width:260px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--accent)}
+.dup td.n{font-variant-numeric:tabular-nums;font-weight:700}
+.map td:first-child{width:44%}
+.map td.del{color:var(--crit)}
+
+/* Diagrama de capas */
+.arch{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.arch{grid-template-columns:minmax(0,1fr)}}
+.layers{display:flex;flex-direction:column;align-items:stretch}
+.layer{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.layer b{font-size:.98rem}
+.layer span{font-size:.86rem;color:var(--muted)}
+.layer code{font-size:.76rem;color:var(--accent);background:none;padding:0}
+.layer.hi{border-color:var(--accent);background:var(--accent-soft)}
+.layer.srv{border-style:dashed}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.arrow{height:26px;display:flex;justify-content:center;color:var(--muted)}
+.arrow svg{width:16px;height:26px}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:r}
+.rules li{counter-increment:r;display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;font-size:.95rem}
+.rules li::before{content:counter(r);font-family:var(--f-mono);font-size:.8rem;font-weight:600;color:var(--accent);border:1.5px solid var(--accent);border-radius:50%;width:24px;height:24px;display:grid;place-items:center}
+
+pre{margin:0;font-family:var(--f-mono);font-size:.8rem;line-height:1.6;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;color:var(--fg)}
+pre .c{color:var(--muted)}
+pre .k{color:var(--accent);font-weight:600}
+.codes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.codes figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.codes figcaption{font-size:.86rem;color:var(--muted)}
+.codes figcaption b{color:var(--fg)}
+@media (max-width:860px){.codes{grid-template-columns:minmax(0,1fr)}}
+
+/* Fases */
+.phases{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.phase{display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;padding:22px 0;border-top:1px solid var(--line)}
+.phase:last-child{border-bottom:1px solid var(--line)}
+.phase .ph-n{font-family:var(--f-display);font-stretch:78%;font-weight:800;font-size:2.4rem;line-height:.9;color:var(--accent)}
+.phase .ph-n small{display:block;font-size:.72rem;font-stretch:100%;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px}
+.phase h3{margin-bottom:8px}
+.phase ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px;max-width:74ch}
+.done-when{margin-top:10px;font-size:.92rem;background:var(--ok-bg);color:var(--ok);padding:8px 12px;border-radius:8px;display:inline-block}
+.done-when b{font-weight:700}
+@media (max-width:560px){.phase{grid-template-columns:minmax(0,1fr);gap:8px}}
+
+/* Principios y navegación */
+.princ{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.princ div{border-top:2px solid var(--accent);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.princ b{font-size:.98rem}
+.princ span{font-size:.88rem;color:var(--muted)}
+@media (max-width:960px){.princ{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.princ{grid-template-columns:minmax(0,1fr)}}
+.nav{display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.nav-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:start}
+.nav-row > span{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:6px}
+.nav-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nd{border:1.5px solid var(--line);border-radius:8px;padding:5px 10px;font-size:.88rem;background:var(--bg)}
+.nd.tab{border-color:var(--accent);color:var(--accent);font-weight:700}
+.nd small{color:var(--muted);font-size:.78rem}
+.nav-flow .to{color:var(--muted)}
+.tabgrp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%}
+.tabgrp > div{display:flex;flex-direction:column;gap:6px}
+@media (max-width:720px){.nav-row{grid-template-columns:minmax(0,1fr)}.tabgrp{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Filas de pantallas */
+.screens{display:flex;flex-direction:column;gap:64px}
+.srow{display:grid;grid-template-columns:300px minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:760px){.srow{grid-template-columns:minmax(0,1fr);justify-items:center;gap:22px}.srow .notes{justify-self:stretch}}
+.notes{display:flex;flex-direction:column;gap:12px;min-width:0;padding-top:8px}
+.notes .route{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.notes .route b{color:var(--accent);font-weight:600}
+.notes h3{font-size:1.6rem;font-stretch:84%}
+.notes p{margin:0;max-width:62ch}
+.notes ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:5px;max-width:64ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags code{font-size:.78rem;border:1px solid var(--line);background:var(--surface);padding:3px 8px;border-radius:6px;color:var(--fg)}
+.variants{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:2px}
+@media (max-width:1100px){.variants{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mini{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;font-family:var(--f-body);color:var(--app-on);font-size:.8rem;line-height:1.3}
+.mini .ey{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.85}
+.mini b{font-family:var(--f-display);font-stretch:85%;font-size:1.15rem;line-height:1.05}
+.mini.ok{background:var(--app-ok)} .mini.pri{background:var(--app-primary)} .mini.crit{background:var(--app-crit)}
+.mini.warn{background:var(--app-warn-fill);color:var(--app-ink)}
+
+/* ---------- Teléfono ---------- */
+.phone{width:300px;max-width:100%;background:var(--bezel);border-radius:44px;padding:10px;box-shadow:0 0 0 1px var(--line),0 24px 48px -24px rgba(13,34,54,.55);flex:none}
+.scr{position:relative;height:620px;border-radius:35px;overflow:hidden;background:var(--app-bg);color:var(--app-ink);font-family:var(--f-body);font-size:12px;line-height:1.35;display:flex;flex-direction:column}
+.scr b{font-weight:700}
+.sb{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:4px 24px 0;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.sb .notch{width:76px;height:22px;background:var(--bezel);border-radius:12px}
+.ab{flex:none;display:flex;align-items:center;gap:8px;padding:6px 16px 10px}
+.ab.between{justify-content:space-between}
+.ab h3{font-family:var(--f-body);font-size:17px;font-weight:700;letter-spacing:0;font-stretch:100%}
+.ab .i{font-size:20px;color:var(--app-primary)}
+.ab .sub{display:block;color:var(--app-muted);font-size:10.5px}
+.bd{flex:1;min-height:0;overflow:hidden;padding:2px 14px 12px;display:flex;flex-direction:column;gap:9px}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);background:var(--app-surface);border-top:1px solid var(--app-line);padding:7px 4px 16px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;color:var(--app-muted);position:relative}
+.tab .i{font-size:20px}
+.tab.on{color:var(--app-primary);font-weight:700}
+.tab em{position:absolute;top:-3px;left:calc(50% + 6px);min-width:14px;height:14px;border-radius:7px;background:var(--app-crit);color:var(--app-on);font-style:normal;font-size:8.5px;font-weight:700;display:grid;place-items:center;padding:0 3px}
+.footbar{flex:none;display:flex;gap:8px;padding:10px 14px 18px;background:var(--app-surface);border-top:1px solid var(--app-line)}
+.footbar .btn{flex:1}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:12px;font-weight:700;font-size:12.5px;background:var(--app-primary);color:var(--app-on);flex:none}
+.btn .i{font-size:15px}
+.btn.ghost{background:var(--app-surface);color:var(--app-primary);border:1.5px solid var(--app-line)}
+.btn.off{background:var(--app-neutral-bg);color:var(--app-muted)}
+.btn.onfill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:var(--app-on);height:34px;font-size:12px}
+.btn.sm{height:32px;font-size:11.5px;border-radius:10px}
+.link{color:var(--app-primary);font-weight:700;font-size:11.5px;white-space:nowrap}
+.mm{color:var(--app-muted);font-size:10.5px;display:block}
+.m-h{font-family:var(--f-body);font-size:19px;font-weight:700;letter-spacing:0;font-stretch:100%;line-height:1.2}
+.m-sub{margin:0;color:var(--app-muted);font-size:12px}
+.m-note{margin:0;color:var(--app-muted);font-size:10.5px;display:flex;gap:6px;align-items:flex-start}
+.m-note .i{font-size:13px;margin-top:1px}
+.m-note.okc{color:var(--app-ok)}
+.sec{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--app-muted);margin-top:3px}
+.grow{flex:1;min-width:0}
+.grow b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.list{border-radius:14px;overflow:hidden;border:1px solid var(--app-line);background:var(--app-line);display:flex;flex-direction:column;gap:1px;flex:none}
+.row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--app-surface);min-height:44px}
+.row > .i{font-size:15px;color:var(--app-muted)}
+.row .k{color:var(--app-muted);width:66px;font-size:11px}
+.row .r{text-align:right}
+.row.danger{color:var(--app-crit);font-weight:700}
+.row.danger .i{color:var(--app-crit)}
+.ord{width:24px;height:24px;border-radius:7px;background:var(--app-navy);color:var(--app-on);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+.pos{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:22px;line-height:1;color:var(--app-navy);font-variant-numeric:tabular-nums}
+.pos small{font-family:var(--f-body);font-size:9px;font-weight:700;color:var(--app-muted);margin-right:2px;vertical-align:3px}
+.ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+.ic .i{font-size:16px}
+.ic.ok{background:var(--app-ok-bg);color:var(--app-ok)} .ic.crit{background:var(--app-crit-bg);color:var(--app-crit)}
+.ic.warn{background:var(--app-warn-bg);color:var(--app-warn)} .ic.pri{background:var(--app-primary-soft);color:var(--app-primary)}
+.ic.neu{background:var(--app-neutral-bg);color:var(--app-muted)}
+.chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap;flex:none;align-self:center}
+.chip.ok{background:var(--app-ok-bg);color:var(--app-ok)} .chip.warn{background:var(--app-warn-bg);color:var(--app-warn)}
+.chip.crit{background:var(--app-crit-bg);color:var(--app-crit)} .chip.neu{background:var(--app-neutral-bg);color:var(--app-muted)}
+.chip.pri{background:var(--app-primary-soft);color:var(--app-primary)}
+.plate{display:inline-flex;flex-direction:column;align-items:center;background:var(--plate-bg);color:var(--plate-ink);border:2px solid var(--plate-ink);border-radius:5px;padding:1px 7px 1px;line-height:1;flex:none}
+.plate b{font-family:var(--f-display);font-stretch:72%;font-weight:800;font-size:16px;letter-spacing:.05em}
+.plate small{font-size:5.5px;letter-spacing:.16em;font-weight:700;margin-top:1px}
+.plate.lg b{font-size:22px}
+.plate.lg small{font-size:6.5px}
+.ava{width:34px;height:34px;border-radius:50%;background:var(--app-navy);color:var(--app-on);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none;position:relative}
+.ava.lg{width:68px;height:68px;font-size:22px}
+.ava .cam{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--app-primary);color:var(--app-on);display:grid;place-items:center;border:2px solid var(--app-bg)}
+.ava .cam .i{font-size:12px}
+.who{display:flex;align-items:center;gap:9px}
+.who b{display:block;font-size:14px}
+
+.hero{border-radius:16px;padding:13px 14px 12px;color:var(--app-on);background:var(--app-ok);display:flex;flex-direction:column;gap:5px;flex:none}
+.hero .ey{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;opacity:.85;font-weight:700}
+.hero .big{font-family:var(--f-display);font-size:28px;font-weight:800;font-stretch:82%;line-height:1}
+.hero .hl{display:flex;align-items:center;gap:6px;font-size:11.5px}
+.hero .hl .i{font-size:13px;opacity:.9}
+.hero .btn{margin-top:4px}
+
+.banner{display:flex;align-items:center;gap:10px;border-radius:12px;padding:9px 11px;flex:none}
+.banner > .i{font-size:17px}
+.banner.warn{background:var(--app-warn-bg);color:var(--app-warn)}
+.banner.warn .grow b{color:var(--app-ink)}
+.banner.neu{background:var(--app-surface);border:1px dashed var(--app-line);color:var(--app-muted)}
+.banner.neu .grow b{color:var(--app-ink)}
+.banner .grow span{font-size:10.5px;display:block}
+.offline{flex:none;display:flex;align-items:center;gap:10px;background:var(--app-navy);color:var(--app-on);padding:8px 16px}
+.offline .i{font-size:16px}
+.offline .grow b{font-size:12px}
+.offline .grow span{font-size:10.5px;opacity:.8}
+.offline .link{color:var(--app-on);text-decoration:underline}
+
+.field{display:flex;flex-direction:column;gap:5px;flex:none}
+.field label{font-size:10.5px;font-weight:700;color:var(--app-muted)}
+.input{height:42px;border-radius:11px;border:1.5px solid var(--app-line);background:var(--app-surface);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;font-size:14px;font-variant-numeric:tabular-nums}
+.input.focus{border-color:var(--app-primary);box-shadow:0 0 0 3px var(--app-primary-soft)}
+.input .ph{color:var(--app-muted);font-size:11px}
+.platetxt{font-family:var(--f-display);font-stretch:72%;font-weight:800;font-size:19px;letter-spacing:.08em}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--app-neutral-bg);border-radius:11px;padding:3px;gap:3px;flex:none}
+.seg span{height:32px;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:9px;font-weight:700;font-size:11.5px;color:var(--app-muted)}
+.seg span.on{background:var(--app-surface);color:var(--app-ink);box-shadow:0 1px 2px rgba(13,34,54,.18)}
+.seg em{font-style:normal;min-width:15px;height:15px;border-radius:8px;background:var(--app-crit);color:var(--app-on);font-size:9px;display:grid;place-items:center;padding:0 3px}
+.sep{height:1px;background:var(--app-line);flex:none}
+
+/* Pantallas específicas */
+.login .bd{padding-top:18px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:42px;height:42px;border-radius:12px;background:var(--app-primary);color:var(--app-on);display:grid;place-items:center}
+.mark .i{font-size:22px}
+.brand b{display:block;font-size:15px}
+.m-foot{margin:auto 0 0;text-align:center;color:var(--app-muted);font-size:10px}
+.dim{height:78px;flex:none;background:var(--scrim);position:relative}
+.dim::before{content:"";position:absolute;left:14px;right:14px;top:6px;height:90px;border-radius:16px;background:var(--app-ok);opacity:.55}
+.sheet{flex:1;min-height:0;background:var(--app-surface);border-radius:20px 20px 0 0;margin-top:-14px;position:relative;padding:8px 16px 18px;display:flex;flex-direction:column;gap:10px}
+.handle{width:38px;height:4px;border-radius:2px;background:var(--app-line);align-self:center}
+.sheet-h{display:flex;justify-content:space-between;align-items:center}
+.sheet-h h3{font-family:var(--f-body);font-size:17px;font-weight:700;font-stretch:100%;letter-spacing:0}
+.sheet-h .i{font-size:18px;color:var(--app-muted)}
+.sheet .list{border-radius:12px}
+.sheet .btn{margin-top:auto}
+.gps{display:flex;align-items:center;gap:10px;background:var(--app-primary-soft);border-radius:12px;padding:9px 12px;color:var(--app-primary)}
+.gps .i{font-size:18px}
+.gps b{display:block;color:var(--app-ink);font-size:13px}
+.prog{display:flex;flex-direction:column;gap:6px;flex:none}
+.prog-t{display:flex;justify-content:space-between;font-size:11.5px}
+.prog-t span{color:var(--app-muted);font-variant-numeric:tabular-nums}
+.track{height:7px;border-radius:4px;background:var(--app-neutral-bg);overflow:hidden}
+.track i{display:block;height:100%;background:var(--app-primary);border-radius:4px}
+.qcard{background:var(--app-surface);border:1px solid var(--app-line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;flex:none}
+.qcard .qn{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:13px;color:var(--app-muted)}
+.qcard h4{font-family:var(--f-body);font-size:18px;text-transform:none;letter-spacing:0;color:var(--app-ink);line-height:1.2}
+.qcard p{margin:0;color:var(--app-muted);font-size:11.5px}
+.ans{height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:13.5px;border:2px solid}
+.ans .i{font-size:18px}
+.ans.ok{border-color:var(--app-ok);color:var(--app-ok);background:var(--app-ok-bg)}
+.ans.crit{border-color:var(--app-line);color:var(--app-crit);background:var(--app-surface)}
+.prof{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 6px;text-align:center;flex:none}
+.prof b{font-size:15px;margin-top:6px}
+.doc{background:var(--app-surface);border:1px solid var(--app-line);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;flex:none}
+.doc.crit{border-color:var(--app-crit);box-shadow:0 0 0 3px var(--app-crit-bg)}
+.doc .btn{width:100%}
+.cap{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none}
+.tile{border-radius:14px;border:1.5px dashed var(--app-line);background:var(--app-surface);height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:8px;position:relative}
+.tile .i{font-size:22px;color:var(--app-primary)}
+.tile .t{font-size:10.5px;font-weight:700;color:var(--app-muted)}
+.tile.filled{border-style:solid;border-color:var(--app-ok);justify-content:flex-start;padding:8px}
+.idcard{width:100%;height:72px;border-radius:8px;background:linear-gradient(135deg,#d9e7f3,#c3d7ea);position:relative;overflow:hidden}
+.idcard::before{content:"";position:absolute;left:8px;top:10px;width:24px;height:30px;border-radius:4px;background:#9fb8cf}
+.idcard::after{content:"";position:absolute;left:40px;top:12px;right:10px;height:30px;background:repeating-linear-gradient(#8aa5be 0 3px,transparent 3px 9px);opacity:.8}
+.tile .okmark{position:absolute;right:8px;top:8px;width:20px;height:20px;border-radius:50%;background:var(--app-ok);color:var(--app-on);display:grid;place-items:center}
+.tile .okmark .i{font-size:12px}
+.tile .tl{display:flex;gap:6px;width:100%}
+.tile .tl .btn{flex:1;height:28px;font-size:10.5px;border-radius:8px}
+.veh{background:var(--app-surface);border:1px solid var(--app-line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:3px;flex:none}
+.veh.on{border-color:var(--app-ok);box-shadow:0 0 0 3px var(--app-ok-bg)}
+.veh-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.veh-top > .i{font-size:18px;color:var(--app-muted)}
+.veh b{font-size:12.5px}
+.veh .btn{margin-top:7px}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;flex:none}
+.steps i{height:5px;border-radius:3px;background:var(--app-neutral-bg)}
+.steps i.done{background:var(--app-primary)}
+.steps i.cur{background:linear-gradient(90deg,var(--app-primary) 50%,var(--app-primary-soft) 50%)}
+.stepname{display:flex;justify-content:space-between;font-size:10.5px;color:var(--app-muted);flex:none}
+.stepname b{color:var(--app-ink)}
+.togrow{display:flex;align-items:center;gap:10px;background:var(--app-surface);border:1px solid var(--app-line);border-radius:12px;padding:9px 12px;flex:none}
+.tog{width:38px;height:22px;border-radius:11px;background:var(--app-primary);position:relative;flex:none}
+.tog i{position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--app-on)}
+
+/* Tokens */
+.sw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.sw{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.swatch{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column}
+.swatch i{height:64px;display:block}
+.swatch div{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.swatch b{font-size:.94rem}
+.swatch code{font-size:.76rem;color:var(--muted);background:none;padding:0}
+.swatch span{font-size:.84rem;color:var(--muted)}
+.typescale{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.ts{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:baseline;font-family:var(--f-body)}
+.ts span{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+.next{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.next li{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.next li ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px;font-size:.95rem}
+@media (max-width:720px){.next{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="m9 13 2 2 4-4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.3"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 10h4l3 3v3h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-wifioff" viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 8"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5"/><path d="m14 8 4 4-4 4M18 12H9"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 4.6 3.2 7.7 7.5 9 4.3-1.3 7.5-4.4 7.5-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-gps" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"/></symbol>
+  <symbol id="i-good" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 16 26"><path d="M8 2v20M3 17l5 5 5-5"/></symbol>
+</svg>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Contenido">
+    <span class="toc-t">Contenido</span>
+    <a href="#resumen">Resumen</a>
+    <a href="#positivo">Lo que está bien</a>
+    <a href="#mejorar">Lo que hay que mejorar</a>
+    <a href="#patron">Patrón propuesto</a>
+    <a href="#estructura">Nueva estructura</a>
+    <a href="#plan">Plan por fases</a>
+    <a href="#pantallas">Diseño de pantallas</a>
+    <a href="#tokens">Sistema visual</a>
+    <a href="#siguientes">Siguientes pasos</a>
+  </nav>
+
+  <main>
+    <!-- ============ CABECERA ============ -->
+    <section id="resumen" class="head">
+      <span class="eyebrow-t">Análisis técnico · 21 de octubre de 2026</span>
+      <h1>Plan de refactor Viaja con Aldia</h1>
+      <p class="lead">La app cumple su función y tiene piezas recientes bien hechas: el login, el guard y los servicios base. Pero más de la mitad del código vive en tres pantallas que copian la misma lógica, las credenciales de servicio viajan dentro del APK y el login no verifica la identidad del conductor. La propuesta es cerrar primero la seguridad, después montar una capa de datos única con piezas compartidas, y rehacer registro, perfil y vehículos sobre esa base con un diseño pensado para usarse desde la cabina.</p>
+      <div class="meta">
+        <span><b>Angular 15</b> · Ionic 6 · Capacitor 7</span>
+        <span>Rama <b>main</b> (80dc877) con cambios sin commitear</span>
+        <span>Revisado: <code>src/app</code> completo, configuración y CI</span>
+      </div>
+
+      <div class="figs" role="list">
+        <div class="fig" role="listitem"><b>19.861</b><span>líneas en TS, HTML y SCSS (sin specs)</span></div>
+        <div class="fig" role="listitem"><b>54 %</b><span>del código está en 3 pantallas: registro, datos y vehículo</span></div>
+        <div class="fig" role="listitem"><b>838</b><span>usos de <code>any</code> con <code>strict</code> activado</span></div>
+        <div class="fig" role="listitem"><b>51</b><span>llamadas a URLs escritas a mano, en 4 hosts</span></div>
+        <div class="fig" role="listitem"><b>62</b><span><code>toPromise()</code>, obsoleto desde RxJS 7</span></div>
+        <div class="fig" role="listitem"><b>0</b><span>pruebas con lógica (24 specs de plantilla)</span></div>
+      </div>
+
+      <div class="prose">
+        <h4>Prioridades, en orden</h4>
+      </div>
+      <ol class="prio">
+        <li><div><b>Sacar las credenciales de servicio del cliente y rotarlas.</b><span>Hoy se compilan dentro de <code>main.js</code>; el cambio a <code>environment.ts</code> que está en curso las saca de git, pero no del APK.</span></div></li>
+        <li><div><b>Quitar del repositorio la llave de firma, <code>www/</code> y <code>google-services.json</code>.</b><span>La llave pasa a los secretos del CI.</span></div></li>
+        <li><div><b>Agregar un segundo factor al login.</b><span>Cédula y placa identifican al conductor, pero no lo autentican. El flujo de código SMS ya existe para el cambio de vehículo.</span></div></li>
+        <li><div><b>Crear una capa HTTP única con interceptores y modelos tipados.</b><span>Termina con las 51 URLs sueltas, el manejo de 401 pantalla por pantalla y los nombres del backend en las plantillas.</span></div></li>
+        <li><div><b>Extraer las piezas repetidas y convertir el registro en un asistente por pasos.</b><span>Formulario de vehículo, captura de documentos y selector de catálogos, usados por registro, perfil y vehículos.</span></div></li>
+      </ol>
+    </section>
+
+    <!-- ============ POSITIVO ============ -->
+    <section id="positivo">
+      <span class="eyebrow-t">Diagnóstico</span>
+      <h2>Lo que está bien</h2>
+      <p class="lead">Varias decisiones recientes van en la dirección correcta. El refactor debe extenderlas, no reemplazarlas.</p>
+      <ul class="good">
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>El login es la plantilla a seguir</b><span>Página de 70 líneas, formulario reactivo, <code>AuthFacadeService</code> que encadena versión y login con <code>switchMap</code>, error manejado en un solo lugar y bloqueo de doble envío.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Estructura por features en marcha</b><span>Carpetas <code>core/</code> y <code>features/</code>, alias <code>@core</code>, <code>@env</code>, <code>@features</code> y <code>@models</code> en <code>tsconfig.json</code>.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Carga bajo demanda</b><span>Seis features con <code>loadChildren</code> y <code>PreloadAllModules</code> en <code>app-routing.module.ts</code>.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>TypeScript estricto configurado</b><span><code>strict</code> y <code>strictTemplates</code> activos. La base para tipar ya existe, solo falta dejar de saltarla con <code>any</code>.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Servicios transversales iniciados</b><span><code>StorageService</code>, <code>AlertService</code> y <code>GlobalService</code>, este último con cabeceras, timeout y errores centralizados.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Guard que revisa la expiración</b><span><code>LoginGuard</code> decodifica el JWT, rechaza tokens vencidos y limpia los corruptos.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Secretos fuera de git, en curso</b><span><code>environment.example.ts</code> documentado y los <code>environment*.ts</code> en <code>.gitignore</code>.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Comportamiento nativo cuidado</b><span>Pantalla sin conexión, deep links, actualización obligatoria por versión, registro del token FCM y pull-to-refresh.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Preoperacional dirigido por datos</b><span>Preguntas, orden y categorías llegan de la API; la lista de "no cumple" permite marcar como solucionado.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Catálogo de documentos como configuración</b><span><code>documents_conductor</code> y <code>documents_vehiculo</code> describen caras, fechas y rotación. La idea es buena; falta tiparlo y moverlo a su dominio.</span></div></li>
+        <li><svg class="i"><use href="#i-good"/></svg><div><b>Plataforma nativa al día</b><span>Capacitor 7 y CI de iOS con Codemagic hasta TestFlight.</span></div></li>
+      </ul>
+    </section>
+
+    <!-- ============ NEGATIVO ============ -->
+    <section id="mejorar">
+      <span class="eyebrow-t">Diagnóstico</span>
+      <h2>Lo que hay que mejorar</h2>
+      <p class="lead">Agrupado por área y ordenado por severidad. <b>Crítico</b> expone datos o cuentas hoy; <b>Alto</b> frena cada cambio; <b>Medio</b> y <b>Bajo</b> son deuda que se resuelve durante el refactor.</p>
+
+      <div class="cat">
+        <h3>Seguridad</h3>
+        <div class="find"><span class="sev crit">Crítico</span><div>
+          <h5>Credenciales de servicio dentro de la app</h5>
+          <p>Las cabeceras <code>user</code>/<code>password</code> (12 llamadas) y <code>X-Client-Id</code>/<code>X-Client-Secret</code> (Inicio y Preoperacional) salen del dispositivo. Pasarlas a <code>environment.ts</code> las saca de git, pero Angular las compila dentro de <code>main.js</code>: quien descomprima el APK las lee. El build versionado en <code>www/</code> ya las contiene y el historial de git guarda los valores anteriores.</p>
+          <p class="fix"><b>Solución:</b> rotarlas y mover esas llamadas a un BFF en el backend 3SL, que reenvía a Aldia y SIAT con credenciales guardadas en el servidor. La app solo envía su Bearer.</p>
+          <div class="refs"><code>user.service.ts</code><code>photo.service.ts</code><code>geodata.service.ts</code><code>home.page.ts:135</code><code>preform.page.ts</code><code>www/</code></div>
+        </div></div>
+        <div class="find"><span class="sev crit">Crítico</span><div>
+          <h5>El login identifica, pero no autentica</h5>
+          <p>Se entra con cédula y placa, y la placa va pintada en el camión. Quien conozca la cédula de un conductor puede enturnarse, cambiar su vehículo o ver sus documentos. Además, el campo de placa es <code>type="password"</code> con placeholder "Clave".</p>
+          <p class="fix"><b>Solución:</b> código de un solo uso por SMS al celular registrado. El backend ya tiene el flujo en <code>/vehiculo/validation</code>.</p>
+          <div class="refs"><code>auth-facade.service.ts</code><code>login.page.html</code></div>
+        </div></div>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Archivos sensibles en el repositorio</h5>
+          <p><code>mikey.keystore</code> (la llave de firma de Android), <code>google-services.json</code> y la carpeta <code>www/</code> (1.450 archivos, 22 MB) están versionados. Con la llave, cualquiera con acceso al repo puede firmar una app que Android acepta como actualización oficial.</p>
+        </div></div>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Sesión frágil</h5>
+          <p>El token vive en <code>localStorage</code>, se envía en la URL de capacitaciones (<code>?token=</code>) y <code>auth-facade.service.ts</code> imprime las credenciales con <code>console.log</code>. Sin interceptor, cada pantalla trata el 401 a su manera y algunas lo ignoran.</p>
+          <div class="refs"><code>user.service.ts:779</code><code>auth-facade.service.ts:28</code><code>home.page.ts:199</code></div>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Tráfico y HTML sin protección</h5>
+          <p><code>http://siat.aldialogistica.com:8000</code> viaja sin TLS (ya anotado en el código). La ciudad que devuelve el servidor se inserta con <code>innerHTML</code> en Inicio y Turnos, y los términos legales se arman con <code>document.createElement</code> dentro de un servicio. El registro pide usuario y clave del GPS satelital como campos de texto normales.</p>
+        </div></div>
+      </div>
+
+      <div class="cat">
+        <h3>Arquitectura</h3>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Tres componentes concentran la app</h5>
+          <p><code>registro.page.ts</code>, <code>datos.page.ts</code> y <code>vehiculo.component.ts</code>, con sus plantillas, suman el 54 % del código. Registro tiene 6 <code>FormGroup</code>, 7 modales, cerca de 100 métodos y más de 60 banderas booleanas (<code>isModalOpen1…6</code>, <code>checkX</code>, <code>alertX</code>, <code>incompletoX</code>) que forman una máquina de estados escrita a mano.</p>
+        </div></div>
+
+        <div class="chart" role="img" aria-label="Archivos más grandes del proyecto comparados con una meta de 400 líneas">
+          <div class="chart-h"><b>Archivos más grandes, en líneas</b><span>Escala lineal desde 0. La línea punteada marca la meta de 400 líneas por archivo.</span></div>
+          <div class="bars">
+            <div class="bar"><span class="lbl">registro/registro.page.ts</span><span class="trk"><i style="width:100%"></i></span><span class="val">3.444</span></div>
+            <div class="bar"><span class="lbl">datos/datos.page.ts</span><span class="trk"><i style="width:86.18%"></i></span><span class="val">2.968</span></div>
+            <div class="bar"><span class="lbl">vehiculo/vehiculo.component.ts</span><span class="trk"><i style="width:37.54%"></i></span><span class="val">1.293</span></div>
+            <div class="bar"><span class="lbl">datos/datos.page.html</span><span class="trk"><i style="width:36.41%"></i></span><span class="val">1.254</span></div>
+            <div class="bar"><span class="lbl">registro/registro.page.html</span><span class="trk"><i style="width:33.30%"></i></span><span class="val">1.147</span></div>
+            <div class="bar"><span class="lbl">global.scss</span><span class="trk"><i style="width:29.33%"></i></span><span class="val">1.010</span></div>
+            <div class="bar"><span class="lbl">core/services/user.service.ts</span><span class="trk"><i style="width:23.37%"></i></span><span class="val">805</span></div>
+            <div class="bar"><span class="lbl">home/pages/home.page.ts</span><span class="trk"><i style="width:20.24%"></i></span><span class="val">697</span></div>
+            <div class="bar"><span class="lbl">vehiculo/vehiculo.component.html</span><span class="trk"><i style="width:16.23%"></i></span><span class="val">559</span></div>
+            <div class="bar"><span class="lbl">registro/…/documentos.component.ts</span><span class="trk"><i style="width:15.97%"></i></span><span class="val">550</span></div>
+            <div class="bar"><span class="lbl">datos/…/documentos.component.ts</span><span class="trk"><i style="width:15.01%"></i></span><span class="val">517</span></div>
+          </div>
+          <div class="legend"><span><i></i>Líneas del archivo</span><span><i class="t"></i>Meta: 400 líneas</span></div>
+        </div>
+
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>La misma lógica copiada en varias pantallas</h5>
+          <p>Diez bloques aparecen entre 2 y 7 veces. Cada corrección hay que repetirla en cada copia, y hoy ya divergen entre sí.</p>
+        </div></div>
+        <div class="tbl">
+          <table class="dup">
+            <thead><tr><th>Bloque repetido</th><th>app</th><th>home</th><th>turnos</th><th>registro</th><th>datos</th><th>vehículo</th><th>docs reg.</th><th>docs datos</th><th>preform</th><th>Copias</th></tr></thead>
+            <tbody>
+              <tr><td>Formulario de vehículo: 6 autocompletes con 3 o 4 handlers cada uno</td><td></td><td></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td class="n">3</td></tr>
+              <tr><td>Carga de catálogos (clase, marca, línea, carrocería, color, satelital)</td><td></td><td></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td class="n">3</td></tr>
+              <tr><td>Captura y procesado de imagen (<code>addToCamera</code>, <code>addToGalery</code>, <code>processImage</code>)</td><td></td><td></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td class="n">5</td></tr>
+              <tr><td><code>getDocument</code> para la foto o documento del tercero</td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td class="n">7</td></tr>
+              <tr><td><code>presentAlert</code> propio en lugar de <code>AlertService</code></td><td></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td class="n">7</td></tr>
+              <tr><td>Buscar, crear y editar propietario y tenedor</td><td></td><td></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td></td><td class="n">2</td></tr>
+              <tr><td>Validación por código SMS</td><td></td><td></td><td></td><td><i class="dot"></i></td><td></td><td><i class="dot"></i></td><td></td><td></td><td></td><td class="n">2</td></tr>
+              <tr><td>Formulario de turno</td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="n">2</td></tr>
+              <tr><td><code>executeNotification</code> (además de <code>LocalNotificationService</code>)</td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="n">2</td></tr>
+              <tr><td><code>initializeApp</code> y <code>setStatusBarColor</code></td><td></td><td><i class="dot"></i></td><td></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td><i class="dot"></i></td><td></td><td></td><td></td><td class="n">4</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>No existe una capa de datos</h5>
+          <p>51 URLs escritas a mano en 4 hosts y cabeceras armadas dentro de cada método, unas 40 veces. <code>GlobalService</code>, que ya resuelve parte de esto, solo lo usan Inicio y Preoperacional. Las plantillas leen los nombres del backend (<code>nombreTercerox</code>, <code>numeroPlacaxxx</code>) directamente.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Servicios que hacen de todo</h5>
+          <p><code>UserService</code> (805 líneas) mezcla 3 backends, el catálogo de documentos, storage, utilidades de texto, una redirección con <code>window.location</code> y un <code>trackBy</code> con <code>Math.random()</code> que obliga a Angular a redibujar toda la lista. <code>RegistroService</code> guarda el texto legal. <code>TurnosService</code> muestra alertas y recarga la app.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Sin estado compartido</h5>
+          <p>El perfil se pide en <code>app.component</code>, Inicio y Mis datos: al abrir la app salen 3 llamadas a <code>/ingresos</code> y 3 a <code>/documento</code>. <code>placa</code> y <code>conductor</code> circulan por <code>localStorage</code> como si fueran estado global.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Navegación con recarga completa</h5>
+          <p><code>window.location.reload()</code> y <code>location.href</code> (8 usos) reinician la app entera, incluidos los listeners de red y push, cuando solo hacía falta refrescar datos.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Acoplamiento y rutas</h5>
+          <p>Los dos <code>DocumentosComponent</code> inyectan su página padre (<code>RegistroPage</code>, <code>DatosPage</code>). <code>VehiculoComponent</code> y <code>DashboardComponent</code> se declaran en <code>AppModule</code> y no se cargan bajo demanda. <code>/preform</code> no tiene guard y <code>/pruebas</code> sigue publicada.</p>
+        </div></div>
+      </div>
+
+      <div class="cat">
+        <h3>Código</h3>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Tipado desactivado en la práctica</h5>
+          <p>838 <code>any</code> con <code>strict: true</code> y solo 3 modelos. <code>user.model.ts</code> importa <code>ParseSourceFile</code> del compilador de Angular.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>RxJS a medias</h5>
+          <p>62 <code>toPromise()</code> (obsoleto en RxJS 7, eliminado en 8), 33 <code>subscribe</code> y un solo <code>unsubscribe</code>: hay suscripciones que siguen vivas al salir de la pantalla. Dependencias <code>rxjs-compat</code> y <code>rxjs-observable</code> innecesarias.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Imports de Node dentro del navegador</h5>
+          <p><code>import { log } from 'console'</code> en 8 archivos e <code>import * as e from 'cors'</code> en 2. <code>cors</code> es una librería de servidor y está en <code>dependencies</code>.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Código muerto que pesa</h5>
+          <p>712 líneas comentadas en TS y 66 bloques en HTML. <code>datos.page.ts</code> importa <code>face-api.js</code> para una detección facial que está comentada, y eso arrastra TensorFlow y 15 MB de modelos dentro del APK.</p>
+        </div></div>
+        <div class="find"><span class="sev low">Bajo</span><div>
+          <h5>Higiene general</h5>
+          <p>227 <code>console.*</code> en producción. Las 24 specs son el "should create" del generador. Strings mágicos para reglas de negocio: <code>code '200'/'204'</code>, <code>'ACTIVO'</code>, <code>'SI'/'NO'</code>, <code>appPages[2].hidden</code>. <code>[ngModel]</code> junto a <code>formControlName</code> en 5 plantillas.</p>
+        </div></div>
+      </div>
+
+      <div class="cat">
+        <h3>Interfaz y experiencia</h3>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Tres sistemas visuales a la vez</h5>
+          <p>Ionic, Bootstrap 5 (CSS, JS y Popper cargados globalmente) y 1.010 líneas de <code>global.scss</code> con <code>!important</code>. ng-bootstrap y Syncfusion están instalados sin uso. El tema de Ionic sigue en el azul por defecto (<code>#3880ff</code>) y el azul de marca (<code>#3C8CCD</code>, <code>#0083CB</code>) está escrito a mano en los estilos.</p>
+        </div></div>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Registro sin orientación</h5>
+          <p>Los campos aparecen uno tras otro según lo que responde el servidor, con íconos de estado, y cada entidad abre un modal a pantalla completa. El conductor no sabe cuántos pasos faltan ni qué quedó incompleto.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Estados normales tratados como errores</h5>
+          <p>"Sin turnos" salta como alerta cada vez que se abre Inicio, los documentos vencidos redirigen a Mis datos sin explicar por qué, y la carga usa loaders modales ("Generando perfil.....") en lugar de esqueletos.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Navegación y toque</h5>
+          <p>Menú hamburguesa para 5 destinos frecuentes. La cédula es <code>type="number"</code> (muestra flechas y puede perder ceros). Imágenes sin <code>alt</code>, <code>span</code> clicables sin rol, íconos cargados desde <code>3slogistica.com</code> y "Eliminar" vehículo con el mismo peso visual que "Asignar".</p>
+        </div></div>
+        <div class="find"><span class="sev low">Bajo</span><div>
+          <h5>Erratas visibles</h5>
+          <p>Vechiculo, Mis Vehiulos, Conducotor, Cerdula, Bucando Ubicacion, aceptgacion, Enturnase, romolque.</p>
+        </div></div>
+      </div>
+
+      <div class="cat">
+        <h3>Dependencias y herramientas</h3>
+        <div class="find"><span class="sev high">Alto</span><div>
+          <h5>Framework fuera de soporte</h5>
+          <p>Angular 15 e Ionic 6 dejaron de recibir parches en 2024, y TypeScript 4.8 es de 2022. Capacitor 7 sí está al día.</p>
+        </div></div>
+        <div class="find"><span class="sev mid">Medio</span><div>
+          <h5>Librerías repetidas o sin uso</h5>
+          <p>Tres de geolocalización (<code>@capacitor/geolocation</code>, <code>@awesome-cordova-plugins/geolocation</code>, <code>cordova-plugin-geolocation</code>), dos de autocompletado, dos de push, <code>lodash</code> solo para <code>head</code> y <code>last</code>, y <code>ngx-cookie-service</code> inyectado sin usarse.</p>
+        </div></div>
+        <div class="find"><span class="sev low">Bajo</span><div>
+          <h5>Despliegue frágil</h5>
+          <p><code>deploy.sh</code> cambia de rama y borra archivos en la raíz. Codemagic solo compila iOS; Android se firma a mano con la llave del repo.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ============ PATRÓN ============ -->
+    <section id="patron">
+      <span class="eyebrow-t">Propuesta</span>
+      <h2>Patrón de diseño propuesto</h2>
+      <div class="prose">
+        <p class="lead">Capas dentro de cada feature, al estilo feature-sliced, con tres patrones concretos: <b>Facade</b> por pantalla, <b>Container / Presentational</b> para los componentes y <b>Repository</b> para los datos (los archivos <code>*.api.ts</code>).</p>
+        <p>No hace falta NgRx. Para el tamaño de esta app basta un facade con <code>BehaviorSubject</code> en Angular 15, que se cambia por signals cuando se actualice el framework. El login ya sigue esta forma; el resto de pantallas se lleva al mismo molde.</p>
+      </div>
+
+      <div class="arch">
+        <div class="layers" role="img" aria-label="Diagrama de capas: páginas, facades, APIs y adaptadores, interceptores y backend">
+          <div class="layer hi"><b>Páginas (contenedores)</b><span>Leen <code>vm$</code> del facade y despachan intenciones. Usan componentes de presentación.</span><code>features/*/pages</code></div>
+          <div class="arrow"><svg class="i"><use href="#i-down"/></svg></div>
+          <div class="layer"><b>Facades</b><span>Casos de uso y estado de la pantalla: <code>cargar()</code>, <code>enturnar()</code>, <code>guardarDocumento()</code>.</span><code>features/*/*.facade.ts</code></div>
+          <div class="arrow"><svg class="i"><use href="#i-down"/></svg></div>
+          <div class="split">
+            <div class="layer"><b>APIs de dominio</b><span>HTTP tipado y mappers DTO → modelo.</span><code>domain/*/*.api.ts</code></div>
+            <div class="layer"><b>Adaptadores de plataforma</b><span>Cámara, GPS, red, push, almacenamiento seguro.</span><code>core/platform</code></div>
+          </div>
+          <div class="arrow"><svg class="i"><use href="#i-down"/></svg></div>
+          <div class="layer"><b>Interceptores HTTP</b><span>URL base, Bearer, 401 que cierra la sesión, reintento de GET.</span><code>core/http</code></div>
+          <div class="arrow"><svg class="i"><use href="#i-down"/></svg></div>
+          <div class="layer srv"><b>Backend 3SL con BFF</b><span>Reenvía a la API de Aldia y a SIAT con credenciales que solo existen en el servidor.</span></div>
+        </div>
+        <div class="prose">
+          <h4>Reglas de dependencia</h4>
+          <ol class="rules">
+            <li><span>Una página solo habla con su facade. Nunca inyecta <code>HttpClient</code> ni plugins de Capacitor.</span></li>
+            <li><span>Los componentes de presentación reciben <code>@Input</code> y emiten <code>@Output</code>; no inyectan servicios.</span></li>
+            <li><span>Los facades exponen un view model observable y métodos con nombre de intención.</span></li>
+            <li><span>Las APIs devuelven modelos tipados. El paso de <code>nombreTercerox</code> a <code>nombre</code> se hace en un mapper, una sola vez.</span></li>
+            <li><span>Los plugins nativos se envuelven en <code>core/platform</code>, lo que permite simularlos en pruebas.</span></li>
+            <li><span>Las dependencias van hacia abajo: <code>features → domain → shared → core</code>. Una feature no importa de otra.</span></li>
+            <li><span>Ningún secreto en el cliente. Lo que necesita credenciales pasa por el BFF.</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="codes">
+        <figure>
+          <figcaption><b>Interceptor de sesión.</b> Angular 15 ya admite interceptores funcionales.</figcaption>
+<pre><span class="c">// core/http/auth.interceptor.ts</span>
+<span class="k">export const</span> authInterceptor: HttpInterceptorFn = (req, next) =&gt; {
+  <span class="k">const</span> session = inject(SessionStore);
+  <span class="k">const</span> token = session.token;
+  <span class="k">const</span> conToken = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
+
+  <span class="k">return</span> next(conToken).pipe(
+    catchError((err: HttpErrorResponse) =&gt; {
+      <span class="k">if</span> (err.status === 401) session.cerrar(<span class="k">'expirada'</span>);
+      <span class="k">return</span> throwError(() =&gt; err);
+    }),
+  );
+};
+
+<span class="c">// app.module.ts</span>
+providers: [
+  provideHttpClient(withInterceptors([
+    apiBaseInterceptor, authInterceptor, errorInterceptor,
+  ])),
+]</pre>
+        </figure>
+        <figure>
+          <figcaption><b>API de dominio con mapper.</b> Las URLs salen de configuración y el componente nunca ve el DTO.</figcaption>
+<pre><span class="c">// domain/turno/turnos.api.ts</span>
+@Injectable({ providedIn: <span class="k">'root'</span> })
+<span class="k">export class</span> TurnosApi {
+  <span class="k">private readonly</span> http = inject(HttpClient);
+  <span class="k">private readonly</span> url = inject(API_CONFIG).tresSl;
+
+  actual(placa: string): Observable&lt;Turno | null&gt; {
+    <span class="k">return this</span>.http
+      .get&lt;ApiResponse&lt;TurnoDto&gt;&gt;(`${<span class="k">this</span>.url}/enturnamiento`,
+        { params: { placa } })
+      .pipe(map(r =&gt; r.code === <span class="k">'204'</span> ? <span class="k">null</span> : toTurno(r.data)));
+  }
+
+  <span class="c">// vía BFF: el backend reenvía a Aldia con sus credenciales</span>
+  crear(s: SolicitudTurno): Observable&lt;string&gt; {
+    <span class="k">return this</span>.http
+      .post&lt;ApiResponse&lt;string&gt;&gt;(`${<span class="k">this</span>.url}/enturnamiento`, toTurnoDto(s))
+      .pipe(map(r =&gt; r.data));
+  }
+}</pre>
+        </figure>
+        <figure>
+          <figcaption><b>Facade con estado.</b> Reemplaza las 60 banderas sueltas por un view model.</figcaption>
+<pre><span class="c">// features/inicio/inicio.facade.ts</span>
+<span class="k">export interface</span> InicioVm {
+  conductor: Conductor | <span class="k">null</span>;
+  turno: Turno | <span class="k">null</span>;
+  alertas: AlertaDocumento[];
+  estado: <span class="k">'cargando'</span> | <span class="k">'listo'</span> | <span class="k">'error'</span>;
+}
+
+@Injectable({ providedIn: <span class="k">'root'</span> })
+<span class="k">export class</span> InicioFacade {
+  <span class="k">private readonly</span> state = <span class="k">new</span> BehaviorSubject&lt;InicioVm&gt;(INICIAL);
+  <span class="k">readonly</span> vm$ = <span class="k">this</span>.state.asObservable();
+
+  cargar(): <span class="k">void</span> {
+    <span class="k">const</span> { cedula, placa } = <span class="k">this</span>.session.snapshot;
+    <span class="k">this</span>.patch({ estado: <span class="k">'cargando'</span> });
+    forkJoin({
+      conductor: <span class="k">this</span>.conductores.porCedula(cedula, placa),
+      turno: <span class="k">this</span>.turnos.actual(placa),
+      alertas: <span class="k">this</span>.documentos.vencimientos(cedula, placa),
+    }).subscribe({
+      next: d =&gt; <span class="k">this</span>.patch({ ...d, estado: <span class="k">'listo'</span> }),
+      error: () =&gt; <span class="k">this</span>.patch({ estado: <span class="k">'error'</span> }),
+    });
+  }
+}</pre>
+        </figure>
+        <figure>
+          <figcaption><b>Página contenedora.</b> La plantilla compone piezas; no tiene lógica de negocio.</figcaption>
+<pre><span class="c">&lt;!-- features/inicio/pages/inicio.page.html --&gt;</span>
+&lt;ion-content *ngIf="vm$ | async as vm"&gt;
+  &lt;ion-refresher (ionRefresh)="refrescar($event)"&gt;&lt;/ion-refresher&gt;
+
+  &lt;app-status-hero
+    [conductor]="vm.conductor"
+    [turno]="vm.turno"
+    (enturnar)="abrirTurno()"&gt;
+  &lt;/app-status-hero&gt;
+
+  &lt;app-destinos-list [destinos]="vm.turno?.destinos ?? []"&gt;
+  &lt;/app-destinos-list&gt;
+
+  &lt;app-alerta-documento
+    *ngFor="let a of vm.alertas"
+    [alerta]="a"
+    (actualizar)="irADocumento(a.tipo)"&gt;
+  &lt;/app-alerta-documento&gt;
+&lt;/ion-content&gt;</pre>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ ESTRUCTURA ============ -->
+    <section id="estructura">
+      <span class="eyebrow-t">Propuesta</span>
+      <h2>Nueva estructura de carpetas</h2>
+      <p class="lead">La capa <code>domain/</code> es la que resuelve la duplicación: el formulario de vehículo, la captura de documentos y los catálogos se escriben una vez y los usan registro, perfil y vehículos.</p>
+<pre>src/app/
+├─ core/              <span class="c"># se instancia una vez</span>
+│  ├─ config/         api.config.ts            <span class="c"># URLs por entorno (InjectionToken)</span>
+│  ├─ http/           auth · error · api-base  <span class="c"># interceptores</span>
+│  ├─ session/        session.store · auth.guard · guest.guard
+│  ├─ platform/       camera · geolocation · network · push · secure-storage · app-version
+│  ├─ ui/             alert.service · toast.service
+│  └─ layout/         tabs.page · offline-banner
+├─ shared/            <span class="c"># piezas sin estado</span>
+│  ├─ ui/             plate-badge · plate-input · status-chip · catalog-picker
+│  │                  photo-picker · otp-input · step-header · empty-state
+│  ├─ utils/          image.ts (redimensionar, rotar, recortar) · fechas.ts · texto.ts
+│  └─ validators/     cedula · placa
+├─ domain/            <span class="c"># una carpeta por entidad: modelo + API + UI reutilizable</span>
+│  ├─ conductor/      conductor.model · conductor.api · conductor.mapper · datos-personales-form
+│  ├─ vehiculo/       vehiculo.model · vehiculos.api · catalogos.api (con caché) · vehiculo-form
+│  ├─ tercero/        tercero.model · terceros.api · tercero-form   <span class="c"># propietario y tenedor</span>
+│  ├─ documento/      documento.model · documentos.api · document-catalog.ts · doc-capture
+│  └─ turno/          turno.model · turnos.api · regionales.api
+└─ features/          <span class="c"># pantallas, cada una con su facade</span>
+   ├─ auth/           login.page · codigo.page · auth.facade
+   ├─ inicio/         inicio.page · status-hero · destinos-list · turno-sheet · inicio.facade
+   ├─ preoperacional/ checklist.page · pregunta-card · preop.facade
+   ├─ documentos/     documentos.page · captura.page · documentos.facade
+   ├─ perfil/         perfil.page · datos-personales.page · terceros.page · perfil.facade
+   ├─ vehiculos/      vehiculos.page · vehiculo-detalle.page · vehiculos.facade
+   └─ registro/       registro.page (asistente) · steps/* · registro.facade (borrador)</pre>
+
+      <h3>De dónde sale cada pieza</h3>
+      <div class="tbl">
+        <table class="map">
+          <thead><tr><th>Hoy</th><th>Propuesta</th></tr></thead>
+          <tbody>
+            <tr><td><code>core/services/user.service.ts</code> · 805 líneas, 3 backends</td><td><code>domain/conductor</code>, <code>domain/documento</code> (API y catálogo), <code>domain/turno</code> y <code>core/session</code></td></tr>
+            <tr><td><code>core/services/registro.service.ts</code></td><td><code>domain/vehiculo/catalogos.api</code> y <code>vehiculos.api</code>, <code>domain/tercero/terceros.api</code>. Los términos legales pasan a un archivo de contenido o a un endpoint.</td></tr>
+            <tr><td><code>core/services/auth.service.ts</code></td><td><code>features/auth/auth.facade</code> y <code>core/session</code>; logout sin <code>location.href</code></td></tr>
+            <tr><td><code>api/global.service.ts</code></td><td><code>core/http</code>: interceptores y <code>HttpClient</code> directo en cada <code>*.api.ts</code></td></tr>
+            <tr><td><code>api/geodata.service.ts</code></td><td><code>core/platform/geolocation</code> y <code>domain/turno/regionales.api</code></td></tr>
+            <tr><td><code>api/turnos.service.ts</code> · regionales fijas, alertas y recarga</td><td><code>features/inicio/inicio.facade</code>; las regionales llegan de la API</td></tr>
+            <tr><td><code>core/services/photo.service.ts</code></td><td><code>core/platform/camera</code> y <code>shared/utils/image.ts</code></td></tr>
+            <tr><td><code>local-notification.service</code> y <code>api/notificaciones.service</code></td><td><code>core/platform/push</code> (locales y FCM)</td></tr>
+            <tr><td><code>app.component.ts</code> · carga perfil, red y deep links</td><td><code>core/layout/tabs.page</code>, <code>core/platform/network</code> y <code>SessionStore</code></td></tr>
+            <tr><td><code>features/home</code> y <code>features/turnos</code></td><td><code>features/inicio</code> con <code>turno-sheet</code>; se elimina la ruta <code>/turnos</code></td></tr>
+            <tr><td><code>features/datos</code> · 2.968 + 1.254 líneas</td><td><code>features/perfil</code> y <code>features/documentos</code></td></tr>
+            <tr><td><code>features/vehiculo</code> · declarado en AppModule</td><td><code>features/vehiculos</code>, cargado bajo demanda</td></tr>
+            <tr><td><code>features/registro</code> · 3.444 + 1.147 líneas</td><td><code>features/registro</code>: asistente de 6 pasos</td></tr>
+            <tr><td>Los dos <code>DocumentosComponent</code></td><td><code>domain/documento/doc-capture</code></td></tr>
+            <tr><td><code>global.scss</code> (1.010 líneas) y Bootstrap</td><td><code>theme/tokens.scss</code>, variables de Ionic y estilos por componente</td></tr>
+            <tr><td><code>api/face-api</code>, <code>api/video-player</code>, <code>features/dashboard</code>, <code>utils/runner.js</code>, <code>directives/tipo-documento</code></td><td class="del">Se eliminan: no tienen uso real</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ PLAN ============ -->
+    <section id="plan">
+      <span class="eyebrow-t">Propuesta</span>
+      <h2>Plan de refactor por fases</h2>
+      <p class="lead">Cada fase deja la app funcionando y publicable. El orden importa: la seguridad no puede esperar al refactor, y las piezas compartidas tienen que existir antes de partir las pantallas grandes.</p>
+      <ol class="phases">
+        <li class="phase"><div class="ph-n"><small>Fase</small>0</div><div>
+          <h3>Seguridad</h3>
+          <ul>
+            <li>Rotar las credenciales de servicio, el client id y secret de Aldia y la API key de Maps.</li>
+            <li>Crear endpoints BFF en el backend 3SL para todo lo que hoy va directo a <code>api.aldialogistica.com</code> y a SIAT.</li>
+            <li>Sacar del repositorio <code>www/</code>, <code>mikey.keystore</code> (a los secretos del CI) y <code>google-services.json</code>. Si el repo se comparte, limpiar el historial con <code>git filter-repo</code>.</li>
+            <li>Login con código SMS.</li>
+            <li>Quitar el <code>console.log</code> de credenciales y el token en la URL de capacitaciones.</li>
+          </ul>
+          <span class="done-when"><b>Lista cuando</b> una búsqueda en el build compilado no encuentra ninguna credencial.</span>
+        </div></li>
+        <li class="phase"><div class="ph-n"><small>Fase</small>1</div><div>
+          <h3>Cimientos</h3>
+          <ul>
+            <li><code>api.config</code>, interceptores y <code>SessionStore</code>.</li>
+            <li>Modelos y mappers tipados para conductor, vehículo, documento y turno.</li>
+            <li>Quitar dependencias: <code>cors</code>, Syncfusion, ng-bootstrap, <code>rxjs-compat</code>, <code>rxjs-observable</code>, <code>face-api.js</code>, TensorFlow y sus 15 MB de modelos, geolocalización Cordova, <code>ngx-cookie-service</code>, <code>lodash</code>.</li>
+            <li>Sacar Bootstrap de <code>angular.json</code> y definir el tema de Ionic con los tokens de marca.</li>
+            <li>ESLint con <code>no-explicit-any</code> como advertencia y <code>no-console</code>.</li>
+          </ul>
+          <span class="done-when"><b>Lista cuando</b> ninguna URL ni cabecera se arma fuera de un <code>*.api.ts</code>.</span>
+        </div></li>
+        <li class="phase"><div class="ph-n"><small>Fase</small>2</div><div>
+          <h3>Piezas compartidas y piloto</h3>
+          <ul>
+            <li><code>CatalogPicker</code>, <code>VehiculoForm</code>, <code>TerceroForm</code>, <code>DocCapture</code>, <code>PhotoPicker</code>, <code>OtpInput</code>, <code>PlateBadge</code>.</li>
+            <li>Migrar primero Mis vehículos (1.293 líneas, la más pequeña de las tres grandes) y aplicarle el diseño nuevo.</li>
+          </ul>
+          <span class="done-when"><b>Lista cuando</b> <code>vehiculos.page</code> tiene menos de 300 líneas y ningún handler <code>onFocused</code>/<code>onBlur</code> repetido.</span>
+        </div></li>
+        <li class="phase"><div class="ph-n"><small>Fase</small>3</div><div>
+          <h3>Inicio, perfil, documentos y registro</h3>
+          <ul>
+            <li>Inicio con su facade y la hoja de turno; se elimina <code>/turnos</code>.</li>
+            <li><code>datos.page</code> se divide en Perfil, Datos personales, Terceros y Documentos.</li>
+            <li><code>registro.page</code> se convierte en un asistente de 6 pasos con el borrador en <code>RegistroFacade</code>.</li>
+            <li>Barra de pestañas en lugar del menú lateral.</li>
+          </ul>
+          <span class="done-when"><b>Lista cuando</b> ningún archivo supera las 400 líneas.</span>
+        </div></li>
+        <li class="phase"><div class="ph-n"><small>Fase</small>4</div><div>
+          <h3>Actualización y pruebas</h3>
+          <ul>
+            <li><code>ng update</code> versión por versión desde la 15 hasta la vigente, Ionic 8, componentes standalone, signals en los stores y el nuevo control flow.</li>
+            <li>Pruebas unitarias de facades y mappers; una prueba de punta a punta del flujo login → enturnarse.</li>
+            <li>CI de Android con firma desde secretos; reemplazar <code>deploy.sh</code>.</li>
+          </ul>
+          <span class="done-when"><b>Lista cuando</b> cada PR corre lint, pruebas y build en verde.</span>
+        </div></li>
+      </ol>
+    </section>
+
+    <!-- ============ PANTALLAS ============ -->
+    <section id="pantallas">
+      <span class="eyebrow-t">Diseño</span>
+      <h2>Diseño de cada pantalla</h2>
+      <p class="lead">El usuario es un conductor: muchas veces está en la cabina, con sol directo, señal intermitente y una mano ocupada. Las pantallas se diseñan para leerse de un vistazo y operarse con el pulgar.</p>
+
+      <div class="princ">
+        <div><b>Un vistazo</b><span>Turno, preoperacional y documentos se entienden sin leer párrafos.</span></div>
+        <div><b>Un pulgar</b><span>Acciones principales abajo y objetivos de 48 px o más.</span></div>
+        <div><b>Sol directo</b><span>Contraste AA o mejor y una tipografía hecha para legibilidad.</span></div>
+        <div><b>Señal intermitente</b><span>Datos en caché, envíos con reintento y un aviso en vez de un bloqueo.</span></div>
+        <div><b>Sin sorpresas</b><span>Nada de alertas modales para estados normales ni redirecciones sin explicación.</span></div>
+      </div>
+
+      <div class="nav" aria-label="Mapa de navegación propuesto">
+        <div class="nav-row"><span>Sin sesión</span>
+          <div class="nav-flow"><span class="nd">Login</span><span class="to">→</span><span class="nd">Código SMS</span><span class="to">→</span><span class="nd">Inicio</span><span class="muted" style="margin:0 6px">o</span><span class="nd">Login</span><span class="to">→</span><span class="nd">Registro <small>6 pasos</small></span></div>
+        </div>
+        <div class="nav-row"><span>Pestañas</span>
+          <div class="tabgrp">
+            <div><span class="nd tab">Inicio</span><span class="nd">Hoja: Enturnarme</span></div>
+            <div><span class="nd tab">Preoperacional</span><span class="nd">Checklist</span></div>
+            <div><span class="nd tab">Documentos</span><span class="nd">Actualizar documento</span></div>
+            <div><span class="nd tab">Perfil</span><span class="nd">Datos personales</span><span class="nd">Mis vehículos</span><span class="nd">Propietario y tenedor</span><span class="nd">Capacitaciones</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screens">
+
+        <!-- 1 LOGIN -->
+        <div class="srow">
+          <div class="phone"><div class="scr login">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="bd">
+              <div class="brand"><div class="mark"><svg class="i"><use href="#i-truck"/></svg></div><div><b>Viaja con Aldia</b><span class="mm">Aldia Logística</span></div></div>
+              <div><div class="m-h">Ingresa a tu cuenta</div><p class="m-sub">Con tu cédula y la placa del vehículo que conduces.</p></div>
+              <div class="field"><label>Cédula</label><div class="input">1023456789</div></div>
+              <div class="field"><label>Placa</label><div class="input focus"><span class="platetxt">SXT 482</span><span class="ph">AAA 000</span></div></div>
+              <div class="btn">Recibir código por SMS</div>
+              <p class="m-note">Lo enviaremos al celular registrado terminado en ••21.</p>
+              <div class="sep"></div>
+              <div class="btn ghost">Soy nuevo, quiero registrarme</div>
+              <p class="m-foot">Versión 9 · © 2026 Aldia Logística</p>
+            </div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/login</b> · reemplaza login.page</span>
+            <h3>Login</h3>
+            <p>La estructura actual se mantiene porque ya funciona; cambia el segundo paso y la forma de los campos.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>Cédula y placa identifican; el código SMS autentica. Se reutiliza el flujo de validación por código que ya existe para el cambio de vehículo.</li>
+              <li>Cédula con <code>inputmode="numeric"</code> en vez de <code>type="number"</code>: sin flechas, sin notación científica, conserva ceros.</li>
+              <li>Placa con máscara <code>AAA 000</code> y mayúsculas automáticas, en un campo de texto normal, no de contraseña.</li>
+              <li>Errores en línea debajo del campo, no en una alerta modal.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>PlateInput</code><code>OtpInput</code><code>AuthFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 2 INICIO -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab between">
+              <div class="who"><div class="ava">CP</div><div><b>Hola, Carlos</b><span class="mm">Conductor activo</span></div></div>
+              <span class="plate"><b>SXT 482</b><small>FUNZA</small></span>
+            </div>
+            <div class="bd">
+              <div class="hero">
+                <span class="ey">Tu turno</span>
+                <span class="big">Enturnado</span>
+                <span class="hl"><svg class="i"><use href="#i-pin"/></svg>Origen: Regional Bogotá</span>
+                <span class="hl"><svg class="i"><use href="#i-clock"/></svg>Puedes reenturnarte en 2 h 14 min</span>
+                <div class="btn onfill">Ver o actualizar turno</div>
+              </div>
+              <span class="sec">Destinos en orden de preferencia</span>
+              <div class="list">
+                <div class="row"><span class="ord">1</span><div class="grow"><b>Regional Medellín</b><span class="mm">Posición en cola</span></div><span class="pos"><small>#</small>4</span></div>
+                <div class="row"><span class="ord">2</span><div class="grow"><b>Regional Cali</b><span class="mm">Posición en cola</span></div><span class="pos"><small>#</small>11</span></div>
+                <div class="row"><span class="ord">3</span><div class="grow"><b>Regional Barranquilla</b><span class="mm">Posición en cola</span></div><span class="pos"><small>#</small>7</span></div>
+              </div>
+              <div class="list"><div class="row"><span class="ic ok"><svg class="i"><use href="#i-check"/></svg></span><div class="grow"><b>Preoperacional aprobado</b><span class="mm">Hoy, 06:12</span></div><svg class="i"><use href="#i-chev"/></svg></div></div>
+              <div class="banner warn"><svg class="i"><use href="#i-alert"/></svg><div class="grow"><b>Tu SOAT vence en 12 días</b><span>Actualízalo para no perder el turno</span></div><span class="link">Actualizar</span></div>
+            </div>
+            <nav class="tabs"><span class="tab on"><svg class="i"><use href="#i-home"/></svg>Inicio</span><span class="tab"><svg class="i"><use href="#i-clip"/></svg>Preoperacional</span><span class="tab"><svg class="i"><use href="#i-doc"/></svg>Documentos</span><span class="tab"><svg class="i"><use href="#i-user"/></svg>Perfil</span></nav>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/inicio</b> · reemplaza home.page (697 + 255 líneas)</span>
+            <h3>Inicio</h3>
+            <p>Lo primero que se lee es el estado del turno. Debajo, la cola por destino y los avisos que requieren acción.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>Un solo componente <code>StatusHero</code> con cuatro variantes en lugar de cuatro bloques <code>*ngIf</code> con botones casi iguales.</li>
+              <li>La posición en cola por destino se lee de un vistazo; hoy está sobre una imagen de tiquete.</li>
+              <li>Preoperacional y documentos por vencer como tarjetas que no bloquean. Hoy son alertas modales y redirecciones automáticas.</li>
+              <li>Pull-to-refresh recarga datos desde el facade, sin <code>window.location.reload()</code>.</li>
+              <li>Esqueletos mientras carga, en vez del loader "Generando perfil.....".</li>
+            </ul>
+            <h4>Variantes del estado</h4>
+            <div class="variants">
+              <div class="mini ok"><span class="ey">Turno</span><b>Enturnado</b><span>Regional Bogotá</span></div>
+              <div class="mini pri"><span class="ey">Turno</span><b>Sin turno</b><span>Enturnarme →</span></div>
+              <div class="mini warn"><span class="ey">Bloqueado</span><b>Documentos vencidos</b><span>Seguridad social</span></div>
+              <div class="mini crit"><span class="ey">Cuenta</span><b>Inactiva</b><span>Comunícate con Tráfico</span></div>
+            </div>
+            <h4>Componentes</h4>
+            <div class="tags"><code>StatusHero</code><code>DestinosList</code><code>AlertaDocumento</code><code>PlateBadge</code><code>InicioFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 3 ENTURNARME -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="dim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sheet-h"><h3>Enturnarme</h3><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="gps"><svg class="i"><use href="#i-gps"/></svg><div><span class="mm">Origen confirmado por GPS</span><b>Regional Bogotá</b></div></div>
+              <span class="sec">Destinos en orden de preferencia</span>
+              <div class="list">
+                <div class="row"><span class="ord">1</span><b class="grow">Regional Medellín</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="ord">2</span><b class="grow">Regional Cali</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="ord">3</span><b class="grow">Regional Barranquilla</b><svg class="i"><use href="#i-chev"/></svg></div>
+              </div>
+              <div class="field"><label>Tipo de remolque</label><div class="seg"><span class="on">Contenedor</span><span>Plancha</span></div></div>
+              <div class="field"><label>¿Viajas vacío?</label><div class="seg"><span>Sí</span><span class="on">No</span></div></div>
+              <p class="m-note"><svg class="i"><use href="#i-alert"/></svg>Si la información no corresponde a la realidad, la empresa puede aplicar sanciones.</p>
+              <div class="btn">Confirmar turno</div>
+            </div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>Hoja sobre /inicio</b> · reemplaza el modal de home y turnos.page</span>
+            <h3>Enturnarme</h3>
+            <p>Una sola implementación. Hoy el formulario existe dos veces, en el modal de Inicio y en la página de Turnos.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>El origen se muestra como dato confirmado por GPS. Hoy se escribe con <code>innerHTML</code> en una etiqueta.</li>
+              <li>Los destinos se numeran porque el orden es la preferencia. La lista no deja repetir un destino ya elegido.</li>
+              <li>Las opciones de dos valores se eligen con un toque, con control segmentado en lugar de action-sheet.</li>
+              <li>Tipo de remolque solo aparece si el vehículo es articulado.</li>
+              <li>Las regionales llegan de la API o de configuración remota, no de un arreglo fijo en <code>TurnosService</code>.</li>
+              <li>Al confirmar: aviso breve y el estado de Inicio se actualiza solo, sin recargar la app.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>TurnoSheet</code><code>CatalogPicker</code><code>SegmentedControl</code><code>GeolocationService</code></div>
+          </div>
+        </div>
+
+        <!-- 4 PREOPERACIONAL -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab"><div><h3>Preoperacional</h3><span class="sub">SXT 482 · martes 21 de octubre</span></div></div>
+            <div class="bd">
+              <div class="prog"><div class="prog-t"><b>Pregunta 8 de 24</b><span>33 %</span></div><div class="track"><i style="width:33%"></i></div></div>
+              <span class="chip neu" style="align-self:flex-start">Luces y señalización</span>
+              <div class="qcard">
+                <span class="qn">8</span>
+                <h4>Luces de parqueo</h4>
+                <p>Encienden las dos y los lentes no están rotos.</p>
+                <div class="ans ok"><svg class="i"><use href="#i-check"/></svg>Cumple</div>
+                <div class="ans crit"><svg class="i"><use href="#i-x"/></svg>No cumple</div>
+              </div>
+              <span class="sec">Por corregir antes de salir (1)</span>
+              <div class="list"><div class="row"><span class="ic crit"><svg class="i"><use href="#i-alert"/></svg></span><div class="grow"><b>5 · Presión de llantas</b><span class="mm">Marcada como No cumple</span></div><span class="link">Solucionado</span></div></div>
+            </div>
+            <div class="footbar"><div class="btn ghost">Anterior</div><div class="btn">Siguiente</div></div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/preoperacional</b> · reemplaza preform.page</span>
+            <h3>Preoperacional</h3>
+            <p>La lógica dirigida por la API se conserva. Cambia la presentación: una pregunta a la vez, con progreso visible.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>Botones grandes de Cumple y No cumple en lugar de radios pequeños.</li>
+              <li>Al responder avanza a la siguiente; Anterior permite corregir.</li>
+              <li>Las respuestas se guardan como borrador local, así una pérdida de señal no borra el avance. El envío se reintenta solo.</li>
+              <li>La foto del vehículo es el último paso, con cámara directa.</li>
+              <li>Al terminar se muestra el resultado (aprobado o rechazado) y se refleja en Inicio.</li>
+              <li>La ruta queda protegida por el guard; hoy no lo está.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>PreguntaCard</code><code>ProgressHeader</code><code>PhotoPicker</code><code>PreopFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 5 DOCUMENTOS -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab"><h3>Documentos</h3></div>
+            <div class="bd">
+              <div class="seg"><span class="on">Conductor <em>1</em></span><span>Vehículo <em>1</em></span></div>
+              <div class="doc"><span class="ic ok"><svg class="i"><use href="#i-doc"/></svg></span><div class="grow"><b>Cédula de ciudadanía</b><span class="mm">Frente y reverso</span></div><span class="chip ok">Al día</span></div>
+              <div class="doc"><span class="ic ok"><svg class="i"><use href="#i-doc"/></svg></span><div class="grow"><b>Licencia de conducción</b><span class="mm">Vence el 14 mar 2027</span></div><span class="chip ok">Vigente</span></div>
+              <div class="doc crit"><span class="ic crit"><svg class="i"><use href="#i-doc"/></svg></span><div class="grow"><b>Seguridad social</b><span class="mm">Venció el 18 oct 2026</span></div><span class="chip crit">Vencido</span><div class="btn sm">Actualizar ahora</div></div>
+              <div class="doc"><span class="ic neu"><svg class="i"><use href="#i-doc"/></svg></span><div class="grow"><b>Mercancías peligrosas</b><span class="mm">Opcional</span></div><span class="link">Cargar</span></div>
+              <p class="m-note"><svg class="i"><use href="#i-alert"/></svg>Un documento vencido bloquea el enturnamiento.</p>
+            </div>
+            <nav class="tabs"><span class="tab"><svg class="i"><use href="#i-home"/></svg>Inicio</span><span class="tab"><svg class="i"><use href="#i-clip"/></svg>Preoperacional</span><span class="tab on"><svg class="i"><use href="#i-doc"/></svg>Documentos<em>2</em></span><span class="tab"><svg class="i"><use href="#i-user"/></svg>Perfil</span></nav>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/documentos</b> · sale de datos.page y de los dos DocumentosComponent</span>
+            <h3>Documentos</h3>
+            <p>Una lista que responde a la pregunta del conductor: qué tengo al día y qué me falta.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>El estado de cada documento se calcula de la fecha de vencimiento: vigente, por vencer (menos de 30 días) o vencido.</li>
+              <li>El documento que bloquea el turno se destaca y trae su acción en la misma tarjeta.</li>
+              <li>El catálogo de documentos es configuración tipada en <code>document-catalog.ts</code>, compartida por registro y perfil.</li>
+              <li>La pestaña muestra cuántos documentos requieren atención.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>DocumentoRow</code><code>StatusChip</code><code>DocumentCatalog</code><code>DocumentosFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 6 CAPTURA -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab"><svg class="i"><use href="#i-back"/></svg><h3>Licencia de conducción</h3></div>
+            <div class="bd">
+              <p class="m-sub">Toma las dos caras sobre una superficie oscura, sin reflejos.</p>
+              <div class="cap">
+                <div class="tile filled"><span class="okmark"><svg class="i"><use href="#i-check"/></svg></span><div class="idcard"></div><span class="t">Cara frontal</span><div class="tl"><span class="btn ghost">Repetir</span></div></div>
+                <div class="tile"><svg class="i"><use href="#i-camera"/></svg><span class="t">Cara posterior</span><div class="tl"><span class="btn">Tomar foto</span></div><span class="link"><svg class="i" style="vertical-align:-2px"><use href="#i-image"/></svg> Galería</span></div>
+              </div>
+              <div class="field"><label>Fecha de vencimiento</label><div class="input">14/03/2027<svg class="i" style="color:var(--app-muted)"><use href="#i-clock"/></svg></div></div>
+              <div class="banner neu"><svg class="i"><use href="#i-shield"/></svg><div class="grow"><b>Revisión de Tráfico</b><span>El documento queda pendiente hasta que Tráfico lo apruebe.</span></div></div>
+            </div>
+            <div class="footbar" style="flex-direction:column;gap:6px"><p class="m-note" style="justify-content:center">Falta la cara posterior</p><div class="btn off">Guardar licencia</div></div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/documentos/:tipo</b> · reemplaza 5 copias de processImage</span>
+            <h3>Actualizar documento</h3>
+            <p>El mismo componente sirve para cualquier documento del catálogo: el catálogo dice cuántas caras tiene, si pide fecha y si hay que rotar la imagen.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>Un solo <code>DocCapture</code> parametrizado, usado en registro, perfil y vehículos.</li>
+              <li>Compresión, rotación y recorte en <code>shared/utils/image.ts</code>, con pruebas unitarias.</li>
+              <li>Vista previa antes de enviar y botón de guardar que dice qué falta.</li>
+              <li>La subida muestra progreso y permite reintentar si se cae la señal.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>DocCapture</code><code>CaptureTile</code><code>CameraService</code><code>image.ts</code></div>
+          </div>
+        </div>
+
+        <!-- 7 PERFIL -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="bd">
+              <div class="prof"><div class="ava lg">CP<span class="cam"><svg class="i"><use href="#i-camera"/></svg></span></div><b>Carlos Andrés Pérez Gómez</b><span class="mm">CC 1.023.456.789</span><span class="chip ok">Activo</span></div>
+              <span class="sec">Tu información</span>
+              <div class="list">
+                <div class="row"><svg class="i"><use href="#i-user"/></svg><b class="grow">Datos personales</b><span class="chip ok">Completo</span><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><svg class="i"><use href="#i-truck"/></svg><div class="grow"><b>Mis vehículos</b><span class="mm">SXT 482 en uso</span></div><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><svg class="i"><use href="#i-shield"/></svg><b class="grow">Propietario</b><span class="chip ok">Verificado</span><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><svg class="i"><use href="#i-shield"/></svg><b class="grow">Tenedor</b><span class="chip neu">No aplica</span><svg class="i"><use href="#i-chev"/></svg></div>
+              </div>
+              <span class="sec">Cuenta</span>
+              <div class="list">
+                <div class="row"><svg class="i"><use href="#i-book"/></svg><b class="grow">Capacitaciones</b><span class="chip warn">1 pendiente</span><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><svg class="i"><use href="#i-bell"/></svg><b class="grow">Notificaciones</b><span class="mm">Activadas</span><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row danger"><svg class="i"><use href="#i-logout"/></svg><span class="grow">Cerrar sesión</span></div>
+              </div>
+            </div>
+            <nav class="tabs"><span class="tab"><svg class="i"><use href="#i-home"/></svg>Inicio</span><span class="tab"><svg class="i"><use href="#i-clip"/></svg>Preoperacional</span><span class="tab"><svg class="i"><use href="#i-doc"/></svg>Documentos</span><span class="tab on"><svg class="i"><use href="#i-user"/></svg>Perfil</span></nav>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/perfil</b> · reemplaza datos.page (2.968 + 1.254 líneas, 7 modales)</span>
+            <h3>Perfil</h3>
+            <p>Mis datos deja de ser un formulario gigante con modales anidados. Es un índice con el estado de cada sección, y cada sección abre su propia página con su propio formulario.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>Cada fila dice si la sección está completa o qué le falta, con texto y color.</li>
+              <li>Mis vehículos y Capacitaciones se integran aquí y salen del menú.</li>
+              <li>Íconos locales en lugar de imágenes remotas desde <code>3slogistica.com</code>.</li>
+              <li>Cerrar sesión pide confirmación y no recarga la app con <code>location.href</code>.</li>
+              <li>Capacitaciones se abre en el navegador del sistema, sin el token en la URL.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>ProfileHeader</code><code>SectionRow</code><code>DatosPersonalesForm</code><code>TerceroForm</code><code>PerfilFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 8 VEHICULOS -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab"><svg class="i"><use href="#i-back"/></svg><h3>Mis vehículos</h3></div>
+            <div class="bd">
+              <div class="veh on"><div class="veh-top"><span class="plate lg"><b>SXT 482</b><small>FUNZA</small></span><span class="chip ok">En uso</span></div><b>Kenworth T800 · 2019</b><span class="mm">Tractocamión · articulado · blanco</span></div>
+              <div class="veh"><div class="veh-top"><span class="plate lg"><b>WPL 915</b><small>MOSQUERA</small></span><svg class="i"><use href="#i-dots"/></svg></div><b>Chevrolet NPR · 2016</b><span class="mm">Camión sencillo · estacas · rojo</span><div class="btn sm ghost">Usar este vehículo</div></div>
+              <div class="veh"><div class="veh-top"><span class="plate lg"><b>TGK 207</b><small>COTA</small></span><span class="chip warn">En revisión</span></div><b>International 7600 · 2015</b><span class="mm">Documentos en validación</span></div>
+            </div>
+            <div class="footbar"><div class="btn"><svg class="i"><use href="#i-plus"/></svg>Agregar vehículo</div></div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/perfil/vehiculos</b> · reemplaza vehiculo.component (1.293 + 559 líneas)</span>
+            <h3>Mis vehículos</h3>
+            <p>Es el piloto de la Fase 2: la pantalla más pequeña de las tres grandes y la que más usa las piezas compartidas.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>La placa se muestra como placa, que es como el conductor reconoce su vehículo.</li>
+              <li>La acción principal, usar este vehículo, queda visible. Eliminar pasa al menú de la tarjeta y pide confirmación.</li>
+              <li>Cambiar de vehículo sigue pidiendo código SMS, en una hoja con el mismo <code>OtpInput</code> del login.</li>
+              <li>Sin foto, se muestra la placa; no la imagen de demostración de <code>ionicframework.com</code>.</li>
+              <li>Agregar y editar usan el mismo <code>VehiculoForm</code> del registro.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>VehiculoCard</code><code>VehiculoForm</code><code>CatalogPicker</code><code>OtpInput</code><code>VehiculosFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 9 REGISTRO -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>5G 87%</span></div>
+            <div class="ab between"><div class="who"><svg class="i"><use href="#i-back"/></svg><h3>Registro</h3></div><span class="mm">Paso 3 de 6</span></div>
+            <div class="bd">
+              <div class="steps"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i><i></i><i></i></div>
+              <div class="stepname"><b>Vehículo</b><span>Sigue: propietario y tenedor</span></div>
+              <div class="field"><label>Placa</label><div class="input focus"><span class="platetxt">SXT 482</span><span class="chip ok">Encontrado</span></div></div>
+              <p class="m-note okc"><svg class="i"><use href="#i-check"/></svg>Ya existe en el sistema. Revisa que los datos sean correctos.</p>
+              <div class="list">
+                <div class="row"><span class="k">Clase</span><b class="grow r">Tractocamión</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="k">Marca</span><b class="grow r">Kenworth</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="k">Línea</span><b class="grow r">T800</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="k">Modelo</span><b class="grow r">2019</b><svg class="i"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="k">Color</span><b class="grow r">Blanco</b><svg class="i"><use href="#i-chev"/></svg></div>
+              </div>
+              <div class="togrow"><div class="grow"><b>Vehículo articulado</b><span class="mm">Pide los datos del remolque</span></div><span class="tog"><i></i></span></div>
+            </div>
+            <div class="footbar"><div class="btn ghost">Atrás</div><div class="btn">Continuar</div></div>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>/registro</b> · reemplaza registro.page (3.444 + 1.147 líneas)</span>
+            <h3>Registro</h3>
+            <p>Un asistente con seis pasos explícitos: Identidad, Conductor, Vehículo, Propietario y tenedor, Documentos, y Términos y firma.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>El conductor siempre sabe en qué paso está y qué sigue.</li>
+              <li>Cada paso es un componente con su propio <code>FormGroup</code>. El borrador vive en <code>RegistroFacade</code> y se guarda en el dispositivo para retomar después.</li>
+              <li>Si la placa o la cédula ya existen, el paso se llena solo y pide confirmar. Hoy eso se comunica con íconos junto al campo.</li>
+              <li>Los catálogos se eligen en un <code>CatalogPicker</code> con búsqueda y caché. Reemplaza 24 handlers repetidos por pantalla.</li>
+              <li>Los términos legales se leen como contenido con scroll y aceptación explícita, no como DOM armado en un servicio.</li>
+              <li>Las credenciales del GPS satelital se envían al BFF y no se guardan en el dispositivo.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>StepHeader</code><code>VehiculoForm</code><code>TerceroForm</code><code>DocCapture</code><code>CatalogPicker</code><code>RegistroFacade</code></div>
+          </div>
+        </div>
+
+        <!-- 10 SIN CONEXIÓN -->
+        <div class="srow">
+          <div class="phone"><div class="scr">
+            <div class="sb"><span>9:41</span><span class="notch"></span><span>Sin señal</span></div>
+            <div class="offline"><svg class="i"><use href="#i-wifioff"/></svg><div class="grow"><b>Sin conexión</b><span>Mostrando datos de hoy, 06:40</span></div><span class="link">Reintentar</span></div>
+            <div class="ab between" style="padding-top:10px">
+              <div class="who"><div class="ava">CP</div><div><b>Hola, Carlos</b><span class="mm">Conductor activo</span></div></div>
+              <span class="plate"><b>SXT 482</b><small>FUNZA</small></span>
+            </div>
+            <div class="bd">
+              <div class="hero">
+                <span class="ey">Tu turno</span>
+                <span class="big">Enturnado</span>
+                <span class="hl"><svg class="i"><use href="#i-pin"/></svg>Origen: Regional Bogotá</span>
+              </div>
+              <div class="list">
+                <div class="row"><span class="ord">1</span><b class="grow">Regional Medellín</b><span class="pos"><small>#</small>4</span></div>
+                <div class="row"><span class="ord">2</span><b class="grow">Regional Cali</b><span class="pos"><small>#</small>11</span></div>
+                <div class="row"><span class="ord">3</span><b class="grow">Regional Barranquilla</b><span class="pos"><small>#</small>7</span></div>
+              </div>
+              <div class="banner neu"><svg class="i"><use href="#i-clock"/></svg><div class="grow"><b>1 envío en espera</b><span>Preoperacional de hoy. Se enviará cuando vuelva la señal.</span></div></div>
+            </div>
+            <nav class="tabs"><span class="tab on"><svg class="i"><use href="#i-home"/></svg>Inicio</span><span class="tab"><svg class="i"><use href="#i-clip"/></svg>Preoperacional</span><span class="tab"><svg class="i"><use href="#i-doc"/></svg>Documentos</span><span class="tab"><svg class="i"><use href="#i-user"/></svg>Perfil</span></nav>
+          </div></div>
+          <div class="notes">
+            <span class="route"><b>Estado global</b> · reemplaza el modal EmptyScreen de app.component</span>
+            <h3>Sin conexión y otros estados</h3>
+            <p>Perder la señal en carretera es normal. Hoy un modal a pantalla completa bloquea la app; la propuesta es un aviso arriba y la app usable con los últimos datos.</p>
+            <h4>Qué cambia</h4>
+            <ul>
+              <li>El último perfil, turno y estado de documentos quedan en caché y se muestran con su hora.</li>
+              <li>Los envíos (preoperacional, fotos) se encolan y se mandan al volver la señal.</li>
+              <li>Las acciones que necesitan red se deshabilitan con una explicación, en vez de fallar.</li>
+            </ul>
+            <h4>Los demás estados globales</h4>
+            <ul>
+              <li><b>Actualización requerida:</b> hoja que no se puede cerrar, con botón a la tienda correcta según la plataforma. Hoy siempre abre Play Store, también en iOS.</li>
+              <li><b>Sesión expirada:</b> el interceptor lleva al login con un mensaje, sin perder lo que se estaba llenando.</li>
+              <li><b>Cuenta inactiva:</b> variante roja del <code>StatusHero</code> con el contacto de Tráfico.</li>
+            </ul>
+            <h4>Componentes</h4>
+            <div class="tags"><code>OfflineBanner</code><code>NetworkService</code><code>OutboxService</code><code>EmptyState</code></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TOKENS ============ -->
+    <section id="tokens">
+      <span class="eyebrow-t">Diseño</span>
+      <h2>Sistema visual de la app</h2>
+      <p class="lead">Un solo sistema sobre Ionic. Los colores de estado son los mismos en toda la app: si algo está en verde, está al día; en ámbar, pide atención pronto; en rojo, bloquea.</p>
+
+      <div class="sw">
+        <div class="swatch"><i style="background:var(--app-primary)"></i><div><b>Primario</b><code>#0B72B9</code><span>Acciones, enlaces, pestaña activa. Contraste 5,1:1 con blanco.</span></div></div>
+        <div class="swatch"><i style="background:var(--app-navy)"></i><div><b>Noche</b><code>#0D2A44</code><span>Texto fuerte, números de cola, avisos globales.</span></div></div>
+        <div class="swatch"><i style="background:var(--app-bg);border-bottom:1px solid var(--line)"></i><div><b>Fondo</b><code>#F3F6F9</code><span>Fondo de pantalla; las tarjetas van en blanco.</span></div></div>
+        <div class="swatch"><i style="background:var(--app-ok)"></i><div><b>Al día</b><code>#1A7F37</code><span>Enturnado, aprobado, vigente.</span></div></div>
+        <div class="swatch"><i style="background:var(--app-warn-fill)"></i><div><b>Atención</b><code>#F2A900</code><span>Por vencer, pendiente. El texto encima va en Noche.</span></div></div>
+        <div class="swatch"><i style="background:var(--app-crit)"></i><div><b>Bloquea</b><code>#D3302F</code><span>Vencido, rechazado, cuenta inactiva.</span></div></div>
+      </div>
+
+      <div class="two">
+        <div class="typescale" aria-label="Escala tipográfica">
+          <h4>Tipografía: Atkinson Hyperlegible</h4>
+          <p class="muted" style="margin:0;font-size:.92rem">Diseñada para distinguir caracteres parecidos (1, l, I; 0, O). Para la placa y los números de cola se usa una grotesca condensada.</p>
+          <div class="ts"><span>28 · display</span><b style="font-family:var(--f-display);font-stretch:82%;font-size:28px;line-height:1.1">Enturnado</b></div>
+          <div class="ts"><span>22 · título</span><b style="font-size:22px;line-height:1.2">Mis vehículos</b></div>
+          <div class="ts"><span>18 · subtítulo</span><b style="font-size:18px">Luces de parqueo</b></div>
+          <div class="ts"><span>16 · cuerpo</span><span style="font-family:var(--f-body);font-size:16px;color:var(--fg)">Encienden las dos y los lentes no están rotos.</span></div>
+          <div class="ts"><span>14 · apoyo</span><span style="font-family:var(--f-body);font-size:14px;color:var(--muted)">Vence el 14 mar 2027</span></div>
+        </div>
+        <div class="prose">
+          <h4>Medidas</h4>
+          <ul>
+            <li>Objetivo táctil mínimo de 48 px; botones principales de 52 px.</li>
+            <li>Espaciado en múltiplos de 4 px.</li>
+            <li>Radio de 14 px en tarjetas, 12 px en botones y campos.</li>
+            <li>Acciones principales en la parte baja de la pantalla.</li>
+          </ul>
+          <h4>Tema de Ionic</h4>
+<pre>:root {
+  --ion-color-primary: #0B72B9;
+  --ion-color-primary-rgb: 11, 114, 185;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #0a64a3;
+  --ion-color-primary-tint: #2380c0;
+  --ion-color-success: #1A7F37;
+  --ion-color-warning: #F2A900;
+  --ion-color-danger: #D3302F;
+  --ion-background-color: #F3F6F9;
+  --ion-text-color: #0D2236;
+  --ion-font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SIGUIENTES ============ -->
+    <section id="siguientes">
+      <span class="eyebrow-t">Cierre</span>
+      <h2>Siguientes pasos</h2>
+      <ul class="next">
+        <li>
+          <h3>Se puede hacer ya en el repositorio</h3>
+          <ul>
+            <li>Sacar <code>www/</code>, <code>mikey.keystore</code> y <code>google-services.json</code> del índice de git y agregarlos a <code>.gitignore</code>, sin borrar las copias locales.</li>
+            <li>Montar <code>core/http</code> con <code>api.config</code> e interceptores, y migrar <code>TurnosApi</code> como primer ejemplo.</li>
+            <li>Quitar las dependencias e imports sin uso (Fase 1).</li>
+            <li>Piloto de Mis vehículos con <code>VehiculoForm</code> y <code>CatalogPicker</code>.</li>
+          </ul>
+        </li>
+        <li>
+          <h3>Necesita al equipo de backend</h3>
+          <ul>
+            <li>Rotar las credenciales de servicio y la API key de Maps.</li>
+            <li>Endpoints BFF para las llamadas que hoy van directo a Aldia y SIAT.</li>
+            <li>Código SMS para el login, reutilizando <code>/vehiculo/validation</code>.</li>
+            <li>TLS en <code>siat.aldialogistica.com:8000</code>.</li>
+            <li>Endpoint de regionales y de términos legales.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+  </main>
+</div>
