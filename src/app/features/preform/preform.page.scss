@@ -1,105 +1,66 @@
-/* Contenedor principal */
-.preguntas-lista {
-  padding: 0 10px;
-}
+$blue: #0094DA;
+$white: #FFFFFF;
 
-/* Tarjetas */
-.pregunta-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 20px;
-  margin: 18px 0;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 0.35s ease;
-}
+.header-aldia { --background: #{$blue}; --color: #{$white}; }
+.header-title { color: $white; font-weight: 700; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.header-badge-wrap { margin-right: 8px; }
 
-/* Título grande, escalable */
-.pregunta-titulo {
-  font-size: clamp(1.1rem, 6vw, 1.6rem);
+.chip-status {
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #222;
-  line-height: 1.4;
-  margin-bottom: 12px;
-}
-
-/* Descripción */
-.pregunta-descripcion {
-  font-size: clamp(0.95rem, 4.8vw, 1.25rem);
-  color: #444;
-  background: #f5f5f5;
-  padding: 14px;
-  border-radius: 10px;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
-
-/* Grupo de radios centrado */
-.radio-group {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  padding-top: 14px;
-  border-top: 1px solid #e0e0e0;
-}
-
-/* Cada opción */
-.radio-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: clamp(0.9rem, 4vw, 1.2rem);
-  color: #333;
-}
-
-/* Agrandar radios para accesibilidad */
-.radio-option ion-radio {
-  --size: 28px;
-  --border-radius: 50%;
-}
-
-/* Etiqueta debajo del radio */
-.radio-option label {
-  margin-top: 6px;
-  font-weight: 500;
-}
-
-.no-cumple-container {
-  margin-top: 25px;
-  padding: 15px;
+  padding: 4px 8px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chip-online { background: #E5F4EA; color: #1A7F37; }
+.chip-offline { background: #FFF3E0; color: #9A5B00; }
+
+.preform-content { --background: #F4F6F9; }
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+  color: #5B6B7B;
+  gap: 12px;
 }
 
-.titulo-no-cumple {
-  font-size: 1.3rem;
+.wizard-body {
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 48vh;
+}
+
+.step-container {
+  padding: 16px 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alertas-list { display: flex; flex-direction: column; gap: 10px; }
+
+.photo-btn-row { margin-top: 12px; }
+.btn-capture {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid $blue;
+  background: transparent;
+  color: $blue;
+  border-radius: 10px;
   font-weight: 700;
-  color: #b30000;
-  margin-bottom: 12px;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.texto-descripcion {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.card-none {
-   background-color: #f17b7b;
-}
-
-/* Animación entrada */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Animación salida */
-.animate-exit {
-  animation: fadeOutDown 0.3s ease forwards;
-}
-
-@keyframes fadeOutDown {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(20px); }
-}
+.step-footer { margin-top: 8px; }
+.btn-aldia-primary { --background: #{$blue}; --color: #{$white}; --border-radius: 12px; font-weight: 700; height: 48px; }

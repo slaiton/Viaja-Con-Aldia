@@ -345,10 +345,10 @@ const data = await this.getCityByLatLon(lat, lon, token);
 **Secretos expuestos en `environment.ts`:**
 ```typescript
 export const environment = {
-  maps: { apikey: 'AIzaSyC9OhpXTbpB4i_jXgf49uhwvX2QovLpnUU' }, // ← Google Maps API Key
+  maps: { apikey: 'API_KEY_AQUI' }, // ← Google Maps API Key
   aldia: {
     client_id: '6195793E9674880F',
-    client_secret: '691e1dd6ee281jfALnXyGZIuXnX7O6H5EuxwCiel37bhQ' // ← Secret expuesto
+    client_secret: 'CLIENT_SECRET_AQUI' // ← Secret expuesto
   }
 };
 ```
@@ -658,3 +658,4 @@ El endpoint `POST /api/logs/gps/batch` (a crear en el backend) recibe el arreglo
 ---
 
 *Documento generado a partir del análisis exhaustivo del código fuente y el Manual de Arquitectura y Contexto Logístico "Viaja Con Aldia". Listo para validación estratégica con contexto de operaciones logísticas en Colombia.*
+

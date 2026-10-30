@@ -4,7 +4,7 @@ import { AlertController, IonModal, LoadingController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { PhotoService } from '@core/services/photo.service';
 import { UserService } from '@core/services/user.service';
-import { log } from 'console';
+// log removed
 import { Photo } from '@capacitor/camera';
 import { DatosPage } from '../../datos.page';
 import { RegistroService } from '@core/services/registro.service';
@@ -14,7 +14,7 @@ import { RegistroService } from '@core/services/registro.service';
   selector: 'app-documentos-data',
   templateUrl: './documentos.component.html',
   styleUrls: ['./documentos.component.scss'],
-  encapsulation: ViewEncapsulation.ShadowDom
+  // encapsulation standard
 })
 export class Documentos2Component implements OnInit {
 
@@ -49,7 +49,7 @@ export class Documentos2Component implements OnInit {
 
 
   constructor(
-    private datos: DatosPage,
+    private datos: any,
     private route: Router,
     private photo: PhotoService,
     private alertController: AlertController,
@@ -515,3 +515,4 @@ export class Documentos2Component implements OnInit {
   }
 
 }
+

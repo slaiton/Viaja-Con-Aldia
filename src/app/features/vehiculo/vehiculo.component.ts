@@ -1,142 +1,87 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
+import {
+  Component, Input, OnInit, Output, EventEmitter
+} from '@angular/core';
 import { Router } from '@angular/router';
-import { ActionSheetController, AlertController, LoadingController, ModalController } from '@ionic/angular';
-import { Platform } from '@ionic/angular';
-import { PhotoService } from '../../core/services/photo.service';
-import { UserService } from '../../core/services/user.service';
-import { log } from 'console';
-import { Photo } from '@capacitor/camera';
-import { RegistroService } from '../../core/services/registro.service';
+import {
+  ActionSheetController, AlertController, LoadingController, Platform
+} from '@ionic/angular';
+import { PhotoService } from '@core/services/photo.service';
+import { UserService } from '@core/services/user.service';
+import { RegistroService } from '@core/services/registro.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
-
+import { Photo } from '@capacitor/camera';
+import { firstValueFrom } from 'rxjs';
+import { VehiculosFacade } from './vehiculos.facade';
+import { VehiculoListItem } from '@core/models/vehiculo.model';
 
 @Component({
   selector: 'app-vehiculo',
   templateUrl: './vehiculo.component.html',
-  styleUrls: ['./vehiculo.component.scss'],
-  encapsulation: ViewEncapsulation.ShadowDom
+  styleUrls: ['./vehiculo.component.scss']
+  // ShadowDom eliminado: los tokens globales del Mockup ahora penetran correctamente
 })
 export class VehiculoComponent implements OnInit {
 
-  formVehicle: any = FormGroup;
-  formProp: any = FormGroup;
-  formTene: any = FormGroup;
-  formPlaca: any = FormGroup;
-  formSendCode: any = FormGroup;
-
-  @ViewChild('modal') modal!: ModalController;
-  @ViewChild('modalcode') modalcode!: ModalController;
-  @ViewChild('modalChange') modalChange!: ModalController;
   @Input() public dataTercero: any;
-
   @Output() dismissChange = new EventEmitter<boolean>();
 
+  // ─── Estado UI ──────────────────────────────────────────────────────────
+  isModalOpen   = false;
+  modalCodeOpen = false;
+  nuevoVehiculo = true;
+  codeValidation = false;
 
-  private canDismissOverride = false;
+  dataVehiculos: VehiculoListItem[] = [];
+  cargando = false;
 
-  listEvents: Array<any> = [];
-  overCanvas: any;
-  documentActive: any;
-  articulado: any = true;
-  loadingData: any;
-  token: any
-  searchTerm: any;
-  nuevoVehiculo: any = true;
+  // Formularios (conservados para el modal de registro/búsqueda)
+  formVehicle!: FormGroup;
+  formPlaca!: FormGroup;
+  formSendCode!: FormGroup;
 
-  isTenedor: any = true;
-  isPropietario: any = true;
+  // Datos del vehículo en proceso de cambio/registro
+  vehiculo: any = {
+    placa: '', claseVehiculo: '', celularPropietario: '',
+    celularPropietariox3: '', celularPropietarioLast: '',
+    codigoTerce: '', articulado: false, modelo: '',
+    marca: '', linea: '', color: '', carroceria: '',
+    codigoClase: '', codigoMarca: '', codigoLinea: '',
+    codigoColor: '', codigoCarroceria: '', codigoSatelital: '',
+    empresaSatelital: '', usuarioSatelital: '', claveSatelital: '',
+    cuentaSatelital: '', fechaSoat: '', fechaTecno: '', remolque: '',
+    foto: null
+  };
+
+  hubImag: any = {
+    fotovehi1:  { webviewPath: false },
+    fotoremol:  { webviewPath: false },
+    tarjePror1: { webviewPath: false },
+    tarjePror2: { webviewPath: false },
+  };
+
+  searchTerm = '';
+  documents_vehiculo: any;
+  documents_conductor: any;
+
+  // Catálogos para autocomplete (cargados al abrir modal)
+  dataClases: any[] = [];
+  dataMarcas: any[] = [];
+  dataLineas: any[] = [];
+  dataColores: any[] = [];
+  dataCarroc: any[] = [];
+  dataSatelital: any[] = [];
 
   keyword = 'name';
   itemTemplate: any;
   notFoundTemplate: any;
-  placaChange: any;
-  imgxVehiculo: any = []
 
-  isModalOpen: any = false;
-  isModalChange: any = false;
-  modalCodeOpen: any = false;
-
-  documents: any;
-  fechaL: any = [];
-  dataVehiculos: any = []
-  documents_vehiculo: any;
-  documents_conductor: any;
-
-  dataMarcas: any = []
-  dataCarroc: any = []
-  dataLineas: any = []
-  dataColores: any = []
-  dataClases: any = []
-  dataSatelital: any = []
-  presentingElement: any = undefined
-  placaActual: any
-
-  codeValidation: any = false;
-  cedula: any;
-  conductor: any = {
-    cedula: ''
-  }
-
-  vehiculo: any = {
-    placa: '',
-    cedulaProp: '',
-    cedulaTene: '',
-    claseVehiculo: '',
-    codigoClase: '',
-    carroceria: '',
-    codigoCarroceria: '',
-    fechaSoat: '',
-    fechaTecno: '',
-    color: '',
-    codigoColor: '',
-    linea: '',
-    codigoLinea: '',
-    modelo: '',
-    repoten: '',
-    articulado: '',
-    marca: '',
-    codigoMarca: '',
-    remolque: '',
-    empresaSatelital: '',
-    codigoSatelital: '',
-    usuarioSatelital: '',
-    claveSatelital: '',
-    cuentaSatelital: '',
-    codigoTerce: '',
-    celularConductor: '',
-    celularPropietario: '',
-    celularPropietariox3: '',
-    celularPropietarioLast: ''
-  }
-
-  hubImag: any = {
-    licencia1: { webviewPath: false },
-    licencia2: { webviewPath: false },
-    cedula1: { webviewPath: false },
-    cedula2: { webviewPath: false },
-    tarjePro: { webviewPath: false },
-    soat1: { webviewPath: false },
-    tecnomecanica: { webviewPath: false },
-    fotoremol: { webviewPath: false },
-    tarjePror1: { webviewPath: false },
-    tarjePror2: { webviewPath: false },
-    cedula_pro1: { webviewPath: false },
-    cedula_pro2: { webviewPath: false },
-    cedula_ten1: { webviewPath: false },
-    cedula_ten2: { webviewPath: false },
-    fotovehi1: { webviewPath: false },
-    fotovehi2: { webviewPath: false },
-    fotovehi3: { webviewPath: false },
-    fotovehi4: { webviewPath: false },
-    fotoperfil: { webviewPath: false },
-    seguridadsocial: { webviewPath: false }
-  };
-
+  private canDismissOverride = false;
+  private loadingData: any;
 
   constructor(
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private photo: PhotoService,
     private alertController: AlertController,
     private router: Router,
@@ -145,1149 +90,379 @@ export class VehiculoComponent implements OnInit {
     private reg: RegistroService,
     private actionSheetCtrl: ActionSheetController,
     private auth: AuthService,
-    private platform: Platform
-
+    private platform: Platform,
+    private facade: VehiculosFacade
   ) {
-    this.initializeApp()
-    this.placaActual = user.getPlaca();
-    this.formVehicle = this.formBuilder.group({
-      claseVehiculo: ['', [Validators.required]],
-      carroceria: ['', [Validators.required]],
-      linea: ['', [Validators.required]],
-      color: ['', [Validators.required]],
-      fechaSoat: [''],
-      fechaTecno: [''],
-      marca: ['', [Validators.required]],
-      modelo: ['', [Validators.required]],
-      remolque: [''],
-      empresaSatelital: ['', [Validators.required]],
+    this.platform.ready().then(() => this.setStatusBarColor());
+
+    this.formVehicle = this.fb.group({
+      claseVehiculo:    ['', Validators.required],
+      carroceria:       ['', Validators.required],
+      linea:            ['', Validators.required],
+      color:            ['', Validators.required],
+      fechaSoat:        [''],
+      fechaTecno:       [''],
+      marca:            ['', Validators.required],
+      modelo:           ['', Validators.required],
+      remolque:         [''],
+      empresaSatelital: ['', Validators.required],
       usuarioSatelital: ['', Validators.required],
-      claveSatelital: ['', Validators.required],
-      cuentaSatelital: [''],
-      codigoPropietario: ['']
+      claveSatelital:   ['', Validators.required],
+      cuentaSatelital:  [''],
+      codigoPropietario:[''],
+      placa:            ['']
     });
 
-    this.formProp = formBuilder.group({
-      cedula: ['', [Validators.required]],
-      nombres: ['', [Validators.required]],
-      apellidos: ['', [Validators.required]],
-      correo: ['', [Validators.required]],
-      celular: ['', [Validators.required]],
-      direccion: ['', [Validators.required]],
-      fechaNacimiento: [''],
-      nombreContacto: [''],
-      celularContacto: [''],
-      parentesco: [''],
-    });
+    this.formPlaca = this.fb.group({ placa: ['', Validators.required] });
+    this.formSendCode = this.fb.group({ codigo: ['', Validators.required] });
 
-
-    this.formTene = formBuilder.group({
-      cedula: ['', [Validators.required]],
-      nombres: ['', [Validators.required]],
-      apellidos: ['', [Validators.required]],
-      correo: ['', [Validators.required]],
-      celular: ['', [Validators.required]],
-      direccion: ['', [Validators.required]],
-      fechaNacimiento: [''],
-      nombreContacto: [''],
-      celularContacto: [''],
-      parentesco: [''],
-    });
-
-    this.formPlaca = formBuilder.group({
-      placa: ['', [Validators.required]]
-    });
-
-    this.formSendCode = formBuilder.group({
-      codigo: ['', [Validators.required]]
-    });
-
-    this.documents_vehiculo = this.user.documents_vehiculo
-    this.documents_conductor = this.user.documents_conductor
-
-
+    this.documents_vehiculo  = this.user.documents_vehiculo;
+    this.documents_conductor = this.user.documents_conductor;
   }
 
-
-  async ngOnInit() {
-
-    const loadingData = await this.loading.create({
-      message: 'Generando datos...',
-    });
-
-    loadingData.present();
-
-    this.dataVehiculos = []
-    this.presentingElement = document.querySelector('.ion-vehicle');
-
-    this.token = this.user.getToken();
-    if (this.user.getToken() == null) {
+  async ngOnInit(): Promise<void> {
+    if (!this.user.getToken()) {
       this.router.navigate(['/login']);
+      return;
     }
-
-    this.conductor.cedula = this.user.getCedula()
-    // console.log(this.active);
-    // this.active = false;
-    var validate = true;
-    var doc = ''
-    var mensaje = '';
-
-
-    this.getVehiculos(this.conductor.cedula).then(
-      (data: any) => {
-        if (data) {
-          loadingData.dismiss();
-        } else {
-          this.presentAlert("Error", "al cargar datos", "", "Cerrar")
-        }
-      }
-    )
-
+    await this.cargarVehiculos();
   }
 
-  initializeApp() {
-    this.platform.ready().then(() => {
-      this.setStatusBarColor();
-    });
-  }
+  // ─── Carga de lista ─────────────────────────────────────────────────────
 
-  setStatusBarColor() {
-    if (this.platform.is('android')) {
-      StatusBar.setBackgroundColor({ color: '#3c8ccd' }); // Cambia a tu color deseado en formato hexadecimal
-    } else if (this.platform.is('ios')) {
-      StatusBar.setStyle({ style: Style.Dark }); // Estilos disponibles: Dark, Light, Default
-    }
-  }
-
-  async getVehiculos(cedula: any) {
+  private async cargarVehiculos(): Promise<void> {
+    const loadingData = await this.loading.create({ message: 'Generando datos...' });
+    await loadingData.present();
     try {
-      var status = true;
-      const data = await this.reg.getVehiculos('', cedula, this.token).toPromise();
-      if (data.status) {
-        console.log(data);
-
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-
-          if (dataArray[a].numeroPlacaxxx == this.vehiculo.placa) { dataArray[a].status = true } else { dataArray[a].status = false }
-
-          if (dataArray[a].hojaVidaApp) { dataArray[a].estado = 'En Uso'; dataArray[a].color = 'danger'; }
-          else { dataArray[a].estado = 'Disponible'; dataArray[a].color = 'success'; }
-
-          this.getDocument(dataArray[a].numeroPlacaxxx, 'fotovehi1').then(
-            (data: any) => {
-
-
-              if (data.data) {
-                dataArray[a].foto = data.data['fotovehi1'];
-
-                console.log(data.data['fotovehi1']);
-                this.imgValidate(data.data['fotovehi1']).then(
-                  isValid => {
-                    if (isValid) {
-                      this.imgxVehiculo[dataArray[a].numeroPlacaxxx] = data.data['fotovehi1'];
-                    } else {
-                      dataArray[a].foto = false;
-                    }
-                  }
-                )
-
-
-              } else {
-                dataArray[a].foto = false;
-              }
-
-            }
-          )
-          this.dataVehiculos.push(dataArray[a]);
-        }
-
-      } else {
-        status = false;
-      }
-
-
-
-      return status;
-
-    } catch (error:any) {
-      if (error.status == 401) {
-        this.auth.logout()
-      }
-      return error
+      this.dataVehiculos = await this.facade.getListaVehiculos();
+    } catch {
+      await this.presentAlert('Error', 'al cargar datos', '', 'Cerrar');
+    } finally {
+      await loadingData.dismiss();
     }
-
   }
 
-  async editVehicule(placa: any): Promise<void> {
+  // ─── Selección / cambio de vehículo ────────────────────────────────────
 
-    var validate = true;
-    this.nuevoVehiculo = false;
-    const loadingData = await this.loading.create({
-      message: 'Generando datos...',
-    });
-
+  selectChange(placa: string): void {
     this.vehiculo.placa = placa;
-    this.formVehicle.patchValue({
-      placa: placa
-    })
-
-    loadingData.present();
-
-    const esl = await this.reg.getDataVehiculo(placa)
-    var mensaje = '<ul>';
-    const datos = esl.data[0];
-    // const cedulaTer = datos['codigoTercerox']
-
-
-    this.vehiculo.codigoTerce = datos.codigoTercerox
-    this.vehiculo.codigoMarca = datos.codigoVehmarca
-    this.vehiculo.codigoLinea = datos.codigoVehlinea
-    this.vehiculo.codigoClase = datos.codigoVehclase
-    this.vehiculo.codigoColor = datos.codigoVehcolor
-    this.vehiculo.codigoCarroceria = datos.codigoVehcarro
-    this.vehiculo.marca = datos.nombreVehmarca
-    this.vehiculo.carroceria = datos.nombreVehcarro
-    this.vehiculo.claseVehiculo = datos.nombreClaseVeh
-    this.vehiculo.linea = datos.nombreVehlinea
-    this.vehiculo.color = datos.nombreVehcolor
-    this.vehiculo.modelo = datos.numeroModeloxx
-    this.vehiculo.usuarioSatelital = datos.sateliUsuariox
-    this.vehiculo.claveSatelital = datos.satelContrasen
-    this.vehiculo.codigoSatelital = datos.sateliEmpresax
-    this.vehiculo.empresaSatelital = datos.nombreAppempgp
-    this.vehiculo.cuentaSatelital = datos.satelCuentaxx
-    this.vehiculo.celularPropietario = datos.celularPropietario
-
-    if (datos.celularPropietario) {
-      this.chartsCelular(datos.celularPropietario)
-    }
-
-
-
-    if (datos.numeroModeloxx) { this.vehiculo.modelo = datos.numeroModeloxx; }
-    else { validate = false; mensaje += '<li> Modelo </li>' }
-    if (datos.fechaxSoatxxxx) { this.vehiculo.fechaSoat = datos.fechaxSoatxxxx; }
-    if (datos.fechaxTecnimec) { this.vehiculo.fechaTecno = datos.fechaxTecnimec; }
-
-    console.log(this.vehiculo);
-
-    if (datos.tipoxxVehiculo == "ARTICULADO") {
-      this.vehiculo.articulado = true
-      // this.dataTercero.articulado = true;
-
-    } else {
-      this.vehiculo.articulado = false;
-      // this.dataTercero.articulado = false;
-    }
-
-    if (this.imgxVehiculo[placa]) {
-      console.log(this.imgxVehiculo[placa]);
-
-      this.hubImag['fotovehi1'].webviewPath = this.imgxVehiculo[placa]
-    }
-
-
-    const dataClases = this.getClases();
-    const dataMarcas = this.getMarcas();
-    const dataColores = this.getColores();
-    const dataSatelitalpo = this.getSatelital();
-
-
-
-
-    Promise.all([dataClases, dataMarcas, dataColores]).then(
-      ([doc1, doc2, doc3]) => {
-
-        loadingData.dismiss();
-
-
-        const objeto2 = this.dataClases.find((objeto2: any) => objeto2.name === datos.nombreClaseVeh);
-        // console.log(objeto2);
-
-        if (objeto2 != undefined) {
-          this.vehiculo.codigoClase = objeto2.id;
-          this.vehiculo.claseVehiculo = objeto2.name
-
-          this.getCarroc(objeto2.id);
-        } else {
-          validate = false;
-          mensaje += '<li>Clase Vehiculo</li>'
-        }
-
-
-        const objeto1 = this.dataMarcas.find((objeto1: any) => objeto1.name === datos.nombreVehmarca);
-        // console.log(objeto1);
-
-        if (objeto1 != undefined) {
-          this.getClaseLinea(objeto1.id);
-          this.vehiculo.codigoMarca = objeto1.id;
-          this.vehiculo.marca = objeto1.name
-        } else {
-          validate = false;
-          mensaje += '<li>Marca</li>'
-          this.vehiculo.marca = ''
-          this.vehiculo.codigoMarca = ''
-
-        }
-
-      })
-
-    this.setOpenVehiculo(true);
-    loadingData.dismiss();
-
+    this.setOpenCode(true);
   }
 
-
-  async getDataCode(cedula: any, placa: any) {
-    const data = await this.reg.getDataCode(cedula, placa, this.token);
-    return data;
-  }
-
-
-  async sendCodeValidation() {
-    const json = {
-      cedula: this.user.getCedula(),
-      placa: this.vehiculo.placa,
-      telefono: this.vehiculo.celularPropietario
-    }
-
-    const data = await this.reg.sendCode(json, this.token).then(
-      data => {
-        if (data.status_sms == 202 || data.code) {
-          this.codeValidation = true;
-        }
+  async changeVehicleDriver(placa: string, cedulaVH: string): Promise<void> {
+    const loadingData = await this.loading.create({ message: 'Validando Datos...' });
+    await loadingData.present();
+    try {
+      await this.facade.cambiarVehiculo(placa, cedulaVH);
+      await this.presentAlert('Vehículo Asignado', 'Por favor inicia sesión con el nuevo vehículo.', '', 'Cerrar');
+      this.onDismissChange(true);
+      this.setOpenVehiculo(false);
+      this.auth.logout();
+    } catch (err: any) {
+      if (err?.message === 'SMS_PENDIENTE') {
+        await this.presentAlert('Alerta', 'Proceso pendiente', 'Ingrese el código recibido', 'Cerrar');
+        this.setOpenCode(true);
+      } else if (err?.message === 'PLACA_OTRO_CONDUCTOR') {
+        await this.presentAlert('Alerta', '', 'La placa que intenta registrar está asociada a otro conductor.', 'Cerrar');
+        this.setOpenCode(true);
+      } else {
+        await this.presentAlert('Error', '', 'Ocurrió un evento inesperado', 'Cerrar');
       }
-    )
-
+    } finally {
+      await loadingData.dismiss();
+    }
   }
 
-  async approveCode() {
+  async approveCode(): Promise<void> {
     const json = {
       cedula: this.user.getCedula(),
-      placa: this.vehiculo.placa,
+      placa:  this.vehiculo.placa,
       codigo: this.formSendCode.value.codigo
-    }
-
-    const data = await this.reg.validateCode(json, this.token);
-
+    };
+    const data = await this.reg.validateCode(json, this.user.getToken());
     if (data.status) {
-      var jsonAprove: any = {}
-      jsonAprove['placa'] = this.vehiculo.placa
-      jsonAprove['cedula'] = this.user.getCedula();
-      await this.changeVehicleApi(jsonAprove);
+      await this.facade.cambiarVehiculoActivo({ placa: this.vehiculo.placa, cedula: this.user.getCedula() });
       this.setOpenCode(false);
     }
   }
 
-  onWillPresent() {
-    this.canDismissOverride = false;
-  }
-
-  async selectEvent(e: any) {
-
-    const loading = await this.loading.create({
-      message: 'Cargando Datos...'
-    });
-
-    loading.present();
-
-    this.formVehicle.patchValue({
-      carroceria: ''
-    });
-
-    // console.log(e);
-
-    if (e.tipo == "ARTICULADO") {
-      this.vehiculo.articulado = true;
-      // this.dataTercero.articulado = true;
-      this.documents_vehiculo[3].hidden = false;
-      this.formVehicle.get('remolque').setValidators(Validators.required);
-    } else {
-      this.vehiculo.articulado = false;
-      this.vehiculo.remolque = ''
-      // this.dataTercero['articulado'] = false;
-      this.formVehicle.patchValue({
-        remolque: ''
-      });
+  async sendCodeValidation(): Promise<void> {
+    const json = {
+      cedula:   this.user.getCedula(),
+      placa:    this.vehiculo.placa,
+      telefono: this.vehiculo.celularPropietario
+    };
+    const data = await this.reg.sendCode(json, this.user.getToken());
+    if (data?.status_sms === 202 || data?.code) {
+      this.codeValidation = true;
     }
-
-    this.vehiculo.claseVehiculo = e.name;
-    this.vehiculo.codigoClase = e.id;
-    this.getCarroc(e.id).then(
-      data => {
-        console.log(data);
-
-        loading.dismiss();
-      }
-    )
   }
 
-  onChangeSearch(e: any) {
-
-  }
-  onFocused(e: any) {
-
-  }
-
-  async selectMarca(e: any) {
-
-    const loading = await this.loading.create({
-      message: 'Cargando Datos...'
-    });
-
-    loading.present();
-
-    this.formVehicle.patchValue({
-      linea: ''
-    });
-    this.vehiculo.codigoMarca = e.id
-    this.vehiculo.marca = e.name
-    this.getClaseLinea(e.id).then(
-      data => {
-        loading.dismiss();
-      }
-    )
-  }
-
-  onChangeMarca(e: any) {
-
-  }
-
-  onFocusedMarca(e: any) {
-
-  }
-
-
-  selectLinea(e: any) {
-    this.vehiculo.linea = e.name
-    this.vehiculo.codigoLinea = e.id
-  }
-  onChangeLinea(e: any) {
-
-  }
-  onFocusedLinea(e: any) {
-
-  }
-
-  selectColor(e: any) {
-    this.vehiculo.color = e.name
-    this.vehiculo.codigoColor = e.id
-  }
-
-  onChangeColor(e: any) {
-
-  }
-
-  onFocusedColor(e: any) {
-
-  }
-
-
-  selectCarroceria(e: any) {
-    this.vehiculo.codigoCarroceria = e.id;
-    this.vehiculo.carroceria = e.name;
-
-  }
-
-  onChangeCarroceria(e: any) {
-
-  }
-
-  onFocusedCarroceria(e: any) {
-
-  }
-
-  selectSatelital(e: any) {
-    this.vehiculo.empresaSatelital = e.name
-    this.vehiculo.codigoSatelital = e.id
-  }
-
-  onChangeSatelital(e: any) {
-
-  }
-
-  onFocusedSatelital(e: any) {
-
-  }
-
-  onEditVehicle() {
-
-  }
-
-  async changeVehicleDriver(placa: any, cedulaVH: any) {
-    // await this.editVehicule(placa);
-
-    const loading = await this.loading.create({
-      message: 'Validando Datos...'
-    });
-
-    loading.present();
-
-
-    const cedulaActual = this.user.getCedula();
-    var json: any = {}
-    var jsonApi1: any = {}
-    jsonApi1['numeroPlacaxxx'] = placa;
-    jsonApi1['codigoTercerox'] = cedulaActual
-    json['placa'] = placa
-    json['cedula'] = cedulaActual
-    const cedula = cedulaVH
-
-    const getCode = await this.getDataCode(this.user.getCedula(), placa);
-    if (getCode.status) {
-      this.presentAlert("Alerta", "Proceso pendiente", "Ingrese el codigo recibido", "Cerrar");
-      this.setOpenCode(true);
-      loading.dismiss();
-      return;
-    }
-
-    // console.log(cedula);
-    // console.log(cedulaActual);
-
-    // return getCode;
-
-    if (cedula && (cedula != json['cedula'])) {
-      this.presentAlert("Alerta", "", "La placa que intenta registrar esta asociada a otro conductor.", "Cerrar");
-      this.setOpenCode(true);
-      loading.dismiss();
-      return;
-    }
-
+  async deleteVehicle(placa: string): Promise<void> {
+    const loadingData = await this.loading.create({ message: 'Cargando Datos...' });
+    await loadingData.present();
     try {
-
-      await this.reg.addVehiclexDriver(this.token, jsonApi1);
-      await this.changeVehicleApi(json).then(
-        () => {
-          loading.dismiss();
-        },
-        err => {
-          loading.dismiss();
-        }
-      )
-      loading.dismiss();
-
-    } catch (error) {
-      this.presentAlert("Error", "", "Ocurio un evento inesperado", "Cerrar");
-      loading.dismiss();
+      await this.facade.eliminarVehiculo(placa);
+      this.onDismissChange(true);
+      this.setOpenVehiculo(false);
+      await this.cargarVehiculos();
+    } finally {
+      await loadingData.dismiss();
     }
-
   }
 
-  async changeVehicleApi(json: any) {
-    await this.reg.changeDataVehicle(json, this.token).then(
-      data => {
-        this.presentAlert("Vehiculo Asignado", "Por favor iniciar Sesion con el nuevo Vehiculo", "", "Cerrar");
-        this.onDismissChange(true);
-        this.setOpenVehiculo(false)
-        this.auth.logout();
-      },
-      err => {
-        this.presentAlert("Error", "", "Ocurio un evento inesperado", "Cerrar");
-      }
-    )
-  }
+  // ─── Búsqueda de nueva placa ────────────────────────────────────────────
 
-  async changeVehicle() {
-
-    const loading = await this.loading.create({
-      message: 'Validando Datos...'
-    });
-
+  async changeVehicle(): Promise<void> {
+    const loadingData = await this.loading.create({ message: 'Validando Datos...' });
+    await loadingData.present();
     try {
-
-      loading.present();
       this.nuevoVehiculo = true;
-
-      this.formVehicle.patchValue({
-        claseVehiculo: '',
-        carroceria: '',
-        linea: '',
-        color: '',
-        fechaSoat: '',
-        fechaTecno: '',
-        marca: '',
-        modelo: '',
-        remolque: '',
-      });
-
-      var cedulaConductor = this.user.getCedula();
-      const placa = document.getElementById("placa") as HTMLInputElement | null;
-      const placaText: any = placa?.value
-
-      if (placaText?.length && placaText?.length > 5) {
-
+      this.formVehicle.reset();
+      const placaEl = document.getElementById('placa') as HTMLInputElement | null;
+      const placaText = placaEl?.value?.trim() ?? '';
+      if (placaText.length > 5) {
         this.vehiculo.placa = placaText;
-        this.placaChange = placaText;
-        const data = await this.reg.getDataVehiculo(placaText)
-        // console.log(data);
-        var status = data.status;
-        if (status) {
-          var cedula = data.data[0].codigoTercerox;
-          this.vehiculo.claseVehiculo = data.data[0].nombreClaseVeh
-          this.vehiculo.celularPropietario = data.data[0].celularPropietario
-          if (data.data[0].celularPropietario) {
-            this.chartsCelular(data.data[0].celularPropietario)
-          }
-
-          if (cedula && cedula != cedulaConductor) {
-            this.presentAlert("Alerta", "", "La placa que intenta registrar esta asociada a otro conductor.", "Cerrar");
-            this.setOpenCode(true);
-          }
-
-          this.nuevoVehiculo = false
-
-          //  await this.editVehicule(placaText);
-          //  this.changeVehicleDriver(placaText);
-          loading.dismiss();
+        const datos = await this.facade.buscarVehiculoPorPlaca(placaText);
+        if (datos) {
+          this.vehiculo.claseVehiculo = datos.nombreClaseVeh;
+          this.vehiculo.celularPropietario = datos.celularPropietario;
+          this.vehiculo.codigoTerce = datos.codigoTercerox;
+          if (datos.celularPropietario) this.chartsCelular(datos.celularPropietario);
+          this.nuevoVehiculo = false;
         }
       }
-
-    } catch (err:any) {
-
-        this.nuevoVehiculo = true
-        loading.dismiss();
-
-
-      if (err.status == 401) {
-        this.user.logout();
-      }
-      
+    } catch (err: any) {
+      if (err?.status === 401) this.user.logout();
+      this.nuevoVehiculo = true;
+    } finally {
+      await loadingData.dismiss();
     }
   }
 
+  // ─── Formulario de registro de vehículo nuevo ───────────────────────────
 
-  chartsCelular(celular: any) {
-    this.vehiculo.celularPropietariox3 = celular.slice(0, 3)
-    this.vehiculo.celularPropietarioLast = celular.charAt(celular.length - 1)
-  }
-
-  selectChange(placa: any) {
-    this.vehiculo.placa = placa
-    this.setOpenChange(true)
-  }
-
-  async deleteVehicle(placa: any) {
-
-    const loading = await this.loading.create({
-      message: 'Cargando Datos...'
-    });
-
-    loading.present();
-
-    var json: any = {}
-
-    json['numeroPlacaxxx'] = placa
-    json['codigoTercerox'] = this.user.getCedula();
-
-    this.reg.deleteVehicle(json, this.token).subscribe(
-      data => {
-        loading.dismiss();
-        this.ngOnInit()
-        this.onDismissChange(true);
-        this.setOpenVehiculo(false)
-      }
-    )
-
-  }
-
-  resetVehicle() {
-    this.formVehicle.reset();
-
-
-    this.vehiculo.placa = '';
-    this.vehiculo.carroceria = '';
-    this.vehiculo.linea = '';
-    this.vehiculo.color = '';
-    this.vehiculo.fechaSoat = '';
-    this.vehiculo.fechaTecno = '';
-    this.vehiculo.marca = '';
-    this.vehiculo.modelo = '';
-    this.vehiculo.remolque = '';
-    this.hubImag['fotovehi1'].webviewPath = ''
-
-    // this.setOpenVehiculo(false);
-
-  }
-
-
-  cancelNewVehicle = async () => {
-
-    if (this.canDismissOverride) {
-      return true;
-    }
-
-
-    const actionSheet = await this.actionSheetCtrl.create({
-      header: 'Seguro desea Salir?',
-      buttons: [
-        {
-          text: 'Si',
-          role: 'confirm',
-          handler: () => {
-            this.resetVehicle();
-          }
-        },
-        {
-          text: 'No',
-          role: 'cancel'
-        },
-
-      ],
-    });
-
-    actionSheet.present();
-
-    const { role } = await actionSheet.onWillDismiss();
-
-    return role === 'confirm';
-  }
-
-
-  upperPlaca(e: any) {
-    // console.log(e.detail.value.toUpperCase());
-    this.searchTerm = e.detail.value.toUpperCase();
-  }
-
-
-  async getClases() {
+  async editVehicule(placa: string): Promise<void> {
+    const loadingData = await this.loading.create({ message: 'Generando datos...' });
+    this.vehiculo.placa = placa;
+    await loadingData.present();
     try {
-      const data = await this.reg.getClasevehiculo(this.token).toPromise();
-
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-          this.dataClases.push({ id: element.codigoVehclase, name: element.nombreSiatxxxx, tipo: element.tipoxxVehiculo });
-        }
+      const datos = await this.facade.buscarVehiculoPorPlaca(placa);
+      if (datos) this.populateFormFromData(datos);
+      const [clases, marcas, colores, satelital] = await Promise.all([
+        this.facade.getCatalogoClases(),
+        this.facade.getCatalogoMarcas(),
+        this.facade.getCatalogoColores(),
+        this.facade.getCatalogoSatelital()
+      ]);
+      this.dataClases = clases;
+      this.dataMarcas = marcas;
+      this.dataColores = colores;
+      this.dataSatelital = satelital;
+      if (datos) {
+        const obj2 = clases.find(c => c.name === datos.nombreClaseVeh);
+        if (obj2) { this.vehiculo.codigoClase = obj2.id; this.dataCarroc = await this.facade.getCarrocerias(obj2.id); }
+        const obj1 = marcas.find(m => m.name === datos.nombreVehmarca);
+        if (obj1) { this.vehiculo.codigoMarca = obj1.id; this.dataLineas = await this.facade.getLineas(obj1.id); }
       }
-
-    } catch (error) {
-      console.log(error);
+    } finally {
+      await loadingData.dismiss();
+      this.setOpenVehiculo(true);
     }
   }
 
-  async getSatelital() {
-    try {
-      const data = await this.reg.getSatelital(this.token).toPromise();
-
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-          this.dataSatelital.push({ id: element.codigoVehgpsxx, name: element.nombreVehgpsxx });
-        }
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-
-  async getMarcas() {
-    try {
-      const data = await this.reg.getMarcas(this.token).toPromise();
-
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-
-          this.dataMarcas.push({ id: element.codigoVehmarca, name: element.nombreVehmarca });
-        }
-        // console.log(this.dataClases);
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async getCarroc(id: any) {
-    try {
-
-      this.dataCarroc = []
-      const data = await this.reg.getCarrocerias(id, this.token).toPromise();
-
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-          this.dataCarroc.push({ id: element.codigoVehcarro, name: element.nombrevehcarcl });
-        }
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async getClaseLinea(id: any) {
-    this.dataLineas = []
-    const data = await this.reg.getLineas(id, '', this.token).toPromise();
-    if (data.status) {
-      const dataArray = data.data;
-      for (let a = 0; a < dataArray.length; a++) {
-        const element = dataArray[a];
-        this.dataLineas.push({ id: element.codigoVehlinea, name: element.nombreVehlinea });
-      }
-    }
-
-  }
-
-  async getColores() {
-    try {
-      const data = await this.reg.getColores(this.token).toPromise();
-      if (data.status) {
-        const dataArray = data.data;
-        for (let a = 0; a < dataArray.length; a++) {
-          const element = dataArray[a];
-
-          this.dataColores.push({ id: element.codigoVehcolor, name: element.nombreVehcolor });
-        }
-        // console.log(this.dataClases);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-
-
-  async addToGalery(name: any, rotate: any) {
-
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
-
-
-    this.photo.addNewToGallery(name).then((da) => {
-      this.loadingData.present();
-      this.processImage(da, name, rotate);
-    });
-  }
-
-  async addToCamera(name: any, rotate: any) {
-
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
-
-    this.photo.addNewToCamera(name).then((da) => {
-      this.loadingData.present();
-      this.processImage(da, name, rotate);
-      // loading.dismiss()
-    });
-
-  }
-
-  setOpenVehiculo(isOpen: boolean) {
-    this.isModalOpen = isOpen;
-  }
-
-  setOpenCode(isOpen: boolean) {
-    this.modalCodeOpen = isOpen;
-  }
-
-  setOpenChange(isOpen: boolean) {
-    this.isModalChange = isOpen;
-  }
-
-  async processImage(da: any, name: any, rotate: any) {
-    try {
-      var rot = 0;
-
-      if (rotate) {
-        rot = 90;
-      }
-
-      console.log(rot);
-
-      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, rot);
-
-      console.log(processedImagerotate);
-
-      const dataPhoto1: Photo = {
-        webPath: processedImagerotate,
-        format: 'jpeg',
-        saved: false
-      };
-
-      const data64 = await this.photo.readAsBase64(dataPhoto1)
-      // console.log(data64);
-
-      const desiredSizeX = 450;
-      const desiredSizeY = 290;
-      // const processedImageDataUrl = await this.photo.processAndCropImage(data64, desiredSizeX, desiredSizeY, 90);
-      const processedImageDataUrl = await this.photo.processImage(data64);
-
-      const dataPhoto2: Photo = {
-        webPath: processedImageDataUrl,
-        format: 'jpeg',
-        saved: false
-      };
-
-      // console.log(data64);
-      da.webviewPath = processedImageDataUrl;
-      da.base64 = await this.photo.readAsBase64(dataPhoto2)
-
-      this.hubImag[name] = da;
-
-      this.loadingData.dismiss();
-
-    } catch (error) {
-      console.error('Error al procesar la imagen:', error);
-    }
-  }
-
-
-  async getDocument(codigo: any, tipo: any): Promise<any> {
-    try {
-      const resp: any = await this.photo.getFotoTercero(codigo, tipo, 'vehiculo').toPromise()
-      return resp
-    } catch (error) {
-      throw error
-    }
-  }
-
-  getImagen(code: any) {
-    return this.hubImag[code].webviewPath;
-  }
-
-  // async onSubmitAndChange(v:any)
-  // {
-  //   await this.onSubmitVehicle();
-  //   await this.changeVehicleDriver(v);
-  // }
-
-  async onSubmitVehicle() {
-
-    var validate = true;
-    var jsonApi: any = {}
-    var jsonApi1: any = {}
-    const cedula = this.user.getCedula();
-    jsonApi['placa'] = this.vehiculo.placa;
-    jsonApi1['numeroPlacaxxx'] = this.vehiculo.placa;
-    jsonApi1['codigoTercerox'] = cedula
-
-    const loadingData = await this.loading.create({
-      message: 'Guardando Datos...',
-    });
-
-    loadingData.present();
-
-    this.formVehicle.patchValue({
-      codigoPropietario: this.user.getCedula()
-    })
-
-    var text = "<ul>";
+  async onSubmitVehicle(): Promise<void> {
+    this.formVehicle.patchValue({ codigoPropietario: this.user.getCedula() });
+    let text = '<ul>';
+    let validate = true;
+    const jsonApi: any = { placa: this.vehiculo.placa };
 
     for (const campo in this.formVehicle.controls) {
       if (this.formVehicle.controls[campo].invalid) {
         validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        text += `<li>${campo.charAt(0).toUpperCase() + campo.slice(1)}</li>`;
       } else {
-
-        this.vehiculo[campo] = this.formVehicle.value[campo]
-        jsonApi[campo] = this.formVehicle.value[campo]
-
+        this.vehiculo[campo] = this.formVehicle.value[campo];
+        jsonApi[campo] = this.formVehicle.value[campo];
       }
     }
 
-    if (this.vehiculo.articulado) {
-
-      if (!this.formVehicle.value.remolque) {
-        validate = false;
-        text += "<li> Placa Remolque </li>";
-      } else {
-        this.vehiculo.remolque = this.formVehicle.value.remolque
-      }
-
+    if (this.vehiculo.articulado && !this.formVehicle.value.remolque) {
+      validate = false;
+      text += '<li>Placa Remolque</li>';
     }
+    text += '</ul>';
 
-    text += "</ul>";
-
-    let statusDoc = false;
-
-    var jsonDocs: any = {
-      files: [],
-    };
+    const jsonDocs: any = { files: [] };
     if (this.hubImag['fotovehi1']?.base64) {
-
-      const dataDoc: any = {
-        codigo: this.vehiculo.placa,
-        tipo: 'fotovehi1',
-        tipoRegistro: 'vehiculo',
-        data64: this.hubImag['fotovehi1'].base64,
-      }
-
-      jsonDocs.files.push(dataDoc)
-      statusDoc = true;
+      jsonDocs.files.push({ codigo: this.vehiculo.placa, tipo: 'fotovehi1', tipoRegistro: 'vehiculo', data64: this.hubImag['fotovehi1'].base64 });
     } else {
       validate = false;
-      text += "<li> Foto Vehiculo </li>";
+      text += '<li>Foto Vehículo</li>';
+    }
+    if (this.hubImag?.fotoremol?.base64)  jsonDocs.files.push({ codigo: this.vehiculo.remolque, tipo: 'fotoremol',  tipoRegistro: 'remolque', data64: this.hubImag.fotoremol.base64 });
+    if (this.hubImag?.tarjePror1?.base64) jsonDocs.files.push({ codigo: this.vehiculo.remolque, tipo: 'tarjePro1', tipoRegistro: 'remolque', data64: this.hubImag.tarjePror1.base64 });
+    if (this.hubImag?.tarjePror2?.base64) jsonDocs.files.push({ codigo: this.vehiculo.remolque, tipo: 'tarjePro2', tipoRegistro: 'remolque', data64: this.hubImag.tarjePror2.base64 });
+
+    if (!validate) {
+      await this.presentAlert('Error', 'Es necesario ingresar:', text, 'Cerrar');
+      return;
     }
 
-    if (this.hubImag?.fotoremol?.base64) {
-      const dataDoc = {
-        codigo: this.vehiculo.remolque,
-        tipo: 'fotoremol',
-        tipoRegistro: 'remolque',
-        data64: this.hubImag.fotoremol.base64
-      }
-
-      jsonDocs.files.push(dataDoc);
-      statusDoc = true;
-
-
-    }
-    if (this.hubImag?.tarjePror1?.base64) {
-      const dataDoc = {
-        codigo: this.vehiculo.remolque,
-        tipo: 'tarjePro1',
-        tipoRegistro: 'remolque',
-        data64: this.hubImag.tarjePror1.base64
-      }
-
-      jsonDocs.files.push(dataDoc);
-      statusDoc = true;
-    }
-
-    if (this.hubImag?.tarjePror2?.base64) {
-      const dataDoc = {
-        codigo: this.vehiculo.remolque,
-        tipo: 'tarjePro2',
-        tipoRegistro: 'remolque',
-        data64: this.hubImag.tarjePror2.base64
-      }
-
-      jsonDocs.files.push(dataDoc);
-      statusDoc = true;
-    }
-
-    if (validate) {
-      const envio = await this.reg.sendDataVehiculo(jsonApi);
-      this.reg.addVehiclexDriver(this.token, jsonApi1);
-
-
-      if (jsonDocs.files.length > 0 && statusDoc) {
-        this.user.cargaDocumentos(jsonDocs).subscribe(
-          data => {
-            this.onDismissChange(true);
-            this.setOpenVehiculo(false)
-            this.changeVehicleDriver(this.vehiculo.placa, '')
-            loadingData.dismiss();
-            return;
-          },
-          err => {
-            loadingData.dismiss();
-            this.presentAlert('Error', 'Se ha presentado un error cargadndo la foto', '', 'Cerrar')
-            return;
-          }
-        )
-      }
-
-      loadingData.dismiss();
+    const loadingData = await this.loading.create({ message: 'Guardando Datos...' });
+    await loadingData.present();
+    try {
+      await firstValueFrom(this.user.cargaDocumentos(jsonDocs));
+      await this.changeVehicleDriver(this.vehiculo.placa, '');
       this.onDismissChange(true);
-      this.setOpenVehiculo(false)
-      this.ngOnInit()
-
-
-      // this.router.navigateByUrl('/vehiculos')
-    } else {
-      this.presentAlert("Error", "Es necesario ingresar:", text, "Cerrar");
-      loadingData.dismiss();
+      this.setOpenVehiculo(false);
+      await this.cargarVehiculos();
+    } catch {
+      await this.presentAlert('Error', 'Se ha presentado un error cargando la foto', '', 'Cerrar');
+    } finally {
+      await loadingData.dismiss();
     }
-
   }
 
-  reseteVehicle() {
-    this.nuevoVehiculo = true;
-    this.vehiculo.placa = ''
-    this.vehiculo.claseVehiculo = ''
-  }
+  // ─── Métodos auxiliares de UI ───────────────────────────────────────────
 
-  onDismissChange(change: any) {
-    this.dismissChange.emit(change);
-    this.canDismissOverride = change;
-  }
-
-  newVehicle() {
+  async newVehicle(): Promise<void> {
     this.nuevoVehiculo = true;
     this.formVehicle.reset();
     this.resetVehicle();
     this.setOpenVehiculo(true);
-
-    const dataSatelitalpo = this.getSatelital();
-    const dataClases = this.getClases();
-    const dataMarcas = this.getMarcas();
-    const dataColores = this.getColores();
-
-
+    const [clases, marcas, colores, satelital] = await Promise.all([
+      this.facade.getCatalogoClases(),
+      this.facade.getCatalogoMarcas(),
+      this.facade.getCatalogoColores(),
+      this.facade.getCatalogoSatelital()
+    ]);
+    this.dataClases = clases;
+    this.dataMarcas = marcas;
+    this.dataColores = colores;
+    this.dataSatelital = satelital;
   }
 
-  checkTenedor() {
-    var item = document.getElementById('tenedor') as HTMLIonCardElement;
-
-    if (!this.isTenedor) {
-      item.classList.add('select-card');
-      this.isTenedor = true;
-      this.formTene.reset()
-
-    } else {
-      item.classList.remove('select-card');
-      this.isTenedor = false;
-    }
-
+  selectEvent(e: any): void {
+    this.vehiculo.claseVehiculo = e.name;
+    this.vehiculo.codigoClase   = e.id;
+    if (e.tipo === 'ARTICULADO') { this.vehiculo.articulado = true; this.formVehicle.get('remolque')?.setValidators(Validators.required); }
+    else { this.vehiculo.articulado = false; this.vehiculo.remolque = ''; this.formVehicle.patchValue({ remolque: '' }); }
+    this.facade.getCarrocerias(e.id).then(d => { this.dataCarroc = d; });
   }
 
-  checkPropietario() {
-    var item = document.getElementById('propietario') as HTMLIonCardElement;
+  selectMarca(e: any):    void { this.vehiculo.marca = e.name; this.vehiculo.codigoMarca = e.id; this.facade.getLineas(e.id).then(d => { this.dataLineas = d; }); }
+  selectLinea(e: any):    void { this.vehiculo.linea = e.name; this.vehiculo.codigoLinea = e.id; }
+  selectColor(e: any):    void { this.vehiculo.color = e.name; this.vehiculo.codigoColor = e.id; }
+  selectCarroceria(e: any): void { this.vehiculo.carroceria = e.name; this.vehiculo.codigoCarroceria = e.id; }
+  selectSatelital(e: any):  void { this.vehiculo.empresaSatelital = e.name; this.vehiculo.codigoSatelital = e.id; }
 
+  onChangeSearch(_: any) {}
+  onFocused(_: any) {}
+  onChangeMarca(_: any) {}
+  onFocusedMarca(_: any) {}
+  onChangeLinea(_: any) {}
+  onFocusedLinea(_: any) {}
+  onChangeColor(_: any) {}
+  onFocusedColor(_: any) {}
+  onChangeCarroceria(_: any) {}
+  onFocusedCarroceria(_: any) {}
+  onChangeSatelital(_: any) {}
+  onFocusedSatelital(_: any) {}
 
-    if (!this.isPropietario) {
-      item.classList.add('select-card');
-      this.isPropietario = true;
-      this.formProp.reset()
-
-    } else {
-      item.classList.remove('select-card');
-      this.isPropietario = false;
-    }
-
+  reseteVehicle(): void { this.nuevoVehiculo = true; this.vehiculo.placa = ''; this.vehiculo.claseVehiculo = ''; }
+  resetVehicle():  void {
+    this.formVehicle.reset();
+    Object.keys(this.vehiculo).forEach(k => this.vehiculo[k] = '');
+    this.vehiculo.articulado = false;
+    this.hubImag.fotovehi1.webviewPath = '';
   }
 
-  imgValidate(url: string): Promise<boolean> {
-    return new Promise(
-      (resolve) => {
-        const img = new Image();
-        img.src = url;
-
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-      }
-    )
+  upperPlaca(e: any):   void { this.searchTerm = e.detail.value?.toUpperCase() ?? ''; }
+  chartsCelular(cel: string): void {
+    this.vehiculo.celularPropietariox3   = cel.slice(0, 3);
+    this.vehiculo.celularPropietarioLast = cel.charAt(cel.length - 1);
   }
 
+  setOpenVehiculo(v: boolean): void { this.isModalOpen = v; }
+  setOpenCode(v: boolean):     void { this.modalCodeOpen = v; }
+  onWillPresent():             void { this.canDismissOverride = false; }
+  onDismissChange(v: boolean): void { this.dismissChange.emit(v); this.canDismissOverride = v; }
 
-  handleRefresh(event: any) {
-    setTimeout(() => {
-      window.location.reload();
-      event.target.complete();
-    }, 2000);
+  handleRefresh(event: any): void {
+    this.cargarVehiculos().then(() => event.target.complete());
   }
 
-  async presentAlert(title: String, subheader: String, desc: String, botton: String) {
-    const alert = await this.alertController.create({
-      header: '' + title,
-      subHeader: '' + subheader,
-      message: '' + desc,
-      buttons: ['' + botton],
+  cancelNewVehicle = async (): Promise<boolean> => {
+    if (this.canDismissOverride) return true;
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: '¿Seguro desea salir?',
+      buttons: [
+        { text: 'Sí', role: 'confirm', handler: () => this.resetVehicle() },
+        { text: 'No', role: 'cancel' }
+      ]
     });
+    await actionSheet.present();
+    const { role } = await actionSheet.onWillDismiss();
+    return role === 'confirm';
+  };
 
+  async addToCamera(name: string, rotate: any): Promise<void> {
+    this.loadingData = await this.loading.create({ message: 'Guardando Foto..' });
+    this.photo.addNewToCamera(name).then(da => { this.loadingData.present(); this.processImage(da, name, rotate); });
+  }
+
+  async processImage(da: any, name: string, rotate: any): Promise<void> {
+    try {
+      const rot = rotate ? 90 : 0;
+      const processed: any = await this.photo.processAndRotationImage(da.base64, rot);
+      const dataPhoto1: Photo = { webPath: processed, format: 'jpeg', saved: false };
+      const data64 = await this.photo.readAsBase64(dataPhoto1);
+      const dataUrl  = await this.photo.processImage(data64);
+      const dataPhoto2: Photo = { webPath: dataUrl, format: 'jpeg', saved: false };
+      da.webviewPath = dataUrl;
+      da.base64 = await this.photo.readAsBase64(dataPhoto2);
+      this.hubImag[name] = da;
+      this.loadingData.dismiss();
+    } catch (err) { console.error('Error al procesar imagen:', err); }
+  }
+
+  async cambiarVehiculoActivo(json: { placa: string; cedula: string }): Promise<void> {
+    await this.facade.cambiarVehiculoActivo(json);
+  }
+
+  async presentAlert(title: string, subheader: string, desc: string, botton: string): Promise<void> {
+    const alert = await this.alertController.create({ header: title, subHeader: subheader, message: desc, buttons: [botton] });
     await alert.present();
   }
 
+  private setStatusBarColor(): void {
+    if (this.platform.is('android')) StatusBar.setBackgroundColor({ color: '#0094DA' });
+    else if (this.platform.is('ios')) StatusBar.setStyle({ style: Style.Dark });
+  }
+
+  private populateFormFromData(datos: any): void {
+    this.vehiculo.codigoTerce        = datos.codigoTercerox;
+    this.vehiculo.codigoMarca        = datos.codigoVehmarca;
+    this.vehiculo.codigoLinea        = datos.codigoVehlinea;
+    this.vehiculo.codigoClase        = datos.codigoVehclase;
+    this.vehiculo.codigoColor        = datos.codigoVehcolor;
+    this.vehiculo.codigoCarroceria   = datos.codigoVehcarro;
+    this.vehiculo.marca              = datos.nombreVehmarca;
+    this.vehiculo.carroceria         = datos.nombreVehcarro;
+    this.vehiculo.claseVehiculo      = datos.nombreClaseVeh;
+    this.vehiculo.linea              = datos.nombreVehlinea;
+    this.vehiculo.color              = datos.nombreVehcolor;
+    this.vehiculo.modelo             = datos.numeroModeloxx;
+    this.vehiculo.usuarioSatelital   = datos.sateliUsuariox;
+    this.vehiculo.claveSatelital     = datos.satelContrasen;
+    this.vehiculo.codigoSatelital    = datos.sateliEmpresax;
+    this.vehiculo.empresaSatelital   = datos.nombreAppempgp;
+    this.vehiculo.cuentaSatelital    = datos.satelCuentaxx;
+    this.vehiculo.celularPropietario = datos.celularPropietario;
+    this.vehiculo.fechaSoat          = datos.fechaxSoatxxxx ?? '';
+    this.vehiculo.fechaTecno         = datos.fechaxTecnimec ?? '';
+    this.vehiculo.articulado         = datos.tipoxxVehiculo === 'ARTICULADO';
+    if (datos.celularPropietario) this.chartsCelular(datos.celularPropietario);
+  }
 }

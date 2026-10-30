@@ -1,149 +1,201 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="header-aldia">
+    <ion-title class="header-title">Preoperacional</ion-title>
+
+    <ion-buttons slot="end" class="header-actions">
+      <span class="chip-status chip-online" *ngIf="isOnline$ | async; else offlineChip">
+        <ion-icon name="cloud-done-outline"></ion-icon> En línea
+      </span>
+      <ng-template #offlineChip>
+        <span class="chip-status chip-offline">
+          <ion-icon name="cloud-offline-outline"></ion-icon> Local
+        </span>
+      </ng-template>
+
+      <div class="header-badge-wrap" *ngIf="placa$ | async as placa">
+        <app-plate-badge [placa]="placa" size="sm"></app-plate-badge>
+      </div>
     </ion-buttons>
-    <ion-title class="ml-3">Pre - operacional</ion-title>
   </ion-toolbar>
+
+  <!-- Barra de Progreso Superior -->
+  <div class="progress-container" *ngIf="(wizardStep$ | async) === 'PREGUNTAS' || (wizardStep$ | async) === 'CATEGORIA_PROMPT'">
+    <ng-container *ngIf="progreso$ | async as prog">
+      <div class="progress-info">
+        <span class="progress-category">{{ prog.categoriaActual }}</span>
+        <span class="progress-count">Pregunta {{ prog.actual }} de {{ prog.total }} ({{ prog.porcentaje }}%)</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" [style.width.%]="prog.porcentaje"></div>
+      </div>
+    </ng-container>
+  </div>
 </ion-header>
 
-<div class="container panel-turno">
-  <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
-    <h5>Inspeccion Pre-operacional Vehiculos</h5>
+<ion-content class="preform-content" [fullscreen]="true">
+  <!-- Estado de Carga -->
+  <div class="loading-state" *ngIf="isLoading$ | async">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando preguntas de inspección...</p>
   </div>
-</div>
-<br>
 
-
-<ion-content>
-  <form (ngSubmit)="submitForm()" [formGroup]="preformForm">
-    <!-- Preguntas con checklist -->
-
-
-    <div *ngIf="preguntasNoCumplen.length > 0" class="no-cumple-container">
-
-      <h2 class="titulo-no-cumple">Alerta! Verificar </h2>
-
-      <ion-list>
-        <ion-item *ngFor="let p of preguntasNoCumplen; let i = index">
-          <ion-label>
-            <strong>{{ p.index + 1 }} - {{ p.texto }}</strong>
-            <div class="texto-descripcion">{{ p.descripcion }}</div>
-          </ion-label>
-
-          <ion-button color="success" fill="outline" size="small" (click)="marcarSolucionado(p.index)">
-            Solucionado
-          </ion-button>
-
-        </ion-item>
-      </ion-list>
-
-    </div>
-
-
-    <ion-list class="preguntas-lista">
-      <ng-container *ngFor="let pregunta of visiblePreguntas; trackBy: userService.trackByPregunta">
-
-
-        <div *ngIf="pregunta.tipo === 'categoria'" class="pregunta-card animate-card">
-          <div class="pregunta-titulo">
-            {{ pregunta.categoria.label }}
+  <!-- Wizard Paso 1: Preguntas Normales -->
+  <ng-container *ngIf="!(isLoading$ | async) && (wizardStep$ | async) === 'PREGUNTAS'">
+    <ng-container *ngIf="preguntaActual$ | async as pregunta">
+      <ng-container *ngIf="progreso$ | async as prog">
+        <div class="wizard-body">
+          <div class="pregunta-hero-card">
+            <div class="category-pill">{{ pregunta.categoria }}</div>
+            <h2 class="pregunta-texto font-display">{{ pregunta.texto }}</h2>
+            <p class="pregunta-desc" *ngIf="pregunta.descripcion">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              {{ pregunta.descripcion }}
+            </p>
           </div>
-
-
-          <ion-radio-group class="radio-group" (ionChange)="setCategoria(pregunta.categoria.nombre, $event)">
-           <div class="radio-option">
-              <ion-radio value="true"></ion-radio>
-              <label>Aplica</label>
-           </div>
-
-           <div class="radio-option">
-              <ion-radio value="false"></ion-radio>
-              <label>No aplica</label>
-           </div>
-          </ion-radio-group>
-
         </div>
 
-        <div *ngIf="pregunta.tipo === 'pregunta'" #preguntaCard class="pregunta-card animate-card">
-
-          <div class="pregunta-titulo">
-            {{pregunta.index + 1}} - {{ pregunta.texto }}
+        <!-- Thumb Zone Fija Abajo -->
+        <div class="thumb-zone">
+          <div class="thumb-nav-back" *ngIf="prog.actual > 1">
+            <button type="button" class="btn-prev-step" (click)="anterior()">
+              <ion-icon name="arrow-back-outline"></ion-icon> Volver
+            </button>
           </div>
-
-          <div class="pregunta-descripcion">
-            {{ pregunta.descripcion || 'Describa cualquier detalle particular si aplica.' }}
+          <div class="thumb-actions-row">
+            <button type="button" class="btn-thumb btn-no-cumple" (click)="responder('NO CUMPLE')">
+              <ion-icon name="close-circle-outline"></ion-icon>
+              <span>NO CUMPLE</span>
+            </button>
+            <button type="button" class="btn-thumb btn-cumple" (click)="responder('CUMPLE')">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+              <span>CUMPLE</span>
+            </button>
           </div>
-
-          <ion-radio-group class="radio-group" (ionChange)="responder(pregunta.index, $event)"
-            [formControlName]="'pregunta' + (pregunta.index + 1)">
-            <div class="radio-option">
-              <ion-radio value="Cumple"></ion-radio>
-              <label>Cumple</label>
-            </div>
-
-            <div class="radio-option">
-              <ion-radio value="No Cumple"></ion-radio>
-              <label>No Cumple</label>
-            </div>
-
-          </ion-radio-group>
-
         </div>
-
       </ng-container>
-    </ion-list>
+    </ng-container>
+  </ng-container>
 
-    <hr>
-
-
-
-
-    <!-- Campo para subir imagen -->
-    <!-- <ion-item>
-      <ion-label>Subir imagen del vehiculo</ion-label>
-      <input type="file" accept="image/*" (change)="onFileChange($event)">
-    </ion-item> -->
-    <hr>
-    <div *ngIf="preguntasCompletas">
-
-      <ion-title class="ml-2 p-2">
-        <strong>
-          Foto Vehiculo
-        </strong>
-      </ion-title>
-
-      <div (click)="getPhotoCar()" class="container-upload">
-        <ion-img *ngIf="car" [src]="car.webviewPath"></ion-img>
-        <div *ngIf="!car" class="camera"></div>
+  <!-- Wizard Paso 2: Prompt de Categoría Opcional -->
+  <ng-container *ngIf="!(isLoading$ | async) && (wizardStep$ | async) === 'CATEGORIA_PROMPT'">
+    <ng-container *ngIf="categoriaPrompt$ | async as cat">
+      <div class="wizard-body">
+        <div class="pregunta-hero-card">
+          <div class="category-pill special-pill">Configuración de Vehículo</div>
+          <h2 class="pregunta-texto font-display">{{ cat.label }}</h2>
+          <p class="pregunta-desc">
+            Indica si tu vehículo cuenta con este equipamiento especial para activar o saltar las preguntas correspondientes.
+          </p>
+        </div>
       </div>
 
-      <!-- Leyenda de advertencia -->
-      <ion-card class="warning-card">
-        <ion-card-header>
-          <ion-card-title class="warning-title">
-            <ion-icon name="warning-outline" class="warning-icon"></ion-icon>
-            Recomendaciones Importantes
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="warning-content">
-          <p class="warning-text">
-            Estimado conductor, le pedimos que tenga en cuenta las siguientes recomendaciones:
+      <div class="thumb-zone">
+        <div class="thumb-actions-row">
+          <button type="button" class="btn-thumb btn-opcional-no" (click)="responderCategoria(cat.nombre, false)">
+            <ion-icon name="close-circle-outline"></ion-icon>
+            <span>NO APLICA</span>
+          </button>
+          <button type="button" class="btn-thumb btn-opcional-si" (click)="responderCategoria(cat.nombre, true)">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <span>SÍ APLICA</span>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- Wizard Paso 3: Resolución de Alertas -->
+  <ng-container *ngIf="!(isLoading$ | async) && (wizardStep$ | async) === 'ALERTAS_RESOLVER'">
+    <div class="step-container">
+      <div class="alert-box-warning">
+        <ion-icon name="warning-outline" class="icon-warning"></ion-icon>
+        <div>
+          <h3 class="alert-box-title">Puntos de atención</h3>
+          <p class="alert-box-text">
+            Marcaste elementos como "No Cumple". Si pudiste solucionarlos en patio antes de iniciar, márcalos como solucionados.
           </p>
-          <ul class="warning-list">
-            <li>Siempre conduzca de manera defensiva, ya que pueden surgir obstáculos en cualquier momento.</li>
-            <li>Recuerde que el exceso de velocidad puede llevar a tragedias.</li>
-            <!-- Agregue más puntos de advertencia según sea necesario -->
-          </ul>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </div>
 
-      <!-- Botón para enviar el formulario -->
-      <ion-button expand="block" color="primary" type="submit" onsubmit="" [disabled]="isSubmitting"> Enviar </ion-button>
+      <div class="alertas-list">
+        <div class="alerta-card" *ngFor="let item of alertasNoCumple$ | async">
+          <div class="alerta-card-header">
+            <span class="alerta-badge" [class.solucionado]="item.solucionado">
+              {{ item.solucionado ? 'SOLUCIONADO' : 'PENDIENTE' }}
+            </span>
+            <span class="alerta-cat">{{ item.categoria }}</span>
+          </div>
+          <div class="alerta-title">{{ item.texto }}</div>
+          <p class="alerta-desc" *ngIf="item.descripcion">{{ item.descripcion }}</p>
+          <button *ngIf="!item.solucionado" type="button" class="btn-solucionar" (click)="marcarSolucionado(item.id)">
+            <ion-icon name="checkmark-done-outline"></ion-icon> Marcar como solucionado
+          </button>
+        </div>
+      </div>
 
+      <div class="step-footer">
+        <ion-button expand="block" class="btn-aldia-primary" (click)="continuarAFoto()">
+          Continuar a Foto del Vehículo <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
     </div>
+  </ng-container>
 
+  <!-- Wizard Paso 4: Foto Final y Recomendaciones -->
+  <ng-container *ngIf="!(isLoading$ | async) && (wizardStep$ | async) === 'FOTO_FINAL'">
+    <div class="step-container">
+      <div class="photo-section-card">
+        <h3 class="section-title">Foto de Evidencia del Vehículo</h3>
+        <p class="section-subtitle">Toma una fotografía panorámica frontal donde sea legible la placa.</p>
 
-  </form>
+        <div class="photo-box" (click)="seleccionarFuenteFoto()">
+          <ng-container *ngIf="fotoVehiculo$ | async as foto; else placeholderFoto">
+            <img [src]="foto.webviewPath" alt="Vehículo" class="img-preview" />
+            <div class="badge-webp">
+              <ion-icon name="shield-checkmark"></ion-icon>
+              <span>WebP optimizado ({{ foto.sizeKb }} KB)</span>
+            </div>
+          </ng-container>
+          <ng-template #placeholderFoto>
+            <div class="photo-placeholder">
+              <ion-icon name="camera-outline" class="camera-icon"></ion-icon>
+              <span class="tap-label">Toca aquí para capturar foto</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="photo-btn-row">
+          <button type="button" class="btn-capture" (click)="seleccionarFuenteFoto()">
+            <ion-icon name="camera-outline"></ion-icon>
+            {{ (fotoVehiculo$ | async) ? 'Cambiar fotografía' : 'Tomar fotografía' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjeta de Recomendaciones -->
+      <div class="safety-card">
+        <div class="safety-header">
+          <ion-icon name="shield-half-outline"></ion-icon>
+          <h4>Recomendaciones de Seguridad Vial</h4>
+        </div>
+        <ul class="safety-list">
+          <li>Maneja siempre a la defensiva y mantén tu distancia reglamentaria.</li>
+          <li>El exceso de velocidad es la primera causa de emergencias viales.</li>
+          <li>Verifica presión de llantas y nivel de líquidos antes del viaje.</li>
+        </ul>
+      </div>
+
+      <div class="step-footer">
+        <button
+          type="button"
+          class="btn-submit-preop"
+          [disabled]="!(fotoVehiculo$ | async) || (isSubmitting$ | async)"
+          (click)="finalizarInspeccion()"
+        >
+          <ion-spinner *ngIf="isSubmitting$ | async" name="crescent"></ion-spinner>
+          <span *ngIf="!(isSubmitting$ | async)">Finalizar y Enviar Preoperacional</span>
+        </button>
+      </div>
+    </div>
+  </ng-container>
 </ion-content>
-<!-- <ion-content> -->

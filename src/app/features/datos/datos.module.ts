@@ -1,18 +1,12 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import { IonicModule } from '@ionic/angular';
 
 import { DatosPageRoutingModule } from './datos-routing.module';
-
 import { DatosPage } from './datos.page';
 import { AutocompleteLibModule } from 'angular-ng-autocomplete';
-import { Documentos2Component } from './components/documentos/documentos.component';
-
-
-
-
+import { SharedModule } from '@shared/shared.module';
 
 @NgModule({
   imports: [
@@ -21,8 +15,9 @@ import { Documentos2Component } from './components/documentos/documentos.compone
     IonicModule,
     DatosPageRoutingModule,
     ReactiveFormsModule,
-    AutocompleteLibModule
+    AutocompleteLibModule,
+    SharedModule
   ],
-  declarations: [DatosPage, Documentos2Component]
+  declarations: [DatosPage]
 })
 export class DatosPageModule {}

@@ -1,129 +1,60 @@
-.tercero-cont {
-    padding: 0.5rem;
-}
+$blue: #0094DA;
+$border: #E2E8F0;
+$text: #1A1A2E;
+$muted: #64748B;
+$white: #FFFFFF;
 
-.tercero-cont span {
-    margin-left: 10px;
-}
+.header-aldia { --background: #{$blue}; --color: #{$white}; }
+.header-title { color: $white; font-weight: 700; }
+.header-badge-wrap { margin-right: 12px; }
+.docs-content { --background: #F4F6F9; }
+.docs-wrapper { padding: 16px 16px 90px; }
 
-.col-n {
-    flex: revert-layer !important;
-  }
-
-// .container-prop {
-//     position: relative;
-//     height: 300px;
-//     width: 100%;
-//     margin-top: 10px;
-//   }
-
-//   .prop-flotante {
-//     position: absolute;
-//     width: 100%;
-//     top: 0;
-//   }
-
-.container-prop {
-  height: auto;
-  padding: 10px;
-  // border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.prop-flotante {
-  height: auto;
-  padding: 10px;
-  // border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-ion-row {
+.loading-state {
   display: flex;
-  flex-wrap: wrap;
-  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: $muted;
+  gap: 12px;
 }
 
-ion-col {
-  height: auto;
-  padding: 10px;
-  box-sizing: border-box;
+.docs-list { display: flex; flex-direction: column; gap: 12px; }
+
+.doc-title { font-size: 0.95rem; font-weight: 700; color: $text; margin: 0; }
+.doc-tipo { font-size: 0.75rem; color: $muted; }
+
+.doc-fecha-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: $muted;
+  margin-bottom: 10px;
+  strong { color: $text; }
 }
 
-  .select-card {
-    background-color: #0094DA;
-    color:#FFFFFF;
-  }
+.doc-btn-wrap ion-button { margin: 0; font-weight: 600; font-size: 0.88rem; }
+.btn-warning-outline { --border-color: #{$blue}; --color: #{$blue}; --border-radius: 8px; }
+.btn-danger-solid { --background: #{$blue}; --color: #{$white}; --border-radius: 8px; }
+.btn-clear-actualizar { --color: #{$blue}; }
 
-  app-documentos-data {
-    width: 100%;
-    height: 97%;
-    position: absolute;
-  }
+.subdocs-selector { margin-bottom: 14px; }
+.selector-lbl { font-size: 0.82rem; font-weight: 600; color: $muted; margin-bottom: 4px; }
 
-  ion-toolbar {
-    --background: #3C8CCD;
-    --color: white;
-  }
+.fecha-input-wrap {
+  margin-bottom: 14px;
+  .input-lbl { font-size: 0.82rem; font-weight: 600; color: $muted; display: block; margin-bottom: 4px; }
+  .date-field { width: 100%; padding: 8px 12px; border: 1px solid $border; border-radius: 8px; }
+}
 
-  ion-title {
-    --margin-start: 15px;
-  }
+.capture-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  .btn-camara { --background: #{$blue}; --color: #{$white}; --border-radius: 10px; font-weight: 700; }
+  .btn-galeria { --border-color: #{$blue}; --color: #{$blue}; --border-radius: 10px; font-weight: 600; }
+}
 
-  .custom-title {
-    text-align: center;
-    width: 100%;
-  }
-
-  ion-menu-button {
-    color: var(white);
-  }
-
-  .icon-edit {
-    position: relative;
-  }
-
-  .icon {
-    position: absolute;
-    cursor: pointer;
-    color: #007bff;
-    font-size: 25px;
-    right: 20px;
-    top: 25px;
-  }
-
-  .icon-calendar {
-    position: absolute;
-    cursor: pointer;
-    color: #007bff;
-    font-size: 25px;
-    right: 20px;
-    top: 30px;
-  }
-
-  .group-icons {
-
-    position: absolute;
-    right: 20px;
-    top: 25px;
-
-  }
-
-  .icon-a{
-    cursor: pointer;
-    color: #007bff;
-    font-size: 25px;
-  }
-
-  .write h2, .write h1, .write h3 {
-   color:#FFF;
-  }
-  .autocomplete-container2 {
-    position: relative;
-  }
-  .col-n {
-    flex: revert-layer !important;
-  }
-
-
-
-
+.btn-confirmar-subida { --background: #{$blue}; --color: #{$white}; --border-radius: 12px; font-weight: 700; height: 48px; }

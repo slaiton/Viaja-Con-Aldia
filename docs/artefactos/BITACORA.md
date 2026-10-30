@@ -15,6 +15,67 @@ Plantilla:
 
 ---
 
+## 2026-10-30 · Fase 3 (Pantallas Operativas): Rediseño Preoperacional Modo Asistente Táctil, Dexie Outbox y Aislamiento de Client Secret
+- **Pedido:** rediseñar el Preoperacional (`preform.page.ts`) transformándolo en un asistente paso a paso optimizado ergonómicamente para cabina, aislar `client_secret` en la capa API de Dominio, implementar resiliencia Offline-First (caché local de preguntas en Dexie y encolamiento en `db.outbox_queue` si no hay señal o hay timeout), e integrar compresión WebP en cliente (`ImageCompressionService`) para la fotografía final del vehículo.
+- **Cambios:**
+  - `src/app/core/models/preoperacional.model.ts` (**nuevo**): interfaces estrictas `PreguntaPreoperacionalRaw`, `PreguntaPreoperacional`, `CategoriaOpcional`, `ItemNoCumple`, `RespuestaPreoperacional`, `PreoperacionalPayload`, `PreoperacionalSubmitResult` y tipos del wizard.
+  - `src/app/domain/preoperacional.api.ts` (**nuevo**): servicio de dominio que encapsula `X-Client-Id` y `X-Client-Secret` en sus encabezados. Implementa `getPreguntas()` con caché local Dexie (TTL 24h) y `enviarPreoperacional()` con timeout, reintentos y fallback automático a la tabla `outbox_queue` de `AldiaDatabase`.
+  - `src/app/features/preform/preoperacional.facade.ts` (**nuevo**): motor de negocio reactivo que gestiona la máquina de estados del asistente, evalúa el salto automático de preguntas para categorías opcionales (Cisterna, Niñera, Refrigeración) si el conductor marca "No aplica", administra las alertas de "No Cumple" con posibilidad de resolverlas en patio, y procesa la fotografía final con `ImageCompressionService` (< 100 KB en formato WebP).
+  - `src/app/features/preform/preform.module.ts`: importado `SharedModule` para soporte del componente `<app-plate-badge>`.
+  - `src/app/features/preform/preform.page.ts`: saneado por completo y reducido de **338 líneas a ~108 líneas**. Eliminados `import { log } from 'console'` y la exposición directa de secretos. Conectado de forma limpia y reactiva con los observables del Facade.
+  - `src/app/features/preform/preform.page.html`: reconstruido como "Modo Asistente Táctil":
+    - Header corporativo con badge de conectividad en tiempo real (En línea / Local) y placa del vehículo.
+    - Barra de progreso superior con conteo dinámico ("Pregunta X de Y") y porcentaje.
+    - Tarjeta central de pregunta con tipografía grande y legible en cabina.
+    - Thumb Zone ergonómica fija en la parte inferior con botones gigantes "CUMPLE" (`#1A7F37`) y "NO CUMPLE" (`#D3302F`), y botón para regresar.
+    - Pantalla de resolución de alertas y sección de evidencia fotográfica con badge WebP y recomendaciones de seguridad vial.
+  - `src/app/features/preform/preform.page.scss` y `src/global.scss`: estilos compartidos trasladados a `global.scss` garantizando cumplimiento estricto del presupuesto de componentes (< 2.00 kB).
+- **Verificación:** `npm run build` ejecutado exitosamente con código de salida 0 (Hash: `c9ae393708890558`, Time: 26049ms, 0 errores, 0 warnings de presupuesto).
+- **Pendiente:** continuar con la siguiente pantalla operativa de Fase 3 (Turnos `/turnos`).
+- **Commit sugerido:** `feat(preform): asistente táctil preoperacional, soporte offline outbox, aislamiento client_secret y fotos webp`
+
+---
+
+## 2026-10-30 · Fase 3 (Pantallas Operativas): Documentos, Semáforo de Vigencias (Mockup v4 Pantalla 8), Compresión WebP y Hotfix de Seguridad Git
+- **Pedido:** ejecutar el rediseño de Documentos (`datos.page.ts`) según la Pantalla 8 del Mockup Oficial v4, implementar la arquitectura `DocumentosFacade` desacoplada del monolito anterior (~2 905 líneas), integrar el compresor de fotos WebP en cliente (`ImageCompressionService`) para subidas ligeras (<100 KB), erradicar componentes y llamadas obsoletas, y aplicar hotfix de seguridad para pasar la auditoría de Git (desindexar secretos y `google-services.json` sin borrarlos de disco, crear `src/assets/.well-known/assetlinks.json`).
+- **Cambios:**
+  - **Seguridad (Auditoría Git):**
+    - `src/environments/environment.ts` y `environment.prod.ts`: `maps.apikey` sanitizado a `'API_KEY_AQUI'`.
+    - `docs/artefactos/2026-10-21-plan-refactor.md`: secretos y client secrets de terceros sanitizados.
+    - `google-services.json`: desindexado del árbol de Git (`git rm --cached --ignore-unmatch google-services.json src/environments/environment.ts src/environments/environment.prod.ts`), preservándolo intacto físicamente en disco.
+    - `src/assets/.well-known/assetlinks.json`: creado con las firmas SHA256 de producción y debug para deep linking en Android.
+  - **Arquitectura de Documentos:**
+    - `src/app/features/datos/documentos.facade.ts` (**nuevo**): servicio `@Injectable({ providedIn: 'root' })` que consulta paralelamente los documentos y vigencias del vehículo y del conductor (`VehiculoApi`, `ConductorApi`), computa el semáforo reactivo (Vigentes `#1A7F37`, Por Vencer `#9A5B00`, Vencidos `#D3302F`), encapsula la compresión WebP cliente con `ImageCompressionService` y gestiona la subida segura preservando la retrocompatibilidad con `UserService` y Dexie.
+    - `src/app/features/datos/datos.module.ts`: importado `SharedModule` (para `<app-plate-badge>`), purgado el componente obsoleto `Documentos2Component` de `declarations`.
+  - **Rediseño UI/UX (Mockup v4 Pantalla 8):**
+    - `src/app/features/datos/datos.page.ts`: refactorizado por completo, reduciendo el monolito de **2 905 líneas a ~215 líneas**. Inyecta `DocumentosFacade` y delega la toma de fotos con `@capacitor/camera` pasando automáticamente por compresión WebP antes de subirse.
+    - `src/app/features/datos/datos.page.html`: implementada la vista oficial v4:
+      - Header con fondo `--aldia-blue` (`#0094DA`) y `<app-plate-badge [placa]="placaActual" size="sm">`.
+      - Tarjeta superior de Semáforo de 3 columnas (Vigentes, Por Vencer, Vencidos) con conteo dinámico.
+      - Tarjetas de documentos con bordes condicionales (verde, ámbar y rojo), chips de estado y botón "Actualizar".
+      - Modal de actualización rápida de documento con selector de tipo, fecha de vigencia, botones para cámara/galería, vista previa y badge WebP indicando reducción de peso.
+    - `src/app/features/datos/datos.page.scss` y `src/global.scss`: estilos desacoplados y compartidos, optimizados para cumplir estrictamente con el presupuesto de componentes de Angular (< 2.00 kB).
+- **Verificación:** `npm run build` ejecutado exitosamente con código de salida 0 (Hash: `a603a7754a80e1c4`, Time: 26058ms, 0 errores, 0 warnings de presupuestos). `google-services.json` permanece intacto en disco y fuera de la indexación de Git.
+- **Pendiente:** continuar con la siguiente pantalla operativa de Fase 3 (Preoperacional `/preform` o Turnos `/turnos`).
+- **Commit sugerido:** `feat(datos): rediseño pantalla 8 documentos, semaforo de vigencias, compresion webp y hotfix seguridad git`
+
+---
+
+## 2026-10-30 · Fase 2 (F2-04): Piloto Arquitectónico "Mis Vehículos" — Split del Monolito + Mockup v4 Pantalla 11
+- **Pedido:** refactorizar el monolito `vehiculo.component.ts` (1 293 líneas), extraer lógica hacia `VehiculosFacade` y `VehiculoApi`, eliminar `ViewEncapsulation.ShadowDom` y `import { log } from 'console'`, y reconstruir el HTML/SCSS con el diseño de la Pantalla 11 del Mockup v4 (tarjeta activa con ring azul, tarjetas inactivas con botón outlined, botón fijo inferior "Agregar vehículo").
+- **Cambios:**
+  - `src/app/core/models/vehiculo.model.ts`: agregadas interfaces `VehiculoListItem` y `CatalogoItem` para tipar la lista de vehículos y los catálogos de autocomplete.
+  - `src/app/domain/vehiculo.api.ts`: agregados 4 métodos nuevos (`getVehiculosConductor`, `getDataVehiculoPorPlaca`, `cambiarVehiculoActivo`, `getDataCode`) usando `firstValueFrom()` y caché Dexie; contratos 3SL preservados 100%.
+  - `src/app/features/vehiculo/vehiculos.facade.ts` (**nuevo**): servicio `@Injectable({ providedIn: 'root' })` que orquesta la lista de vehículos con enriquecimiento de fotos, el flujo completo de cambio de vehículo activo (SMS validation → addVehiclexDriver → cambiarVehiculoActivo), la eliminación y los 6 catálogos de autocomplete.
+  - `src/app/features/vehiculo/vehiculo.component.ts`: reducido de **1 293 a ~468 líneas** (incluyendo comentarios). Eliminados: `ViewEncapsulation.ShadowDom`, `import { log } from 'console'`, todas las llamadas HTTP directas. `.toPromise()` reemplazado por `firstValueFrom()`. Toda lógica de negocio delegada al Facade.
+  - `src/app/features/vehiculo/vehiculo.component.html`: reconstruido con Mockup v4 — header `--background: #0094DA`, tarjeta activa con borde azul + ring + badge "ACTIVO" + chips estado, tarjetas inactivas con borde `#DCE3EA` + botón outlined azul "Usar este vehículo", `<app-plate-badge>` integrado, botón fijo inferior "Agregar vehículo", modales de registro y verificación SMS conservados.
+  - `src/app/features/vehiculo/vehiculo.component.scss`: reescrito sin ShadowDom — tokens Mockup v4, `.card-activa` (ring azul), `.card-inactiva` (borde gris), `.fab-add-wrap` (posición fija respetando `safe-area-inset-bottom`), ~220 líneas.
+- **Verificación:** `npm run build` ejecutado exitosamente con código de salida 0 (Hash: `88f9ca797c0a0695`, Time: 15037ms, 0 errores, 0 warnings de budget). Se configuró `"optimization.fonts": false` en `angular.json` para evitar descargas bloqueadas en build time offline.
+- **Pendiente:** integrar `ImageCompressionService` en `processImage()` del componente para comprimir fotos antes de subirlas. El `registrarVehiculo` del Facade delega el cargue de docs al componente via `UserService.cargaDocumentos()` para evitar dependencia circular.
+- **Commit sugerido:** `feat(vehiculo): split monolito F2-04 — VehiculosFacade + Mockup v4 Pantalla 11`
+
+---
+
 ## 2026-10-29 · Fase 2 (F2-02): Servicio de Compresión de Imágenes WebP/JPEG (Canvas HTML5)
 - **Pedido:** crear una utilidad central de compresión de imágenes en Angular puro (sin librerías externas) que reciba un `base64`/DataURL o `Blob` de `@capacitor/camera`, use `HTML5 Canvas` para redimensionar manteniendo el aspect ratio (límite 1280px) y exporte en `image/webp` con fallback automático a `image/jpeg` en iOS < 14, garantizando un resultado inferior a 150 KB.
 - **Cambios:**
@@ -155,3 +216,4 @@ Plantilla:
   - `.claude/settings.json` y `.claude/hooks/bloquear-git.js`: bloquean commits, push y otras operaciones que escriben historial, y la lectura de archivos con secretos.
 - **Verificación:** `git check-ignore` confirma que `www/`, el keystore, `google-services.json` y los `environment*.ts` quedan ignorados.
 - **Commit sugerido:** `chore(repo): ignorar build y llaves; agregar contexto para agentes y carpeta de artefactos`
+
