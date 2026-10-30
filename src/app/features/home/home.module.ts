@@ -9,7 +9,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { HomePage } from './pages/home.page';
 import { RouterModule } from '@angular/router';
-
+import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   imports: [
@@ -19,7 +19,8 @@ import { RouterModule } from '@angular/router';
     IonicModule,
     HomePageRoutingModule,
     RouterModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    SharedModule
   ],
   declarations: [HomePage]
 })

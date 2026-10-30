@@ -65,4 +65,15 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
-/src/environments/*
+
+# Sensitive files and keys
+*.keystore
+*.jks
+google-services.json
+
+# Compiled web output
+/www/
+
+# Environments with secrets
+/src/environments/environment*.ts
+!/src/environments/environment.example.ts

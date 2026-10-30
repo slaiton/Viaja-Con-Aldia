@@ -1,147 +1,119 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title class="ml-3">Viaja Con Aldia</ion-title>
-  </ion-toolbar>
+<ion-header class="ion-no-border cabina-header-wrap">
+  <div class="cabina-header">
+    <div class="header-left">
+      <div class="avatar-circle">
+        <img *ngIf="fotoUser" [src]="fotoUser" alt="Foto conductor" class="avatar-img" />
+        <span *ngIf="!fotoUser" class="avatar-initials">{{ inicialesConductor }}</span>
+      </div>
+      <div class="header-info">
+        <h1 class="saludo-title">Hola, {{ nombreCorto }}</h1>
+        <div class="status-indicator-wrap">
+          <span class="status-dot"></span>
+          <span class="status-subtitle">Conductor activo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <app-plate-badge [placa]="placa" size="md"></app-plate-badge>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="cabina-content">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- <ion-fab class="move-fab" vertical="top" horizontal="end">
-    <ion-fab-button>
-      <ion-icon name="refresh-circle"></ion-icon>
-    </ion-fab-button>
-  </ion-fab> -->
-
- <!-- <div *ngIf="showAlerts" class="container mt-4 animate-section">
-
-    <ion-list lines="none">
-      <ion-item *ngFor="let articulo of articulos" button detail="false" (click)="verArticulo(articulo)"
-        class="alerta-item">
-        <ion-icon [icon]="alertIcon" slot="start" color="warning"></ion-icon>
-        <ion-label class="alerta-titulo">{{ articulo.titulo }}</ion-label>
-      </ion-item>
-    </ion-list>
-  </div> -->
-
-  <ion-card  *ngIf="showAlerts" class="estado-card" [ngClass]="preoperacional.aprobado === 'NO' ? 'estado-rojo' : 'estado-verde'" (click)="goToPreform()">
-
-    <div class="header-estado">
-      <ion-icon [name]="preoperacional.aprobado === 'NO' ? 'close-circle' : 'checkmark-circle'" class="icon-estado">
-      </ion-icon>
-
-      <div class="titulo-estado">
-        <h2>{{ preoperacional.aprobado === 'NO' ? 'RECHAZADO' : 'APROBADO' }}</h2>
-        <p>Último Preoperacional</p>
+  <div class="cabina-main-container">
+    <!-- Alerta Documentos Vencidos / Inactivo -->
+    <div *ngIf="botonDocumentos || botonInactivo" class="alerta-bloqueo-card" [routerLink]="botonDocumentos ? '/datos' : null">
+      <ion-icon name="alert-circle" class="alerta-icon"></ion-icon>
+      <div class="alerta-texto">
+        <strong>{{ estadoBoton }}</strong>
+        <p *ngIf="botonDocumentos">Toca para actualizar tus documentos</p>
       </div>
-      <div class="datos-right">
+      <ion-icon name="chevron-forward" class="alerta-arrow" *ngIf="botonDocumentos"></ion-icon>
+    </div>
 
-        <div class="dato">
-          <span class="valor">{{ preoperacional.fecha }}</span>
+    <!-- Alerta de Preoperacional -->
+    <ion-card *ngIf="showAlerts" class="estado-card" [ngClass]="preoperacional.aprobado === 'NO' ? 'estado-rojo' : 'estado-verde'" (click)="goToPreform()">
+      <div class="header-estado">
+        <ion-icon [name]="preoperacional.aprobado === 'NO' ? 'close-circle' : 'checkmark-circle'" class="icon-estado">
+        </ion-icon>
+        <div class="titulo-estado">
+          <h2>{{ preoperacional.aprobado === 'NO' ? 'RECHAZADO' : 'APROBADO' }}</h2>
+          <p>Último Preoperacional</p>
         </div>
-        <div class="dato">
-          <span class="valor">{{ preoperacional.hora }}</span>
+        <div class="datos-right">
+          <div class="dato">
+            <span class="valor">{{ preoperacional.fecha }}</span>
+          </div>
+          <div class="dato">
+            <span class="valor">{{ preoperacional.hora }}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </ion-card>
 
+    <!-- StatusHero (Mockup v4) -->
+    <div class="status-hero-container">
+      <!-- Tarjeta: Sin Turno (Azul #0094DA) -->
+      <div *ngIf="!turnoExistente" class="hero-card hero-sin-turno">
+        <div class="hero-top-row">
+          <span class="hero-tag">TU TURNO</span>
+          <ion-icon name="navigate-outline" class="hero-gps-indicator"></ion-icon>
+        </div>
 
-  </ion-card>
+        <div class="hero-body">
+          <h2 class="hero-title font-display">Sin turno</h2>
+          <div class="hero-location-wrap">
+            <ion-icon name="location-sharp" class="pin-icon"></ion-icon>
+            <span class="location-name">{{ ubicacionActual }}</span>
+          </div>
+        </div>
 
-
-  <div class="container panel-user-home">
-    <div class="row p-3">
-      <div class="containerPhoto col col-12 p-2 d-flex justify-content-center">
-        <ion-avatar [style.width]="'130px'" [style.height]="'130px'" slot="start">
-          <ion-img alt="person" *ngIf="fotoUser" class="rounded-circle me-2" [src]="fotoUser"></ion-img>
-          <ion-img alt="person" *ngIf="!fotoUser" class="rounded-circle me-2"
-            src="../../assets/img/userDefault.png"></ion-img>
-        </ion-avatar>
+        <div class="hero-footer">
+          <button type="button" class="btn-hero-primary" (click)="nuevoTurno()">
+            <ion-icon name="add-circle" class="btn-hero-icon"></ion-icon>
+            <span>Enturnarme ahora</span>
+          </button>
+        </div>
       </div>
 
-      <div class="col col-12 d-flex justify-content-center" style="text-align:center; align-items: center;">
-        <ul class="list-unstyled ps-0 ml-3">
+      <!-- Tarjeta: Enturnado (Verde #1A7F37) -->
+      <div *ngIf="turnoExistente" class="hero-card hero-enturnado">
+        <div class="hero-top-row">
+          <span class="hero-tag">TU TURNO</span>
+          <span class="hero-badge-live">Activo</span>
+        </div>
 
-          <li class="mb-1">
-            <h2 class="text-white">
-              <strong id="nameUser"> {{ nombres }} </strong>
-            </h2>
-          </li>
+        <div class="hero-body">
+          <h2 class="hero-title font-display">Enturnado</h2>
+          <div class="hero-route">
+            <div class="route-point">
+              <span class="point-lbl">ORIGEN</span>
+              <span class="point-val">{{ origen || 'Origen' }}</span>
+            </div>
+            <ion-icon name="arrow-forward" class="route-arrow"></ion-icon>
+            <div class="route-point" *ngIf="destino1">
+              <span class="point-lbl">DESTINO</span>
+              <span class="point-val">{{ destino1 }}</span>
+            </div>
+          </div>
+          <p class="hero-countdown" *ngIf="listTurnos?.data?.tiemporestante">
+            Reenturnarse en: <strong>{{ listTurnos.data.tiemporestante }}</strong>
+          </p>
+        </div>
 
-          <li class="mb-1">
-            <h2 class="text-white">
-              {{placaLetras}} - {{placaNum}}
-            </h2>
-          </li>
-
-        </ul>
+        <div class="hero-footer">
+          <button type="button" class="btn-hero-translucent" (click)="getTurnoTecero()">
+            <ion-icon name="refresh-outline" class="btn-hero-icon"></ion-icon>
+            <span>Ver o actualizar turno</span>
+          </button>
+        </div>
       </div>
     </div>
-
-  </div>
-
-  <div class="panel-turnos d-flex justify-content-center">
-
-
-    <div *ngIf="estado">
-      <ul class="list-unstyled p-2 ps-0 ml-3">
-        <li style="text-align:center;">
-          <span class="{{clase_estado}}">
-            {{ turnoExistente ? 'Enturnado: ' + origen : 'Sin Turno' }}
-          </span>
-        </li>
-        <p class="tiemporestante mb-0">
-          {{ turnoExistente ? 'Reenturnarse en: ' +
-          listTurnos.data.tiemporestante : '' }}
-        </p>
-        <li>
-          <span>
-
-          </span>
-        </li>
-        <li class="mt-3 d-flex justify-content-center">
-          <ion-button (click)="turnoExistente ? getTurno() : nuevoTurno()" id="open-modal" class="botontiemporestante"
-            expand="full" shape="round" [color]="turnoExistente ? 'success' : 'danger'">
-            <span class="ml-2 mb-0">
-              {{ estadoBoton }}
-            </span>
-          </ion-button>
-
-        </li>
-      </ul>
-    </div>
-
-    <div *ngIf="!estado && !botonInactivo && !botonDocumentos">
-      <span class="ml-2 mb-0">
-        {{ estadoBoton }}
-      </span>
-    </div>
-
-
-    <div class="mt-3 mb-3 d-flex justify-content-center" *ngIf="botonInactivo">
-      <ion-button id="open-modal" class="botontiemporestante" expand="full" shape="round" color="danger">
-        <span class="ml-2 mb-0">
-          {{ estadoBoton }}
-        </span>
-      </ion-button>
-    </div>
-
-
-
-    <div class="mt-3 mb-3 d-flex justify-content-center" *ngIf="botonDocumentos">
-      <ion-button id="open-modal" class="botontiemporestante" expand="full" shape="round" color="danger">
-        <span class="ml-2 mb-0">
-          {{ estadoBoton }}
-        </span>
-      </ion-button>
-    </div>
-
-  </div>
 
 
 
@@ -172,7 +144,7 @@
     </div>
   </div>
 
-
+  </div> <!-- /cabina-main-container -->
 
   <ion-modal #modalTurno trigger="open-modal" [initialBreakpoint]="0.70" [breakpoints]="[0.7, 0.8, 0.9]"
     handleBehavior="cycle">

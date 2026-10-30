@@ -37,8 +37,8 @@ export class LoginPage implements OnInit {
 
   private buildForm(): void {
     this.loginForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
+      username: ['', [Validators.required, Validators.pattern(/^[0-9]{5,12}$/)]],
+      password: ['', [Validators.required, Validators.pattern(/^[a-zA-Z]{3}\s?[0-9]{3}$/)]],
     });
   }
 
@@ -55,17 +55,24 @@ export class LoginPage implements OnInit {
   }
 
   onLogin(): void {
-
     if (this.loginForm.invalid || this.submitClick) return;
 
     this.submitClick = true;
+    const raw = this.loginForm.value;
+    const credentials = {
+      username: (raw.username || '').toString().trim(),
+      password: (raw.password || '').toString().trim().replace(/\s+/g, '').toUpperCase(),
+    };
 
-    this.authFacade.login(this.loginForm.value).subscribe({
+    this.authFacade.login(credentials).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/home']);
       },
-      error: () => (this.loading = false),
+      error: () => {
+        this.loading = false;
+        this.submitClick = false;
+      },
     });
   }
 }

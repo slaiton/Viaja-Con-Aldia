@@ -1,16 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs-compat/Observable";
-import { BehaviorSubject, tap } from 'rxjs';
-import { CookieService } from "ngx-cookie-service";
-import { User } from "@models/user.model";
-import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, retry, throwError, timeout } from 'rxjs';
 import { LoadingController, MenuController } from '@ionic/angular';
 import { StorageService } from './storage.service';
-
-
+import { ConductorApi } from '@domain/conductor.api';
 
 @Injectable({
   providedIn: 'root'
@@ -24,9 +18,9 @@ export class AuthService {
     private menu: MenuController,
     private http: HttpClient,
     private storage: StorageService,
-    private cookies: CookieService,
     private router: Router,
-   private loading: LoadingController) { }
+    private loading: LoadingController,
+    private conductorApi: ConductorApi) { }
 
 
   login(user: any): Observable<any> {
@@ -34,10 +28,10 @@ export class AuthService {
   }
 
   getUser(): Observable<any>{
-    // console.log(this.storage.get<string>("placa"););
+    const placa = (this.storage.get<string>("placa") || localStorage.getItem("placa") || '').replace(/^["']|["']$/g, '').trim();
 
     const params = new HttpParams({
-      fromString: 'placa='+this.storage.get<string>("placa")
+      fromString: 'placa=' + placa
     });
 
     const headers = new HttpHeaders({
@@ -46,33 +40,13 @@ export class AuthService {
       'password':'12249'
     });
 
-  const requestOptions = { headers: headers, params: params };
+    const requestOptions = { headers: headers, params: params };
 
     return this.http.get("http://api.aldialogistica.com/api/datos/vehiculos", requestOptions)
   }
 
-  getUser3sL(token:any):Promise<any> {
-
-    const params = new HttpParams({
-      fromString: 'cedula='+this.storage.get<string>("conductor") + '&placa=' + this.storage.get<string>("placa")
-    });
-
-    const headers = new HttpHeaders({
-      'Content-Type':'application/json; charset=utf-8',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer ' + token
-    });
-    const requestOptions = { headers: headers, params: params };
-
-    return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
-          .pipe(
-            timeout(5000),
-            retry(2),
-            catchError((err: any) => {
-               return throwError(() => err);
-            })
-          )
-          .toPromise()
+  getUser3sL(token: any): Promise<any> {
+    return this.conductorApi.getEnvelope3SL(undefined, undefined, token);
   }
 
   setToken(token: any) {

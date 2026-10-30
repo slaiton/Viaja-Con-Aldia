@@ -25,11 +25,15 @@ export class AuthFacadeService {
       ),
 
       tap((data: any) => {
-        console.log(credentials);
-        
-        this.storage.set('token', data.access_token);
-        this.storage.set('placa', credentials.password.toUpperCase());
-        this.storage.set('conductor', credentials.username);
+        const cleanPlaca = (credentials.password || '').trim().replace(/\s+/g, '').toUpperCase();
+        const cleanCedula = (credentials.username || '').toString().trim().replace(/^["']|["']$/g, '');
+        const cleanToken = (data.access_token || '').toString().trim().replace(/^["']|["']$/g, '');
+        this.storage.set('token', cleanToken);
+        this.storage.set('placa', cleanPlaca);
+        this.storage.set('conductor', cleanCedula);
+        localStorage.setItem('token', cleanToken);
+        localStorage.setItem('placa', cleanPlaca);
+        localStorage.setItem('conductor', cleanCedula);
       }),
 
       catchError((err) => {
@@ -55,9 +59,11 @@ export class AuthFacadeService {
   }
 
   private buildPayload(credentials: { username: string; password: string }) {
+    const cleanPlaca = (credentials.password || '').trim().replace(/\s+/g, '').toUpperCase();
+    const cleanCedula = (credentials.username || '').toString().trim();
     return {
-      numeroPlacaxxx: credentials.password.toUpperCase(),
-      codigoTercerox: credentials.username,
+      numeroPlacaxxx: cleanPlaca,
+      codigoTercerox: cleanCedula,
       version: environment.version,
     };
   }

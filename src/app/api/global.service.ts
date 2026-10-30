@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs-compat/Observable";
-import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
+import { Observable, catchError, retry, Subject, throwError, timeout } from 'rxjs';
 
 
 @Injectable({

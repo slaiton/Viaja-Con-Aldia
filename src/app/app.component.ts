@@ -1,6 +1,5 @@
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CookieService } from "ngx-cookie-service";
 import { Subject } from 'rxjs';
 import { tap, takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
@@ -10,9 +9,8 @@ import { PluginListenerHandle } from '@capacitor/core';
 import { App,  URLOpenListenerEvent } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { UserService } from './core/services/user.service';
-import { Platform } from '@ionic/angular';
+import { Platform, ActionSheetController } from '@ionic/angular';
 import { PhotoService } from './core/services/photo.service';
-import { log } from 'console';
 
 
 
@@ -51,11 +49,12 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private photo: PhotoService,
     private ngZone: NgZone,
-    private platform: Platform
+    private platform: Platform,
+    private actionSheetCtrl: ActionSheetController
   ) {
-    defineCustomElements(window)
+    defineCustomElements(window);
     this.isMobile = this.platform.is('mobile');
-    this.initialize()
+    this.initialize();
   }
 
   conductor: any;
@@ -236,6 +235,33 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.auth.logout();
   }
 
-
-
+  async openPerfilMenu() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: (this.conductor || 'Mi Perfil').toUpperCase(),
+      subHeader: this.placa ? `Vehículo: ${this.placa}` : undefined,
+      buttons: [
+        {
+          text: 'Mis Documentos',
+          icon: 'document-text-outline',
+          handler: () => {
+            this.router.navigate(['/datos']);
+          }
+        },
+        {
+          text: 'Cerrar Sesión',
+          role: 'destructive',
+          icon: 'log-out-outline',
+          handler: () => {
+            this.logout();
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
 }

@@ -1,100 +1,28 @@
 <ion-app>
-  <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" *ngIf="statusLogin()" >
-      <ion-content>
-        <ion-toolbar>
-          <a class="d-flex justify-content-end">
-            <img class="" src="../assets/icon/aldia.png" class="bi pe-none me-2 text-center" width=
-            "30">
-          </a>
-          <!--
-          <ion-list-header>Viaja con Aldia</ion-list-header> -->
-          <!-- <ion-note>hi@ionicframework.com</ion-note> -->
-          <!-- <a href="#" class="d-flex ml-4 mt-3 align-items-center pb-3 mb-1 link-dark text-decoration-none collapsed" data-bs-toggle="collapse" data-bs-target="#user-collapse" aria-expanded="true">
-          <img src="https://github.com/mdo.png" alt="" width="90" height="90" class="rounded-circle me-2">
-          </a> -->
-          <ion-item>
-            <ion-avatar  [style.width]="'110px'" [style.height]="'110px'" slot="start">
-              <img alt="persons" *ngIf="fotoUser" class="rounded-circle me-2" src="{{fotoUser}}"/>
-              <img alt="persons" *ngIf="!fotoUser" class="rounded-circle me-2" src="../assets/img/userDefault.png"/>
-            </ion-avatar>
-            <ul class="list-unstyled ps-0 ml-3">
-              <li class="mb-1">
-                <h2><strong id="nameUser">{{ nombre }}</strong></h2>
-              </li>
+  <app-offline-banner></app-offline-banner>
+  <!-- Enrutador Principal -->
+  <ion-router-outlet id="main-content" [class.has-bottom-bar]="statusLogin()"></ion-router-outlet>
 
-              <li class="mb-1">
-                <span class="{{clase_estado}}">{{estado}}</span>
-              </li>
+  <!-- Barra de Navegación Inferior (Mockup v4) -->
+  <nav class="aldia-bottom-bar" *ngIf="statusLogin()" role="navigation" aria-label="Navegación principal">
+    <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="bottom-tab-item">
+      <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+      <span class="tab-label">Inicio</span>
+    </a>
 
-              <li class="mt-2">
-                <h3>{{ placa }}</h3>
-              </li>
+    <a routerLink="/preform" routerLinkActive="active" class="bottom-tab-item">
+      <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
+      <span class="tab-label">Preoperacional</span>
+    </a>
 
-              </ul>
-          </ion-item>
+    <a routerLink="/datos" routerLinkActive="active" class="bottom-tab-item">
+      <ion-icon name="document-text-outline" class="tab-icon"></ion-icon>
+      <span class="tab-label">Documentos</span>
+    </a>
 
-        </ion-toolbar>
-
-        <ion-list id="inbox-list">
-          <ion-menu-toggle auto-hide="false" *ngFor="let p of appPages; let i = index" >
-            <ion-item *ngIf="statusLogin() && !p.hidden"  routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
-              <ion-icon slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
-              <ion-label class="ml-2">{{ p.title }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false">
-            <ion-item routerDirection="root"  (click)="logout()"  lines="none" detail="false">
-              <ion-icon slot="start" [ios]="'log-in-outline'" [md]="'log-in-sharp'"></ion-icon>
-              <ion-label class="ml-2">Cerrar Sesion</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-        </ion-list>
-
-        <!-- <ion-list id="labels-list">
-          <ion-list-header>Labels</ion-list-header>
-
-          <ion-item *ngFor="let label of labels" lines="none">
-            <ion-icon slot="start" ios="bookmark-outline" md="bookmark-sharp"></ion-icon>
-            <ion-label>{{ label }}</ion-label>
-          </ion-item>
-        </ion-list> -->
-
-       <!-- <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-         <ion-fab-button>
-           <ion-icon name="chevron-up-circle"></ion-icon>
-         </ion-fab-button>
-         <ion-fab-list side="top">
-           <ion-fab-button>
-             <ion-icon name="document"></ion-icon>
-           </ion-fab-button>
-           <ion-fab-button>
-             <ion-icon name="color-palette"></ion-icon>
-           </ion-fab-button>
-           <ion-fab-button>
-             <ion-icon name="globe"></ion-icon>
-           </ion-fab-button>
-         </ion-fab-list>
-
-       </ion-fab> -->
-
-
-      </ion-content>
-    </ion-menu>
-
-    <ion-router-outlet id="main-content"></ion-router-outlet>
-
-  </ion-split-pane>
-
-
-
-  <ion-modal [isOpen]="!statusNet">
-    <ng-template>
-      <ion-content>
-        <app-empty-screen [model]="model"  (retry)="checkStatus($event)"></app-empty-screen>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
-
+    <button type="button" class="bottom-tab-item btn-tab-perfil" (click)="openPerfilMenu()">
+      <ion-icon name="person-circle-outline" class="tab-icon"></ion-icon>
+      <span class="tab-label">Perfil</span>
+    </button>
+  </nav>
 </ion-app>

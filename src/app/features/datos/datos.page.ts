@@ -7,21 +7,14 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
-import { ActionSheetController, AlertController, IonAccordionGroup, LoadingController, ModalController } from '@ionic/angular';
-import { MenuController } from '@ionic/angular';
+import { ActionSheetController, AlertController, IonAccordionGroup, LoadingController, MenuController, ModalController } from '@ionic/angular';
 import { PhotoService } from '../../core/services/photo.service';
-import { log } from 'console';
 import { Foto } from '../../core/models/photo.interface';
-import * as e from 'cors';
 import { RegistroService } from '../../core/services/registro.service';
-import { FaceApiService } from '../../api/face-api.service';
-import { VideoPlayerService } from '../../api/video-player.service';
 import { Photo } from '@capacitor/camera';
-import { forEach } from 'lodash';
 import { Platform } from '@ionic/angular';
 import { AppComponent } from '../../app.component';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import * as faceapi from 'face-api.js';
 import { AuthService } from '@core/services/auth.service';
 
 
@@ -45,7 +38,6 @@ export class DatosPage implements OnInit {
   @ViewChild('modal5') modal5!: ModalController;
   @ViewChild('modal6') modal6!: ModalController;
   @ViewChild('modal7') modal7!: ModalController;
-  @ViewChild('videoContainer', { static: false }) videoContainer!: ElementRef;
   isModalOpen: any = false;
   isModalOpen1: any = false;
   isModalOpen2: any = false;
@@ -492,8 +484,6 @@ export class DatosPage implements OnInit {
     this.numDocs = 0;
 
     await this.userService.validateCap()
-
-    // this.startVideo()
 
     if (this.userService.getToken() == null) {
       this.router.navigate(['/login']);
@@ -1026,59 +1016,6 @@ export class DatosPage implements OnInit {
   }
 
 
-
-
-  async startVideo() {
-    try {
-      this.startCamera = true
-      var video = await navigator.mediaDevices.getUserMedia({ video: true });
-
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models');
-      await faceapi.nets.faceExpressionNet.loadFromUri('/assets/models');
-      await faceapi.nets.ageGenderNet.loadFromUri('/assets/models');
-
-
-      let stream = this.videoContainer.nativeElement;
-      stream.srcObject = video;
-
-      stream.addEventListener('loadedmetadata', () => this.PlayEvn());
-
-    } catch (error) {
-      console.error('Error al acceder a la cámara:', error);
-    }
-  }
-
-  PlayEvn() {
-    this.videoContainer.nativeElement.addEventListener('play', () => {
-      const canvas = faceapi.createCanvasFromMedia(this.videoContainer.nativeElement)
-      document.body.append(canvas)
-      const displaySize = { width: this.videoContainer.nativeElement.width, height: this.videoContainer.nativeElement.height }
-      faceapi.matchDimensions(canvas, displaySize)
-
-      setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(this.videoContainer.nativeElement, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceExpressions()
-          .withAgeAndGender()
-
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-        canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-        resizedDetections.forEach(detection => {
-          const box = detection.detection.box
-          const drawBox = new faceapi.draw.DrawBox(box, { label: Math.round(detection.age) + " year old " + detection.gender })
-          drawBox.draw(canvas)
-        })
-
-
-      }, 1000)
-    })
-  }
 
 
   async getParentesco() {

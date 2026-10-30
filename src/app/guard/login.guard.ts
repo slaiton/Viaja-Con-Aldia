@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, RouterStateSnapshot, UrlTree, Router } from '@angular/router';
-import { CookieService } from 'ngx-cookie-service';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -8,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class LoginGuard implements CanActivate {
 
-  constructor(private cookie:CookieService,private router:Router){}
+  constructor(private router: Router) {}
 
   redirect(flag: any): any{
 

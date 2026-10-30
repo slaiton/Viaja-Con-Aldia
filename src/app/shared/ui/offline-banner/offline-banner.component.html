@@ -1,0 +1,6 @@
+<div class="offline-banner" *ngIf="!(isOnline$ | async) || shouldShow" role="status" aria-live="polite">
+  <div class="banner-content">
+    <ion-icon name="cloud-offline-outline" class="banner-icon"></ion-icon>
+    <span class="banner-text">{{ message }}</span>
+  </div>
+</div>

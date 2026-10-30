@@ -1,15 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-// import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-
 import { GeodataService } from "../../api/geodata.service";
 import { FormControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CookieService } from "ngx-cookie-service";
 import { AlertController, LoadingController } from '@ionic/angular';
 import { getElement } from 'ionicons/dist/types/stencil-public-runtime';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
 import { RegistroService } from '../../core/services/registro.service';
-import { log } from 'console';
 import { Geolocation } from '@capacitor/geolocation';
 import { InAppReview } from '@capacitor-community/in-app-review';
 import { AuthService } from '@core/services/auth.service';

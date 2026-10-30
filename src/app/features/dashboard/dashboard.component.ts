@@ -1,14 +1,4 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsulation } from '@angular/core';
-import {FaceApiService} from '../../api/face-api.service';
-import {VideoPlayerService} from '../../api/video-player.service';
-import { PhotoService } from '../../core/services/photo.service';
-import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
-import { Platform } from '@ionic/angular';
-import { GeodataService } from '../../api/geodata.service';
-import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-
-
+import { Component, ViewEncapsulation } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,12 +6,9 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
   styleUrls: ['./dashboard.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom
 })
-export class DashboardComponent{
+export class DashboardComponent {
 
-
-  constructor(private geolocation: Geolocation)
-  {
-  }
+  constructor() {}
 
   // async init() {
   //   try {

@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs-compat/Observable";
-import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
-import { CookieService } from "ngx-cookie-service";
+import { Observable, catchError, retry, Subject, throwError, timeout } from 'rxjs';
 import { User } from "../models/user.model";
 import { MenuController } from '@ionic/angular';
 import { StorageService } from './storage.service';
+import { ConductorApi } from '@domain/conductor.api';
 
 
 
@@ -251,25 +250,27 @@ export class UserService {
     private menu: MenuController,
     private http: HttpClient,
     private storage: StorageService,
-    private router: Router) { }
+    private router: Router,
+    private conductorApi: ConductorApi) { }
 
   login(user: User): Observable<any> {
     return this.http.post("https://api.aldialogistica.com/api/auth/login-external", user);
   }
 
   getPlaca() {
-    const placa =this.storage.get('placa');
-    return placa ? placa : null;
+    const raw: any = this.storage.get('placa') || localStorage.getItem("placa");
+    return raw ? (typeof raw === 'string' ? raw.replace(/^["']|["']$/g, '').trim() : raw) : null;
   }
 
   getCedula() {
-    return localStorage.getItem("conductor");
+    const raw: any = this.storage.get('conductor') || localStorage.getItem("conductor");
+    return raw ? (typeof raw === 'string' ? raw.replace(/^["']|["']$/g, '').trim() : raw) : null;
   }
 
   getUser(): Observable<any> {
 
     const params = new HttpParams({
-      fromString: 'placa=' +this.storage.get('placa') + '&digitales=true'
+      fromString: 'placa=' + (this.getPlaca() || '') + '&digitales=true'
     });
 
     const headers = new HttpHeaders({
@@ -308,7 +309,7 @@ export class UserService {
   getConductor(): Observable<any> {
 
     const params = new HttpParams({
-      fromString: 'documento=' + localStorage.getItem("conductor")
+      fromString: 'documento=' + (this.getCedula() || '')
     });
 
     const headers = new HttpHeaders({
@@ -356,7 +357,7 @@ export class UserService {
 
   getFechas(token: any): Promise<any> {
     const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
+      fromString: 'cedula=' + (this.getCedula() || '') + '&placa=' + (this.getPlaca() || '')
     });
 
     const headers = new HttpHeaders({
@@ -368,8 +369,8 @@ export class UserService {
 
     return this.http.get("https://api.3slogistica.com/api/document/validate", requestOptions)
       .pipe(
-        timeout(5000),
-        retry(2),
+        timeout(10000),
+        retry(1),
         catchError((err: any) => {
           return throwError(() => err);
         })
@@ -379,27 +380,7 @@ export class UserService {
 
 
   getTercero3sL(token: any): Promise<any> {
-
-    const params = new HttpParams({
-      fromString: 'cedula=' + localStorage.getItem("conductor") + '&placa=' +this.storage.get('placa')
-    });
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json; charset=utf-8',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer ' + token
-    });
-    const requestOptions = { headers: headers, params: params };
-
-    return this.http.get("https://api.3slogistica.com/api/ingresos", requestOptions)
-      .pipe(
-        timeout(5000),
-        retry(2),
-        catchError((err: any) => {
-          return throwError(() => err);
-        })
-      )
-      .toPromise()
+    return this.conductorApi.getEnvelope3SL(undefined, undefined, token);
   }
 
   get3SLbyplaca(placa: any, token: any): Observable<any> {

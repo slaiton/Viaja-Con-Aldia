@@ -97,6 +97,24 @@ export class HomePage implements OnInit {
     return this.turnoForm.controls;
   }
 
+  get nombreCorto(): string {
+    if (!this.nombres) return 'Conductor';
+    return this.nombres.trim().split(' ')[0];
+  }
+
+  get inicialesConductor(): string {
+    if (!this.nombres) return 'CP';
+    const n = (this.nombres || '').trim().split(' ')[0] || '';
+    const a = (this.apellidos || '').trim().split(' ')[0] || '';
+    const ini1 = n ? n.charAt(0) : 'C';
+    const ini2 = a ? a.charAt(0) : 'P';
+    return (ini1 + ini2).toUpperCase();
+  }
+
+  get ubicacionActual(): string {
+    return this.nombre || this.origen || this.ciudad || 'Colombia';
+  }
+
   alertIcon: any = alertCircleOutline;
   secretsAldia: any = {}
 
@@ -178,11 +196,19 @@ export class HomePage implements OnInit {
         this.initPushNotifications()
       }
 
-      await this.validateFechas();
+      const [fechas, data3SL] = await Promise.all([
+        this.userService.getFechasDocs(this.token),
+        this.userService.getTercero3sL(this.token)
+      ]);
 
-      await this.getData3SL()
+      if (fechas) {
+        this.docs = fechas.docs;
+        this.statusDoc = fechas.status;
+      }
 
-      await this.userService.validateCap()
+      await this.processData3SL(data3SL);
+
+      await this.userService.validateCap();
 
       this.loadingData.dismiss();
 
@@ -272,24 +298,21 @@ export class HomePage implements OnInit {
   }
 
 
-  async getData3SL() {
-
-    const data = await this.userService.getTercero3sL(this.token);
-
+  async processData3SL(data: any) {
     if (!data || !data['data'] || data['data'].length === 0) {
       throw new Error('No se encontraron datos.');
     }
 
     const datos = data['data'][0];
 
-    this.cedula = datos.codigoTercerox
-    this.nombres = datos.nombreTercerox
-    this.apellidos = datos.apell1Tercerox + ' ' + datos.apell2Tercerox
-    this.correo = datos.emailxTercerox
-    this.celular = datos.movilxTercerox
-    this.direccion = datos.direccTercerox
-    this.fecha = datos.fechaxNacimien
-    this.ciudad = datos.ciudadCreacion
+    this.cedula = datos.codigoTercerox;
+    this.nombres = datos.nombreTercerox;
+    this.apellidos = (datos.apell1Tercerox || '') + ' ' + (datos.apell2Tercerox || '');
+    this.correo = datos.emailxTercerox;
+    this.celular = datos.movilxTercerox;
+    this.direccion = datos.direccTercerox;
+    this.fecha = datos.fechaxNacimien;
+    this.ciudad = datos.ciudadCreacion;
 
     this.getDocument(this.cedula, 'fotoperfil', 'conductor').then(
       (doc: any) => {
@@ -297,14 +320,14 @@ export class HomePage implements OnInit {
           this.fotoUser = doc.data.fotoperfil;
         }
       }
-    )
+    );
 
     if (this.statusDoc) {
       if (datos.numeroEstadoxx == 'ACTIVO') {
-        this.estado = true
+        this.estado = true;
         this.getTurnoTecero();
       } else {
-        this.estado = false
+        this.estado = false;
         this.turnoExistente = false;
         this.botonInactivo = true;
         this.estadoBoton = 'Inactivo';
@@ -312,24 +335,14 @@ export class HomePage implements OnInit {
       }
     } else {
       this.estadoBoton = 'Documentos Vencidos';
-      this.botonDocumentos = true
-      this.router.navigateByUrl('/datos')
+      this.botonDocumentos = true;
+      this.router.navigateByUrl('/datos');
     }
+  }
 
-    // } catch (err: any) {
-    //   console.log(err);
-
-    //   this.loadingData.dismiss();
-
-    //   this.presentAlert(
-    //     'Error',
-    //     'Fallo al cargar',
-    //     err.message || 'Ha ocurrido un error inesperado.',
-    //     'Reintentar'
-    //   );
-    // } finally {
-    //   this.loadingData.dismiss();
-    // }
+  async getData3SL() {
+    const data = await this.userService.getTercero3sL(this.token);
+    await this.processData3SL(data);
   }
 
   async validateFechas() {

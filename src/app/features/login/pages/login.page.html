@@ -16,29 +16,35 @@
         />
         <div class="form-floating">
           <input
-            type="number"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="username"
             formControlName="username"
             name="username"
             matInput
             class="form-control"
             id="username"
-            placeholder="Usuario"
+            placeholder="Cédula de ciudadanía"
             required
           />
-          <label for="floatingInput">Cedula</label>
+          <label for="username">Cédula de ciudadanía</label>
         </div>
         <div class="form-floating">
           <input
-            type="password"
+            type="text"
             formControlName="password"
             name="password"
+            maxlength="7"
+            autocomplete="off"
+            style="text-transform: uppercase;"
             matInput
             class="form-control"
             id="password"
-            placeholder="Clave"
+            placeholder="Placa del vehículo"
             required
           />
-          <label for="floatingPassword">Placa</label>
+          <label for="password">Placa del vehículo</label>
         </div>
 
         <button class="btn btn-primary" type="submit" [disabled]="submitClick"> {{ submitClick ? 'Cargando...' : 'Iniciar Sesion' }}</button>

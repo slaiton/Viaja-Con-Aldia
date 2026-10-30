@@ -1,0 +1,19 @@
+<div class="colombian-plate" [ngClass]="'plate-' + size" role="img" [attr.aria-label]="'Placa de vehículo ' + placaFormateada">
+  <!-- Tornillos estéticos esquineros -->
+  <span class="screw top-left" aria-hidden="true"></span>
+  <span class="screw top-right" aria-hidden="true"></span>
+  <span class="screw bottom-left" aria-hidden="true"></span>
+  <span class="screw bottom-right" aria-hidden="true"></span>
+
+  <div class="plate-header">
+    <span class="country-text">COLOMBIA</span>
+  </div>
+
+  <div class="plate-body">
+    <span class="plate-digits">{{ placaFormateada }}</span>
+  </div>
+
+  <div class="plate-footer">
+    <span class="municipality-text">{{ municipioUpper }}</span>
+  </div>
+</div>
