@@ -12,6 +12,7 @@ import { Photo } from '@capacitor/camera';
 import * as e from 'cors';
 import { AuthService } from '@core/services/auth.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { ImageCompressionService } from '@core/services/image-compression.service';
 
 
 @Component({
@@ -171,6 +172,8 @@ export class RegistroPage implements OnInit {
   completeData: any = false;
   aceptTerms: any = false;
   dataTerms: any;
+  aceptaTerminos: boolean = false;
+  aceptaHabeasData: boolean = false;
 
   hubImag: any = {
     licencia1: { webviewPath: false },
@@ -285,7 +288,8 @@ export class RegistroPage implements OnInit {
     private router: Router,
     private reg: RegistroService,
     private auth: AuthService,
-    private menu: MenuController) {
+    private menu: MenuController,
+    private imageCompressor: ImageCompressionService) {
     this.initializeApp();
 
     this.documents_vehiculo = this.user.documents_vehiculo
@@ -851,7 +855,29 @@ export class RegistroPage implements OnInit {
 
 
 
-  onSubmit() {
+  async onSubmit() {
+    if (!this.aceptaTerminos || !this.aceptaHabeasData) {
+      this.presentAlert(
+        "Consentimiento requerido",
+        "",
+        "Debes aceptar los Términos y Condiciones y autorizar el Tratamiento de Datos Personales (Habeas Data) para continuar.",
+        "Entendido"
+      );
+      return;
+    }
+
+    try {
+      if (!this.aceptTermData) {
+        await this.user.firmaContrato(1, this.conductor.cedula, '', this.token);
+        this.aceptTermData = true;
+      }
+      if (!this.aceptTerms) {
+        await this.user.firmaContrato(2, this.conductor.cedula, this.vehiculo.placa, this.token);
+        this.aceptTerms = true;
+      }
+    } catch (e) {
+      console.log('Error registrando firma digital preliminar:', e);
+    }
 
     if (this.completeData) {
       this.saveDocument();
@@ -978,43 +1004,78 @@ export class RegistroPage implements OnInit {
     }
 
 
+    let registroExitoso = false;
     await this.user.registroApiAldia(json, this.token).then(
       data => {
-
+        registroExitoso = true;
       },
       err => {
         this.loadingData.dismiss();
-        this.presentAlert("Error", "Se presento un error al guardar los datos", err.error.message || err.message || "Error desconocido", "Cerrar");
+        this.presentAlert("Error", "Se presento un error al guardar los datos", err.error?.message || err.message || "Error desconocido", "Cerrar");
       }
-    )
+    );
 
+    if (!registroExitoso) {
+      return;
+    }
+
+    // Limpieza estricta de modales residuales (SMS OTP, formularios, etc.)
+    this.setOpenCode(false);
+    this.modalCodeOpen = false;
+    this.codeValidation = false;
+    this.isModalOpen = false;
+    this.isModalOpen2 = false;
+    this.isModalOpen3 = false;
+    this.isModalOpen4 = false;
+    this.isModalOpen5 = false;
+    this.isModalOpen6 = false;
 
     const buttons = [
       {
         text: 'Continuar',
         handler: () => {
-        this.menu.enable(true);
-        this.router.navigate(['/home']);
+          this.menu.enable(true);
+          this.router.navigate(['/home']);
         },
       }
-    ]
+    ];
 
     await this.user.loginUser(this.conductor.cedula, this.vehiculo.placa).then(
       (data: any) => {
         this.loadingData.dismiss();
-        this.user.setToken(data.access_token);
-        localStorage.setItem('conductor', this.conductor.cedula);
-        localStorage.setItem('placa', this.vehiculo.placa);
+        if (data && data.access_token) {
+          this.user.setToken(data.access_token);
+          localStorage.setItem('token', data.access_token);
+          localStorage.setItem('conductor', this.conductor.cedula);
+          localStorage.setItem('placa', this.vehiculo.placa);
 
-        this.user.onLoginChange.next(data.access_token);
-        this.presentAlertButtons("Exito", "Usuario Creado", "Inicia Sesion", "Cerrar", buttons);
-
+          this.user.onLoginChange.next(data.access_token);
+          this.presentAlertButtons("Éxito", "Usuario Creado", "Bienvenido a Viaja con ALDÍA. Presiona continuar para ingresar.", "Cerrar", buttons);
+        } else {
+          const loginButtons = [
+            {
+              text: 'Iniciar Sesión',
+              handler: () => {
+                this.router.navigate(['/login']);
+              }
+            }
+          ];
+          this.presentAlertButtons("Éxito", "Usuario Creado", "Tu registro se completó con éxito. Por favor inicia sesión con tu cédula y placa.", "Cerrar", loginButtons);
+        }
       },
       err => {
         this.loadingData.dismiss();
-        this.presentAlert("Error", "Se presento un error en el app", err.error.message || err.message || "Error desconocido", "Cerrar");
+        const loginButtons = [
+          {
+            text: 'Ir al Login',
+            handler: () => {
+              this.router.navigate(['/login']);
+            }
+          }
+        ];
+        this.presentAlertButtons("Registro Completado", "", "Tu usuario fue creado exitosamente. Por favor ingresa desde la pantalla de inicio de sesión.", "Cerrar", loginButtons);
       }
-    )
+    );
 
   }
 
@@ -1590,17 +1651,16 @@ export class RegistroPage implements OnInit {
             this.token = data.access_token;
             if (!this.aceptTermData) {
               this.getDataFirma(cedula, 1).then(data => {
-                // console.log(data.status);
                 if (data.status) {
                   this.aceptTermData = true;
-                  this.getDriverApi3sL(this.conductor.cedula, false);
-                  // this.searchConductor(cedula, true)
-                } else {
-                  this.setOpenTermsData(true)
-                  this.loadingData.dismiss();
-                  return;
+                  this.aceptaHabeasData = true;
                 }
-              })
+                this.getDriverApi3sL(this.conductor.cedula, false);
+              }).catch(() => {
+                this.getDriverApi3sL(this.conductor.cedula, false);
+              });
+            } else {
+              this.getDriverApi3sL(this.conductor.cedula, false);
             }
           } else if (data.access_token == 0) {
 
@@ -1777,8 +1837,8 @@ export class RegistroPage implements OnInit {
       }
       var docs: any;
 
-      var text: any = '<ul>'
-      var docsFinal: any = []
+      var text: any = '<ul>';
+      var docsFinal: any[] = [];
       this.docsFailDriver = [];
       var docsVehiculo = false;
       var status: any = true;
@@ -1819,15 +1879,18 @@ export class RegistroPage implements OnInit {
           const data = this.removeMatchingKeys(a)
           loading.dismiss()
           if (data.code == '201' || !statusDoc) {
-            docsFinal = []
+            docsFinal = [];
             for (const a in data.data) {
               const status = data.data[a];
               if (!status) {
                 const doc = this.user.buscarCodigoEnDocumentos(a);
-                if (doc) {
+                if (doc && !docsFinal.some((d: any) => d.nombre === doc.nombre)) {
                   docsFinal.push(doc);
                 }
               }
+            }
+            if (docsFinal.length === 0) {
+              docsFinal = this.documents_conductor;
             }
             this.openDocs = true;
             this.openDocumentController(this.conductor.cedula, 'conductor', statusDoc, docsFinal);
@@ -1961,7 +2024,7 @@ export class RegistroPage implements OnInit {
               if (data.code == '201') {
                 this.loadingData.dismiss()
                 this.openDocs = true;
-                this.openDocumentController(this.conductor.cedula, 'conductor', true, []);
+                this.openDocumentController(this.conductor.cedula, 'conductor', true, this.documents_conductor);
               } else {
                 this.loadingData.dismiss()
                 this.incompletoTercero = false;
@@ -2105,6 +2168,36 @@ export class RegistroPage implements OnInit {
 
   setOpenCode(isOpen: boolean) {
     this.modalCodeOpen = isOpen;
+  }
+
+  toggleTerminos(event: any): void {
+    this.aceptaTerminos = !!event?.detail?.checked;
+    if (this.aceptaTerminos) {
+      this.aceptTerms = true;
+    }
+  }
+
+  toggleHabeasData(event: any): void {
+    this.aceptaHabeasData = !!event?.detail?.checked;
+    if (this.aceptaHabeasData) {
+      this.aceptTermData = true;
+    }
+  }
+
+  abrirModalTerminos(e?: Event): void {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    this.setOpenTerms(true);
+  }
+
+  abrirModalHabeasData(e?: Event): void {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    this.setOpenTermsData(true);
   }
 
 
@@ -3196,73 +3289,81 @@ export class RegistroPage implements OnInit {
   // }
 
   async addToGalery(name: any, rotate: any) {
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
+    try {
+      this.loadingData = await this.loading.create({
+        message: 'Guardando Foto...'
+      });
+      await this.loadingData.present();
 
-    this.photo.addNewToGallery(name).then((da) => {
-      this.loadingData.present();
-      this.processImage(da, name, rotate);
-
-    });
+      const da = await this.photo.addNewToGallery(name);
+      if (da) {
+        await this.processImage(da, name, rotate);
+      }
+    } catch (error) {
+      console.error('Error al capturar desde galería en registro:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) { }
+      }
+    }
   }
 
   async addToCamera(name: any, rotate: any) {
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
-    this.loadingData.present();
-    this.photo.addNewToCamera(name).then((da) => {
-      this.processImage(da, name, rotate);
-    });
-  }
+    try {
+      this.loadingData = await this.loading.create({
+        message: 'Guardando Foto...'
+      });
+      await this.loadingData.present();
 
+      const da = await this.photo.addNewToCamera(name);
+      if (da) {
+        await this.processImage(da, name, rotate);
+      }
+    } catch (error) {
+      console.error('Error al capturar con cámara en registro:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) { }
+      }
+    }
+  }
 
   async processImage(da: any, name: any, rotate: any) {
     try {
-      var rot = 0;
+      if (!da) return;
 
-      if (rotate) {
-        rot = 90;
+      const rot = rotate ? 90 : 0;
+      let rawSource = da.base64 || da.webviewPath;
+      if (!rawSource) return;
+
+      if (rot !== 0) {
+        rawSource = await this.photo.processAndRotationImage(rawSource, rot);
       }
-      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, rot);
 
+      const compressed = await this.imageCompressor.compressImage(rawSource, {
+        maxDimension: 1024,
+        quality: 0.8,
+        preferredFormat: 'image/jpeg'
+      });
 
-      const dataPhoto1: Photo = {
-        webPath: processedImagerotate,
-        format: 'jpeg',
-        saved: false
-      };
+      const base64Url = compressed.dataUrl;
 
-      const data64 = await this.photo.readAsBase64(dataPhoto1)
-      // console.log(data64);
+      da.webviewPath = base64Url;
+      da.base64 = base64Url;
 
-      const desiredSizeX = 450;
-      const desiredSizeY = 290;
-      // const processedImageDataUrl = await this.photo.processAndCropImage(data64, desiredSizeX, desiredSizeY, 90);
-      const processedImageDataUrl = await this.photo.processImage(data64);
-
-      const dataPhoto2: Photo = {
-        webPath: processedImageDataUrl,
-        format: 'jpeg',
-        saved: false
-      };
-
-      // console.log(data64);
-      da.webviewPath = processedImageDataUrl;
-      da.base64 = await this.photo.readAsBase64(dataPhoto2)
-
+      if (!this.hubImag[name]) {
+        this.hubImag[name] = {};
+      }
       this.hubImag[name] = da;
 
-      this.loadingData.dismiss();
-
     } catch (error) {
-      console.error('Error al procesar la imagen:', error);
+      console.error(`Error al procesar imagen [${name}] en registro:`, error);
     }
   }
 
   async acept() {
     this.aceptTermData = true;
+    this.aceptaHabeasData = true;
     this.setOpenTermsData(false);
     // Firma APP
     const firma = await this.user.firmaContrato(1, this.conductor.cedula, '', this.token);
@@ -3272,35 +3373,41 @@ export class RegistroPage implements OnInit {
   }
 
   async acept2() {
-
     this.aceptTerms = true;
+    this.aceptaTerminos = true;
 
     try {
       const data = await this.user.firmaContrato(2, this.conductor.cedula, this.vehiculo.placa, this.token);
       console.log(data);
       this.setOpenTerms(false);
-      this.onSubmit();
+      if (this.aceptaHabeasData && this.completeData) {
+        this.onSubmit();
+      }
     } catch (error) {
       console.log(error);
     }
   }
 
   async getFoto() {
+    try {
+      this.loadingData = await this.loading.create({
+        message: 'Guardando Datos...'
+      });
+      await this.loadingData.present();
 
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Datos..'
-    });
-
-    this.photo.addNewToCameraProfile('fotoperfil').then((da) => {
-
-      this.loadingData.present()
-
-
-      this.processImage(da, 'fotoperfil', false);
-      this.checkImagen = true;
-      this.completeData = true;
-
-    });
+      const da = await this.photo.addNewToCameraProfile('fotoperfil');
+      if (da) {
+        await this.processImage(da, 'fotoperfil', false);
+        this.checkImagen = true;
+        this.completeData = true;
+      }
+    } catch (error) {
+      console.error('Error al capturar foto de perfil:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) { }
+      }
+    }
   }
 
   async getDataCode(cedula: any, placa: any) {

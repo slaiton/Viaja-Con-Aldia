@@ -1,21 +1,47 @@
 <ion-header class="ion-no-border cabina-header-wrap">
-  <div class="cabina-header">
-    <div class="header-left">
-      <div class="avatar-circle">
-        <img *ngIf="fotoUser" [src]="fotoUser" alt="Foto conductor" class="avatar-img" />
+  <!-- Cabecera de Cabina unificada (Mockup v4 Pantallas 3, 4, 7) -->
+  <div class="cabina-header" *ngIf="!(viajeActivo$ | async) || (viajeActivo$ | async)?.estado !== 'EN_VIAJE_RNDC'">
+    <div class="cabina-header-left">
+      <div class="avatar-circle-navy">
+        <img *ngIf="fotoUser" [src]="fotoUser" alt="Foto perfil" class="avatar-foto" />
         <span *ngIf="!fotoUser" class="avatar-initials">{{ inicialesConductor }}</span>
       </div>
-      <div class="header-info">
-        <h1 class="saludo-title">Hola, {{ nombreCorto }}</h1>
-        <div class="status-indicator-wrap">
-          <span class="status-dot"></span>
-          <span class="status-subtitle">Conductor activo</span>
+      <div class="cabina-saludo-block">
+        <h2 class="saludo-title">Hola, {{ nombreCorto }}</h2>
+        <div class="header-status-badge" [class.badge-inactivo]="botonInactivo">
+          <ion-icon [name]="botonInactivo ? 'close-circle' : 'checkmark-circle'"></ion-icon>
+          <span>{{ botonInactivo ? 'Vehículo Inactivo' : 'Conductor activo' }}</span>
         </div>
       </div>
     </div>
 
     <div class="header-right">
-      <app-plate-badge [placa]="placa" size="md"></app-plate-badge>
+      <app-plate-badge
+        [placa]="placa"
+        (click)="irAMisVehiculos()"
+        class="cursor-pointer active:opacity-80 transition-opacity"
+        role="button"
+        tabindex="0"
+        title="Mis Vehículos - Cambiar cabezote"
+      ></app-plate-badge>
+    </div>
+  </div>
+
+  <!-- Cabecera En Ruta Nacional (Mockup v4 Pantalla 8) -->
+  <div class="aldia-header-pattern cabina-header-rndc" *ngIf="(viajeActivo$ | async)?.estado === 'EN_VIAJE_RNDC'">
+    <div class="rndc-header-left">
+      <span class="tag-ruta-nacional">En Ruta Nacional</span>
+      <h2 class="title-rndc-activo">Viaje RNDC Activo</h2>
+    </div>
+    <div class="header-right">
+      <app-plate-badge
+        [placa]="placa"
+        (click)="irAMisVehiculos()"
+        class="cursor-pointer active:opacity-80 transition-opacity"
+        role="button"
+        tabindex="0"
+        title="Mis Vehículos - Cambiar cabezote"
+      ></app-plate-badge>
     </div>
   </div>
 </ion-header>
@@ -26,200 +52,796 @@
   </ion-refresher>
 
   <div class="cabina-main-container">
-    <!-- Alerta Documentos Vencidos / Inactivo -->
-    <div *ngIf="botonDocumentos || botonInactivo" class="alerta-bloqueo-card" [routerLink]="botonDocumentos ? '/datos' : null">
-      <ion-icon name="alert-circle" class="alerta-icon"></ion-icon>
-      <div class="alerta-texto">
-        <strong>{{ estadoBoton }}</strong>
-        <p *ngIf="botonDocumentos">Toca para actualizar tus documentos</p>
-      </div>
-      <ion-icon name="chevron-forward" class="alerta-arrow" *ngIf="botonDocumentos"></ion-icon>
+    <!-- Selector de prueba rápida para alternar Viaje Activo RNDC (F3-03 / Demo QA) -->
+    <div class="demo-toggle-wrap">
+      <button type="button" class="btn-demo-pill" (click)="toggleModoViajeDemo()">
+        <ion-icon [name]="(viajeActivo$ | async) ? 'arrow-back-outline' : 'navigate-outline'"></ion-icon>
+        <span>{{ (viajeActivo$ | async) ? 'Volver a Cabina de Turnos' : 'Simular Viaje RNDC Activo' }}</span>
+      </button>
     </div>
 
-    <!-- Alerta de Preoperacional -->
-    <ion-card *ngIf="showAlerts" class="estado-card" [ngClass]="preoperacional.aprobado === 'NO' ? 'estado-rojo' : 'estado-verde'" (click)="goToPreform()">
-      <div class="header-estado">
-        <ion-icon [name]="preoperacional.aprobado === 'NO' ? 'close-circle' : 'checkmark-circle'" class="icon-estado">
-        </ion-icon>
-        <div class="titulo-estado">
-          <h2>{{ preoperacional.aprobado === 'NO' ? 'RECHAZADO' : 'APROBADO' }}</h2>
-          <p>Último Preoperacional</p>
-        </div>
-        <div class="datos-right">
-          <div class="dato">
-            <span class="valor">{{ preoperacional.fecha }}</span>
+    <!-- ============================================================== -->
+    <!-- ESTADO 1: VIAJE RNDC ACTIVO (Pantalla 8 del Mockup v4)          -->
+    <!-- ============================================================== -->
+    <ng-container *ngIf="viajeActivo$ | async as viaje">
+      <div class="viaje-rndc-container" *ngIf="viaje.estado === 'EN_VIAJE_RNDC'">
+        <!-- Tarjeta Manifiesto (MEC) Azul #0094DA -->
+        <div class="card-mec-blue">
+          <div class="mec-top-row">
+            <span class="mec-badge-tag">MANIFIESTO ELECTRÓNICO (MEC)</span>
+            <span class="mec-badge-oficial">RNDC Oficial</span>
           </div>
-          <div class="dato">
-            <span class="valor">{{ preoperacional.hora }}</span>
+
+          <h2 class="mec-number font-plate">{{ viaje.manifiesto.numeroMEC }}</h2>
+
+          <div class="mec-route-box">
+            <div class="route-col">
+              <span class="lbl-route">ORIGEN</span>
+              <strong class="val-route">{{ viaje.manifiesto.origen }}</strong>
+            </div>
+            <ion-icon name="arrow-forward-outline" class="mec-arrow"></ion-icon>
+            <div class="route-col text-right">
+              <span class="lbl-route">DESTINO</span>
+              <strong class="val-route">{{ viaje.manifiesto.destino }}</strong>
+            </div>
+          </div>
+
+          <button type="button" class="btn-mec-qr" (click)="abrirQRDITRA()">
+            <ion-icon name="qr-code-outline"></ion-icon>
+            <span>Mostrar QR DITRA (Disponible Offline)</span>
+          </button>
+        </div>
+
+        <!-- Tarjetas de Remesa y POD Blanca con Borde Azul (Pantalla 8) -->
+        <div class="card-remesa-pod" *ngFor="let remesa of viaje.remesas">
+          <div class="remesa-card-header">
+            <div class="remesa-id-wrap">
+              <span class="remesa-tag">REMESA #{{ remesa.numeroRemesa }}</span>
+              <h4 class="remesa-dest-title">{{ remesa.destinatario }}</h4>
+            </div>
+            <span
+              class="chip-remesa-estado"
+              [class.chip-descargue]="remesa.estado === 'EN_DESCARGUE'"
+              [class.chip-entregado]="remesa.estado === 'ENTREGADO'"
+            >
+              {{ remesa.estado === 'ENTREGADO' ? 'Entregado' : 'En Descargue' }}
+            </span>
+          </div>
+
+          <p class="remesa-punto-entrega">{{ remesa.puntoEntrega }}</p>
+
+          <div class="remesa-footer">
+            <button
+              *ngIf="remesa.estado !== 'ENTREGADO'"
+              type="button"
+              class="btn-subir-pod"
+              (click)="abrirCapturaPOD(remesa)"
+            >
+              <ion-icon name="camera-outline"></ion-icon>
+              <span>Subir Foto de Cumplido (POD)</span>
+            </button>
+
+            <div *ngIf="remesa.estado === 'ENTREGADO'" class="pod-entregado-badge">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <span>Cumplido Registrado ({{ remesa.cumplidoSizeKb || 85 }} KB WebP)</span>
+            </div>
           </div>
         </div>
       </div>
-    </ion-card>
+    </ng-container>
 
-    <!-- StatusHero (Mockup v4) -->
-    <div class="status-hero-container">
-      <!-- Tarjeta: Sin Turno (Azul #0094DA) -->
-      <div *ngIf="!turnoExistente" class="hero-card hero-sin-turno">
-        <div class="hero-top-row">
+    <!-- ============================================================== -->
+    <!-- ESTADOS CABINA: SIN TURNO / ENTURNADO / OFFLINE                -->
+    <!-- ============================================================== -->
+    <ng-container *ngIf="!(viajeActivo$ | async) || (viajeActivo$ | async)?.estado !== 'EN_VIAJE_RNDC'">
+      
+      <!-- ─── PANTALLA 3: DISPONIBLE (SIN TURNO) ───────────────────────── -->
+      <ng-container *ngIf="!turnoExistente">
+        <!-- Hero Card Azul #0094DA -->
+        <div class="hero-card hero-sin-turno">
           <span class="hero-tag">TU TURNO</span>
-          <ion-icon name="navigate-outline" class="hero-gps-indicator"></ion-icon>
-        </div>
-
-        <div class="hero-body">
-          <h2 class="hero-title font-display">Sin turno</h2>
+          <h3 class="hero-title font-display">Sin turno</h3>
           <div class="hero-location-wrap">
             <ion-icon name="location-sharp" class="pin-icon"></ion-icon>
-            <span class="location-name">{{ ubicacionActual }}</span>
+            <span>Ubicación detectada: <strong>{{ ubicacionActual }}</strong></span>
+          </div>
+          <button
+            type="button"
+            class="btn-hero-primary"
+            [class.btn-hero-disabled]="botonInactivo"
+            [disabled]="botonInactivo"
+            (click)="nuevoTurno()"
+          >
+            <ion-icon *ngIf="botonInactivo" name="lock-closed-outline" class="mr-1"></ion-icon>
+            <span>{{ botonInactivo ? 'Vehículo Inactivo' : 'Enturnarme ahora' }}</span>
+            <ion-icon *ngIf="!botonInactivo" name="chevron-forward-outline"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Banner Alerta Vehículo Inactivo (Máxima Prioridad) -->
+        <div *ngIf="botonInactivo" class="banner-alerta-inactivo mb-3">
+          <div class="inactivo-icon-circle">
+            <ion-icon name="alert-circle"></ion-icon>
+          </div>
+          <div class="inactivo-info min-w-0">
+            <b class="inactivo-title">Vehículo Inactivo</b>
+            <span class="inactivo-sub">Tu vehículo se encuentra inactivo. Comunícate con Tráfico para habilitarlo.</span>
           </div>
         </div>
 
-        <div class="hero-footer">
-          <button type="button" class="btn-hero-primary" (click)="nuevoTurno()">
-            <ion-icon name="add-circle" class="btn-hero-icon"></ion-icon>
-            <span>Enturnarme ahora</span>
-          </button>
+        <!-- Banner Alerta Documentos (Pantalla 3) -->
+        <div *ngIf="!botonInactivo && (botonDocumentos || !statusDoc)" class="banner-alerta-soat mb-3" routerLink="/datos">
+          <ion-icon name="warning-outline" class="soat-warn-icon"></ion-icon>
+          <div class="soat-info min-w-0">
+            <b class="soat-title truncate">{{ estadoBoton || 'Documentos Vencidos o Pendientes' }}</b>
+            <span class="soat-sub">Actualízalos para poder solicitar turno</span>
+          </div>
+          <span class="soat-action-link">Revisar</span>
         </div>
-      </div>
 
-      <!-- Tarjeta: Enturnado (Verde #1A7F37) -->
-      <div *ngIf="turnoExistente" class="hero-card hero-enturnado">
-        <div class="hero-top-row">
+        <!-- Estado de Requisitos para Enturnamiento (Pantalla 3) -->
+        <div class="requisitos-section">
+          <span class="section-micro-label">ESTADO PARA ENTURNAMIENTO</span>
+          <div class="card-requisitos-group">
+            <!-- Row 1: Preoperacional -->
+            <div class="requisito-row" (click)="goToPreform()">
+              <div class="req-icon-box req-icon-green">
+                <ion-icon name="checkmark-outline"></ion-icon>
+              </div>
+              <div class="req-info">
+                <b class="req-title">Preoperacional aprobado</b>
+                <span class="req-sub">{{ preoperacional.fecha ? (preoperacional.fecha + ' ' + (preoperacional.hora || '')) : 'Hoy, 06:12' }}</span>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="req-arrow"></ion-icon>
+            </div>
+
+            <!-- Row 2: Documentos -->
+            <div class="requisito-row" routerLink="/datos">
+              <div class="req-icon-box" [ngClass]="statusDoc ? 'req-icon-green' : 'req-icon-amber'">
+                <ion-icon [name]="statusDoc ? 'shield-checkmark-outline' : 'alert-circle-outline'"></ion-icon>
+              </div>
+              <div class="req-info">
+                <b class="req-title">Documentos {{ statusDoc ? 'habilitados' : 'pendientes' }}</b>
+                <span class="req-sub">Conductor y vehículo {{ placa }}</span>
+              </div>
+              <span *ngIf="statusDoc" class="chip-badge-green">Al día</span>
+              <span *ngIf="!statusDoc" class="chip-badge-warn">Por revisar</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ─── PANTALLA 4 & 7: ENTURNADO (TURNO ACTIVO / OFFLINE) ────────── -->
+      <ng-container *ngIf="turnoExistente">
+        <!-- Hero Verde Operativo #1A7F37 (Pantalla 4 y 7) -->
+        <div class="hero-card hero-enturnado">
           <span class="hero-tag">TU TURNO</span>
-          <span class="hero-badge-live">Activo</span>
-        </div>
-
-        <div class="hero-body">
-          <h2 class="hero-title font-display">Enturnado</h2>
-          <div class="hero-route">
-            <div class="route-point">
-              <span class="point-lbl">ORIGEN</span>
-              <span class="point-val">{{ origen || 'Origen' }}</span>
-            </div>
-            <ion-icon name="arrow-forward" class="route-arrow"></ion-icon>
-            <div class="route-point" *ngIf="destino1">
-              <span class="point-lbl">DESTINO</span>
-              <span class="point-val">{{ destino1 }}</span>
-            </div>
+          <h3 class="hero-title font-display">Enturnado</h3>
+          <div class="hero-meta-row">
+            <ion-icon name="location-outline" class="meta-icon"></ion-icon>
+            <span>Origen: {{ origen || 'Regional Bogotá' }}</span>
           </div>
-          <p class="hero-countdown" *ngIf="listTurnos?.data?.tiemporestante">
-            Reenturnarse en: <strong>{{ listTurnos.data.tiemporestante }}</strong>
-          </p>
-        </div>
-
-        <div class="hero-footer">
-          <button type="button" class="btn-hero-translucent" (click)="getTurnoTecero()">
-            <ion-icon name="refresh-outline" class="btn-hero-icon"></ion-icon>
-            <span>Ver o actualizar turno</span>
+          <div class="hero-meta-row" *ngIf="listTurnos?.data?.tiemporestante || tiempoRestante">
+            <ion-icon name="time-outline" class="meta-icon"></ion-icon>
+            <span>Puedes reenturnarte en {{ listTurnos?.data?.tiemporestante || tiempoRestante }}</span>
+          </div>
+          <button
+            *ngIf="isOnline$ | async"
+            type="button"
+            class="btn-hero-translucent"
+            (click)="getTurnoTecero()"
+          >
+            Ver o actualizar turno
           </button>
         </div>
-      </div>
-    </div>
 
+        <!-- Destinos en Orden de Preferencia (Pantallas 4 y 7) -->
+        <div class="destinos-orden-section">
+          <div class="section-header-row">
+            <span class="section-micro-label">DESTINOS EN ORDEN DE PREFERENCIA</span>
+            <span class="action-link-blue" (click)="abrirEnturnamiento()">Modificar</span>
+          </div>
 
+          <div class="card-destinos-orden">
+            <!-- Destino 1 -->
+            <div class="destino-row-item" *ngIf="destino1">
+              <span class="badge-num-navy">1</span>
+              <div class="dest-info min-w-0">
+                <b class="dest-name truncate">{{ destino1 }}</b>
+                <span class="dest-sub">Posición en cola</span>
+              </div>
+              <span class="dest-pos font-display"><small>#</small>{{ posicionTurno1 || '4' }}</span>
+            </div>
 
-  <div *ngIf="turnoExistente" class="container cont-turnos">
-    <div class="origen" style="text-align: center;">
-      <h1> Destinos </h1>
-    </div>
-    <div class="container-ticket">
+            <!-- Destino 2 -->
+            <div class="destino-row-item" *ngIf="destino2">
+              <span class="badge-num-navy">2</span>
+              <div class="dest-info min-w-0">
+                <b class="dest-name truncate">{{ destino2 }}</b>
+                <span class="dest-sub">Posición en cola</span>
+              </div>
+              <span class="dest-pos font-display"><small>#</small>{{ posicionTurno2 || '11' }}</span>
+            </div>
 
-      <div class="ticket">
-        <p>{{destino1}}</p>
-        <img src="../../assets/icon/tiket.png" alt="ticket" />
-        <span>{{posicionTurno1}}</span>
-      </div>
+            <!-- Destino 3 -->
+            <div class="destino-row-item" *ngIf="destino3">
+              <span class="badge-num-navy">3</span>
+              <div class="dest-info min-w-0">
+                <b class="dest-name truncate">{{ destino3 }}</b>
+                <span class="dest-sub">Posición en cola</span>
+              </div>
+              <span class="dest-pos font-display"><small>#</small>{{ posicionTurno3 || '7' }}</span>
+            </div>
 
-      <div class="ticket">
-        <p>{{destino2}}</p>
-        <img src="../../assets/icon/tiket.png" alt="ticket" />
-        <span>{{posicionTurno2}}</span>
-      </div>
+            <!-- Placeholder si no hay destinos en memoria -->
+            <div class="destino-row-item" *ngIf="!destino1 && !destino2 && !destino3">
+              <span class="badge-num-navy">1</span>
+              <div class="dest-info min-w-0">
+                <b class="dest-name">Regional Principal</b>
+                <span class="dest-sub">Posición en cola</span>
+              </div>
+              <span class="dest-pos font-display"><small>#</small>{{ posicionTurno1 || '1' }}</span>
+            </div>
+          </div>
+        </div>
 
-      <div class="ticket">
-        <p>{{destino3}}</p>
-        <img src="../../assets/icon/tiket.png" alt="ticket" />
-        <span>{{posicionTurno3}}</span>
-      </div>
+        <!-- Tarjeta Preoperacional Aprobado (Pantalla 4) -->
+        <div class="card-preoperacional-summary" (click)="goToPreform()">
+          <span class="req-icon-box req-icon-green">
+            <ion-icon name="checkmark-outline"></ion-icon>
+          </span>
+          <div class="req-info">
+            <b class="req-title">Preoperacional aprobado</b>
+            <span class="req-sub">{{ preoperacional.fecha ? (preoperacional.fecha + ' ' + (preoperacional.hora || '')) : 'Hoy, 06:12' }}</span>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="req-arrow"></ion-icon>
+        </div>
 
-    </div>
-  </div>
+        <!-- Tarjeta Punteada de Envío en Espera (Pantalla 7 - Offline Outbox) -->
+        <div class="card-outbox-waiting" *ngIf="!(isOnline$ | async)">
+          <ion-icon name="time-outline" class="outbox-icon"></ion-icon>
+          <div class="outbox-info">
+            <b class="outbox-title">1 envío en espera</b>
+            <span class="outbox-sub">Preoperacional de hoy. Se enviará cuando vuelva la señal.</span>
+          </div>
+        </div>
+
+        <!-- Banner Alerta SOAT / Documentos (Pantalla 4) -->
+        <div *ngIf="botonDocumentos || !statusDoc || botonInactivo" class="banner-alerta-soat" [routerLink]="(botonDocumentos || !statusDoc) ? '/datos' : null">
+          <ion-icon name="warning-outline" class="soat-warn-icon"></ion-icon>
+          <div class="soat-info min-w-0">
+            <b class="soat-title truncate">{{ estadoBoton || 'Documentos Vencidos o Pendientes' }}</b>
+            <span class="soat-sub">Actualízalo para no perder el turno</span>
+          </div>
+          <span class="soat-action-link">Actualizar</span>
+        </div>
+      </ng-container>
+
+    </ng-container>
 
   </div> <!-- /cabina-main-container -->
 
-  <ion-modal #modalTurno trigger="open-modal" [initialBreakpoint]="0.70" [breakpoints]="[0.7, 0.8, 0.9]"
-    handleBehavior="cycle">
+  <!-- ============================================================== -->
+  <!-- MODAL: HOJA DE ENTURNAMIENTO (Mockup v4 - Pantalla 5)         -->
+  <!-- ============================================================== -->
+  <ion-modal
+    [isOpen]="modalEnturnamientoOpen$ | async"
+    (didDismiss)="cerrarEnturnamiento()"
+    class="modal-sheet-enturnamiento"
+    [initialBreakpoint]="0.88"
+    [breakpoints]="[0.88, 1.0]"
+    handleBehavior="cycle"
+  >
     <ng-template>
-      <ion-content class="ion-padding">
-        <div class="container-fluid">
-          <div class="row d-flex justify-content-center">
-            <div class="container panel-turno">
-              <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center text-white">
-                <h3>Reenturnarse</h3>
+      <div class="modal-sheet-container">
+        <!-- Handle superior ergonómico -->
+        <div class="modal-drag-handle"></div>
+
+        <!-- Título y botón cerrar -->
+        <div class="modal-sheet-header">
+          <h3 class="sheet-title">Enturnarme</h3>
+          <button type="button" class="btn-close-sheet" (click)="cerrarEnturnamiento()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-sheet-body">
+          <!-- 1. CAJA ORIGEN GPS (Celeste #E5F4FC) -->
+          <div class="box-origen-gps">
+            <div class="origen-left">
+              <div class="icon-gps-wrap">
+                <ion-icon name="navigate-circle" class="icon-gps"></ion-icon>
+              </div>
+              <div class="origen-texts">
+                <span class="origen-label">Origen confirmado por GPS</span>
+                <div class="origen-value" *ngIf="!(isLoadingGps$ | async)">
+                  <strong *ngIf="origenGps$ | async as orig">{{ orig }}</strong>
+                  <span class="text-error" *ngIf="!(origenGps$ | async) && (errorGps$ | async) as err">{{ err }}</span>
+                  <span class="text-muted" *ngIf="!(origenGps$ | async) && !(errorGps$ | async)">Sin ubicación GPS</span>
+                </div>
+                <div class="origen-loading" *ngIf="isLoadingGps$ | async">
+                  <ion-spinner name="crescent" class="gps-spinner"></ion-spinner>
+                  <span>Identificando regional...</span>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-refresh-gps"
+              (click)="refrescarGps()"
+              [disabled]="isLoadingGps$ | async"
+              title="Refrescar ubicación GPS"
+            >
+              <ion-icon name="refresh-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- 2. DESTINOS EN ORDEN DE PREFERENCIA (Abre Pantalla 6) -->
+          <div class="sheet-destinos-section">
+            <div class="destinos-header-row">
+              <span class="section-micro-label">DESTINOS EN ORDEN DE PREFERENCIA</span>
+              <span class="action-link-blue" (click)="abrirSelectorDestinos()">Toca para elegir</span>
+            </div>
+
+            <div class="card-destinos-slots" (click)="abrirSelectorDestinos()">
+              <div class="destino-slot-row" *ngFor="let slot of (slotsDestinos$ | async)">
+                <span class="badge-num-navy">{{ slot.prioridad }}</span>
+                <b class="dest-slot-name flex-1">{{ slot.regional || 'Seleccionar regional' }}</b>
+                <ion-icon name="chevron-forward-outline" class="dest-slot-arrow"></ion-icon>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. CONTROL SEGMENTADO: TIPO DE REMOLQUE (Para Articulados) -->
+          <div class="control-section" *ngIf="esArticulado$ | async">
+            <label class="control-label">Tipo de remolque</label>
+            <div class="segmented-control-2">
+              <span
+                class="segmented-btn"
+                [class.segmented-active]="(tipoRemolque$ | async) === 'CONTENEDOR'"
+                (click)="setTipoRemolque('CONTENEDOR')"
+              >
+                Contenedor
+              </span>
+              <span
+                class="segmented-btn"
+                [class.segmented-active]="(tipoRemolque$ | async) === 'PLANCHA'"
+                (click)="setTipoRemolque('PLANCHA')"
+              >
+                Plancha
+              </span>
+            </div>
+          </div>
+
+          <!-- 4. CONTROL SEGMENTADO: ¿VIAJAS VACÍO? -->
+          <div class="control-section">
+            <label class="control-label">¿Viajas vacío?</label>
+            <div class="segmented-control-2">
+              <span
+                class="segmented-btn"
+                [class.segmented-active]="(viajaVacio$ | async) === 'SI'"
+                (click)="setViajaVacio('SI')"
+              >
+                Sí
+              </span>
+              <span
+                class="segmented-btn"
+                [class.segmented-active]="(viajaVacio$ | async) === 'NO'"
+                (click)="setViajaVacio('NO')"
+              >
+                No
+              </span>
+            </div>
+          </div>
+
+          <!-- 5. NOTA LEGAL (Aviso de veracidad) -->
+          <p class="banner-legal-texto">
+            <ion-icon name="warning-outline" class="legal-icon"></ion-icon>
+            <span>Si la información no corresponde a la realidad, la empresa puede aplicar sanciones.</span>
+          </p>
+
+          <!-- 6. BOTÓN CONFIRMAR TURNO (#0094DA) -->
+          <button
+            type="button"
+            class="btn-confirmar-turno-blue"
+            [disabled]="!(canSubmit$ | async) || (isSubmitting$ | async)"
+            (click)="confirmarTurno()"
+          >
+            <ion-spinner *ngIf="isSubmitting$ | async" name="crescent" class="submit-spinner mr-2"></ion-spinner>
+            <span>{{ (isSubmitting$ | async) ? 'Enturnando vehículo...' : 'Confirmar turno' }}</span>
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: SELECTOR DE 3 DESTINOS (Mockup v4 - Pantalla 6)        -->
+  <!-- ============================================================== -->
+  <ion-modal
+    [isOpen]="modalSelectorDestinosOpen$ | async"
+    (didDismiss)="cerrarSelectorDestinos()"
+    class="modal-selector-destinos"
+  >
+    <ng-template>
+      <!-- Cabecera Corporativa #0094DA -->
+      <div class="aldia-header-pattern header-selector-pattern">
+        <div class="selector-top-row">
+          <div class="flex items-center gap-2.5">
+            <button type="button" class="btn-selector-back" (click)="cerrarSelectorDestinos()">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+            </button>
+            <div>
+              <h3 class="title-selector-white">Seleccionar Destinos</h3>
+              <p class="sub-selector-white">Elige hasta 3 regionales en orden de preferencia</p>
+            </div>
+          </div>
+          <span class="badge-count-pill">{{ (destinos$ | async)?.length || 0 }} / 3</span>
+        </div>
+
+        <!-- 3 Slots de Preferencia Activos (1°, 2° y 3°) -->
+        <div class="slots-grid-selector">
+          <div
+            *ngFor="let slot of (slotsDestinos$ | async); let i = index"
+            class="slot-card-item"
+            [class.slot-ring-highlight]="slot.regional && i === 2"
+          >
+            <div class="min-w-0 flex-1">
+              <span class="slot-opt-lbl">{{ slot.prioridad }}° Opción</span>
+              <b class="slot-opt-val truncate" *ngIf="slot.regional">{{ slot.regional }}</b>
+              <span class="slot-opt-val text-muted-empty" *ngIf="!slot.regional">Vacío</span>
+            </div>
+            <button
+              type="button"
+              class="btn-remove-slot-x"
+              *ngIf="slot.regional"
+              (click)="removerDestinoPorIndice(slot.index); $event.stopPropagation();"
+              title="Quitar destino"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buscador de Regionales -->
+      <div class="search-regionales-bar">
+        <div class="search-input-box">
+          <ion-icon name="search-outline" class="icon-search"></ion-icon>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Buscar regional de destino..."
+            [value]="filtroBusqueda$ | async"
+            (input)="onFiltroInput($event)"
+          />
+          <button
+            type="button"
+            class="btn-clear-search"
+            *ngIf="filtroBusqueda$ | async"
+            (click)="limpiarFiltro()"
+          >
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <ion-content class="content-regionales">
+        <div class="lista-regionales-wrap">
+          <span class="section-micro-label px-4 pb-1">REGIONALES HABILITADAS DESDE BOGOTÁ</span>
+
+          <div
+            class="regional-row-item"
+            *ngFor="let reg of (regionalesCalculadas$ | async)"
+            [class.row-selected]="reg.seleccionada"
+            [class.row-disabled]="reg.bloqueada"
+            (click)="onToggleDestino(reg)"
+          >
+            <div class="regional-info">
+              <span class="regional-badge-indicator" [class.badge-active]="reg.seleccionada">
+                {{ reg.seleccionada ? reg.prioridad : '+' }}
+              </span>
+              <div>
+                <b class="regional-name">{{ reg.nombre }}</b>
+                <span class="regional-status-hint" [class.hint-active]="reg.seleccionada">
+                  {{ reg.seleccionada ? (reg.prioridad + '° Preferencia seleccionada') : (reg.bloqueada ? 'Máximo 3 seleccionados' : 'Disponible') }}
+                </span>
               </div>
             </div>
 
-            <div class="col-md-8">
-              <form [formGroup]="turnoForm" (ngSubmit)="onSubmit()">
-                <div class="form-row p-2">
-                  <div class="col-md-12 mt-2">
-                    <label id="origenLabel" for="">Origen: <ion-spinner></ion-spinner></label>
-                    <input [ngModel]="nombre" type="hidden" id="origen" formControlName="origen" />
-                  </div>
-                  <ion-item class="col-md-12 mt-2">
-                    <ion-select formControlName="destino1" interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 1 ...">
-                      <ion-select-option></ion-select-option>
-                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
-                        }}</ion-select-option>
-                    </ion-select>
-                  </ion-item>
-                  <ion-item class="col-md-12 mt-2">
-                    <ion-select formControlName="destino2" interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 2 ...">
-                      <ion-select-option></ion-select-option>
-                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
-                        }}</ion-select-option>
-                    </ion-select>
-                  </ion-item>
-                  <ion-item class="col-md-12 mt-2">
-                    <ion-select formControlName="destino3" interface="action-sheet"
-                      placeholder="* Selecciona la ciudad de destino 3 ...">
-                      <ion-select-option></ion-select-option>
-                      <ion-select-option *ngFor="let p of turno.regionales" value="{{ p.nombre }}">{{ p.nombre
-                        }}</ion-select-option>
-                    </ion-select>
-                  </ion-item>
-
-                  <div class="col-md-12 mt-2 mb-3">
-                    <label for="remolque">Tipo de Remolque</label>
-                    <ion-select interface="action-sheet" formControlName="remolque" id="remolque" required>
-                      <ion-select-option selected>Seleccionar</ion-select-option>
-                      <ion-select-option value="CONTENEDOR">CONTENEDOR</ion-select-option>
-                      <ion-select-option value="PLANCHA">PLANCHA</ion-select-option>
-                    </ion-select>
-                  </div>
-
-                  <h6 style="color: #db1824; font-size: 12px" id="labelPorcentaje">
-                    * De detectar que la información brindada no es cierta podrá
-                    incurrir en sanciones drásticas por parte de la compañía.
-                  </h6>
-
-                  <div class="col-md-12 mt-4 mb-4">
-                    <label for="">Vehiculo vacio</label>
-                    <ion-select interface="action-sheet" formControlName="vehiculovac" id="vehiculovac" required>
-                      <ion-select-option selected>Seleccionar</ion-select-option>
-                      <ion-select-option value="SI">SI</ion-select-option>
-                      <ion-select-option value="NO">NO</ion-select-option>
-                    </ion-select>
-                  </div>
-                </div>
-
-                <ion-button expand="block" color="primary" type="submit" [disabled]="turnoForm.invalid || isSubmitting">
-                  {{ isSubmitting ? 'Enviando...' : 'Enturnarme' }}
-                </ion-button>
-              </form>
+            <div class="regional-action">
+              <span class="chip-dest-badge" *ngIf="reg.seleccionada">
+                {{ reg.prioridad }}° Destino
+              </span>
+              <span class="text-disponible-hint" *ngIf="!reg.seleccionada && !reg.bloqueada">
+                Disponible
+              </span>
+              <ion-icon name="lock-closed" class="icon-locked" *ngIf="reg.bloqueada"></ion-icon>
             </div>
           </div>
+
+          <div class="empty-search-state" *ngIf="(regionalesCalculadas$ | async)?.length === 0">
+            <ion-icon name="search-outline"></ion-icon>
+            <p>No se encontraron regionales con esa búsqueda</p>
+          </div>
+        </div>
+      </ion-content>
+
+      <ion-footer class="footer-selector ion-no-border">
+        <div class="footer-actions-row">
+          <button type="button" class="btn-selector-clean" (click)="limpiarDestinos()">
+            Limpiar
+          </button>
+          <button
+            type="button"
+            class="btn-selector-save"
+            [disabled]="!(puedeGuardarDestinos$ | async)"
+            (click)="guardarDestinos()"
+          >
+            Guardar 3 destinos
+          </button>
+        </div>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 1: VISOR OFFLINE QR DITRA (Inspección Policía / RNDC)    -->
+  <!-- ============================================================== -->
+  <ion-modal [isOpen]="modalQROpen$ | async" (didDismiss)="cerrarQRDITRA()" class="modal-ditra-qr" [initialBreakpoint]="0.85" [breakpoints]="[0.85, 1.0]">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar class="header-ditra">
+          <ion-title class="title-ditra">Inspección Oficial DITRA</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarQRDITRA()">
+              <ion-icon name="close-circle-outline" class="btn-close-modal"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding content-ditra">
+        <div class="ditra-container" *ngIf="viajeActivo$ | async as v">
+          <!-- Badge de Respaldo Offline -->
+          <div class="badge-offline-ditra">
+            <ion-icon name="shield-checkmark"></ion-icon>
+            <span>Válido para inspección física DITRA · Respaldo Offline</span>
+          </div>
+
+          <!-- Código QR Reglamentario -->
+          <div class="qr-card-box">
+            <div class="qr-mock-frame">
+              <svg viewBox="0 0 100 100" class="qr-svg">
+                <rect x="5" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D2236" stroke-width="5"/>
+                <rect x="13" y="13" width="12" height="12" fill="#0D2236"/>
+                <rect x="67" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D2236" stroke-width="5"/>
+                <rect x="75" y="13" width="12" height="12" fill="#0D2236"/>
+                <rect x="5" y="67" width="28" height="28" rx="3" fill="none" stroke="#0D2236" stroke-width="5"/>
+                <rect x="13" y="75" width="12" height="12" fill="#0D2236"/>
+                <rect x="40" y="8" width="6" height="6" fill="#0D2236"/>
+                <rect x="52" y="8" width="8" height="6" fill="#0D2236"/>
+                <rect x="40" y="20" width="8" height="6" fill="#0D2236"/>
+                <rect x="52" y="20" width="6" height="6" fill="#0D2236"/>
+                <rect x="40" y="32" width="6" height="6" fill="#0D2236"/>
+                <rect x="8" y="40" width="6" height="8" fill="#0D2236"/>
+                <rect x="20" y="40" width="8" height="8" fill="#0D2236"/>
+                <rect x="36" y="44" width="28" height="12" rx="2" fill="#0094DA"/>
+                <text x="50" y="53" fill="#FFF" font-size="7" font-weight="bold" text-anchor="middle">RNDC</text>
+                <rect x="72" y="40" width="8" height="8" fill="#0D2236"/>
+                <rect x="86" y="40" width="6" height="8" fill="#0D2236"/>
+                <rect x="40" y="64" width="8" height="6" fill="#0D2236"/>
+                <rect x="54" y="64" width="6" height="6" fill="#0D2236"/>
+                <rect x="40" y="76" width="6" height="8" fill="#0D2236"/>
+                <rect x="52" y="76" width="8" height="8" fill="#0D2236"/>
+                <rect x="68" y="68" width="12" height="6" fill="#0D2236"/>
+                <rect x="84" y="68" width="8" height="6" fill="#0D2236"/>
+                <rect x="68" y="80" width="8" height="12" fill="#0D2236"/>
+                <rect x="82" y="80" width="12" height="12" fill="#0D2236"/>
+              </svg>
+            </div>
+            <p class="qr-scan-hint">Escanee para verificar legalidad en MinTransporte RNDC</p>
+          </div>
+
+          <!-- Datos de Ley del Manifiesto -->
+          <div class="ditra-info-card">
+            <div class="ditra-row">
+              <span class="ditra-label">MANIFIESTO (MEC):</span>
+              <strong class="ditra-val font-plate">{{ v.manifiesto.numeroMEC }}</strong>
+            </div>
+            <div class="ditra-row">
+              <span class="ditra-label">VEHÍCULO / PLACA:</span>
+              <strong class="ditra-val">{{ v.manifiesto.placa }}</strong>
+            </div>
+            <div class="ditra-row">
+              <span class="ditra-label">CONDUCTOR:</span>
+              <span class="ditra-val">{{ v.manifiesto.conductor }}</span>
+            </div>
+            <div class="ditra-row">
+              <span class="ditra-label">CÉDULA CONDUCTOR:</span>
+              <span class="ditra-val">{{ v.manifiesto.cedulaConductor }}</span>
+            </div>
+            <div class="ditra-row">
+              <span class="ditra-label">EMPRESA:</span>
+              <span class="ditra-val">{{ v.manifiesto.empresaTransporte }}</span>
+            </div>
+            <div class="ditra-row">
+              <span class="ditra-label">ORIGEN ➔ DESTINO:</span>
+              <span class="ditra-val">{{ v.manifiesto.origen }} ➔ {{ v.manifiesto.destino }}</span>
+            </div>
+            <div class="ditra-row" *ngIf="v.manifiesto.polizaSeguro">
+              <span class="ditra-label">PÓLIZA SEGURO:</span>
+              <span class="ditra-val">{{ v.manifiesto.polizaSeguro }}</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-ditra-close" (click)="cerrarQRDITRA()">
+            Entendido / Cerrar Visor
+          </button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 2: CAPTURA CUMPLIDO (POD) CON COMPRESIÓN WEBP            -->
+  <!-- ============================================================== -->
+  <ion-modal [isOpen]="modalPODOpen$ | async" (didDismiss)="cerrarCapturaPOD()" class="modal-pod-capture" [initialBreakpoint]="0.85" [breakpoints]="[0.85, 1.0]">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar class="header-pod">
+          <ion-title class="title-pod">Cumplido de Entrega (POD)</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarCapturaPOD()">
+              <ion-icon name="close-circle-outline" class="btn-close-modal"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding content-pod">
+        <div class="pod-modal-body" *ngIf="remesaSeleccionada$ | async as remesa">
+          <div class="pod-remesa-summary">
+            <span class="badge-remesa-num">Remesa #{{ remesa.numeroRemesa }}</span>
+            <h3 class="pod-destinatario">{{ remesa.destinatario }}</h3>
+            <p class="pod-punto">{{ remesa.puntoEntrega }}</p>
+          </div>
+
+          <!-- Caja de Fotografía -->
+          <div class="pod-photo-box" (click)="seleccionarFuentePOD()">
+            <ng-container *ngIf="fotoPOD$ | async as foto; else placeholderPOD">
+              <img [src]="foto.webviewPath" alt="Cumplido" class="img-preview-pod" />
+              <div class="badge-webp-pod">
+                <ion-icon name="shield-checkmark"></ion-icon>
+                <span>WebP optimizado ({{ foto.sizeKb }} KB)</span>
+              </div>
+            </ng-container>
+            <ng-template #placeholderPOD>
+              <div class="pod-placeholder">
+                <ion-icon name="camera-outline" class="camera-icon-pod"></ion-icon>
+                <strong class="tap-title">Tomar foto de la remesa sellada</strong>
+                <span class="tap-subtitle">Asegúrate de que la firma y el sello sean legibles</span>
+              </div>
+            </ng-template>
+          </div>
+
+          <div class="pod-actions-row">
+            <button type="button" class="btn-pod-camera" (click)="seleccionarFuentePOD()">
+              <ion-icon name="camera-outline"></ion-icon>
+              <span>{{ (fotoPOD$ | async) ? 'Cambiar fotografía' : 'Capturar foto de remesa' }}</span>
+            </button>
+          </div>
+
+          <!-- Observaciones / Indicador de Red -->
+          <div class="pod-offline-notice">
+            <ion-icon [name]="(isOnline$ | async) ? 'cloud-done-outline' : 'cloud-offline-outline'" class="icon-notice"></ion-icon>
+            <span>
+              {{ (isOnline$ | async) ? 'Se enviará de inmediato al servidor de Aldía.' : 'Sin señal en muelle: se guardará en tu dispositivo y se enviará al salir a ruta.' }}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="btn-confirmar-pod"
+            [disabled]="!(fotoPOD$ | async) || (isUploadingPOD$ | async)"
+            (click)="confirmarEnvioPOD()"
+          >
+            <ion-spinner *ngIf="isUploadingPOD$ | async" name="crescent"></ion-spinner>
+            <span *ngIf="!(isUploadingPOD$ | async)">Confirmar y Legalizar Entrega</span>
+          </button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================================== -->
+  <!-- MODAL BLOQUEANTE: CAPACITACIONES OBLIGATORIAS PENDIENTES       -->
+  <!-- ============================================================== -->
+  <ion-modal
+    [isOpen]="tieneCapacitacionesPendientes"
+    [backdropDismiss]="false"
+    [canDismiss]="false"
+    class="modal-capacitaciones-bloqueo"
+  >
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <div class="aldia-header-pattern px-5 py-4 text-white">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+              <ion-icon name="school-outline" class="text-24"></ion-icon>
+            </div>
+            <div>
+              <span class="text-11 uppercase tracking-wider font-semibold opacity-80 block">Cumplimiento Normativo</span>
+              <h2 class="text-18 font-bold text-white m-0">Capacitaciones Pendientes</h2>
+            </div>
+          </div>
+        </div>
+      </ion-header>
+
+      <ion-content class="ion-padding bg-[#F4F6F9]">
+        <div class="max-w-[440px] mx-auto py-4 flex flex-col items-center text-center">
+          
+          <!-- Icono de Alerta / Certificado -->
+          <div class="w-20 h-20 rounded-2xl bg-[#E5F4FC] border-2 border-[#BCE1F5] flex items-center justify-center text-[#0094DA] mb-4 shadow-sm">
+            <ion-icon name="shield-checkmark" class="text-44 text-[#0094DA]"></ion-icon>
+          </div>
+
+          <!-- Título y Badge de pendientes -->
+          <h3 class="text-19 font-extrabold text-[#1F2937] mb-2 leading-tight">
+            Acceso a Cabina Restringido
+          </h3>
+
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-12 font-bold mb-3">
+            <ion-icon name="alert-circle"></ion-icon>
+            <span>{{ cantidadCapacitaciones }} módulo(s) pendiente(s) por realizar</span>
+          </div>
+
+          <p class="text-13 text-[#4B5563] leading-relaxed mb-6 px-2">
+            Por regulaciones de seguridad vial y normatividad de <strong>ALDÍA Logística</strong>, es obligatorio completar y aprobar todas las capacitaciones asignadas antes de solicitar turnos o realizar viajes.
+          </p>
+
+          <!-- Tarjeta de Instrucción -->
+          <div class="w-full bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-xs text-left mb-6">
+            <div class="flex items-start space-x-3">
+              <ion-icon name="information-circle" class="text-20 text-[#0094DA] mt-0.5 shrink-0"></ion-icon>
+              <div class="text-12 text-[#374151] leading-snug">
+                Presiona <strong>"Realizar Capacitaciones"</strong> para ingresar al portal formativo. Una vez finalices tus lecturas, regresa y pulsa <strong>"Verificar Aprobación"</strong> para desbloquear la cabina.
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón Principal: Abrir Capacitaciones -->
+          <button
+            type="button"
+            (click)="abrirPlataformaCapacitacion()"
+            class="w-full h-12 bg-[#0094DA] active:bg-[#007BB5] text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow-md transition-all mb-3 cursor-pointer"
+          >
+            <ion-icon name="open-outline" class="text-18"></ion-icon>
+            <span>Realizar Capacitaciones</span>
+          </button>
+
+          <!-- Botón Secundario: Revalidar en tiempo real -->
+          <button
+            type="button"
+            (click)="revalidarCapacitaciones()"
+            [disabled]="verificandoCapacitaciones"
+            class="w-full h-11 bg-white border border-[#0094DA] active:bg-[#E5F4FC] text-[#0094DA] font-semibold rounded-xl flex items-center justify-center space-x-2 transition-all mb-4 cursor-pointer disabled:opacity-50"
+          >
+            <ion-spinner *ngIf="verificandoCapacitaciones" name="crescent" color="primary"></ion-spinner>
+            <ion-icon *ngIf="!verificandoCapacitaciones" name="refresh-outline" class="text-18"></ion-icon>
+            <span>{{ verificandoCapacitaciones ? 'Comprobando aprobación...' : 'Verificar Aprobación' }}</span>
+          </button>
+
+          <!-- Opción de Cerrar Sesión -->
+          <button
+            type="button"
+            (click)="cerrarSesionCapacitacion()"
+            class="text-12 text-[#6B7280] hover:text-[#DC2626] flex items-center space-x-1 transition-colors py-2 cursor-pointer"
+          >
+            <ion-icon name="log-out-outline"></ion-icon>
+            <span>Cerrar sesión en este dispositivo</span>
+          </button>
+
         </div>
       </ion-content>
     </ng-template>

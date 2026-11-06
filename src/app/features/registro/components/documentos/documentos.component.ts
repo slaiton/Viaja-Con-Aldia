@@ -1,26 +1,24 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild, Renderer2 } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, IonModal, LoadingController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { RegistroPage } from '../../registro.page';
 import { PhotoService } from '@core/services/photo.service';
 import { UserService } from '@core/services/user.service';
-import { log } from 'console';
 import { Photo } from '@capacitor/camera';
-
+import { ImageCompressionService } from '@core/services/image-compression.service';
 
 @Component({
   selector: 'app-documentos',
   templateUrl: './documentos.component.html',
-  styleUrls: ['./documentos.component.scss'],
-  encapsulation: ViewEncapsulation.ShadowDom
+  styleUrls: ['./documentos.component.scss']
 })
 export class DocumentosComponent implements OnInit {
 
-
   // @ViewChild('videoElement{ñ') public videoElement!: ElementRef;
   // @Input() dataTercero: any;
-  @ViewChild(IonModal) modalType!: IonModal;
+  @ViewChild('modalType') modalType!: IonModal;
+  @ViewChild('modal1') modal1!: IonModal;
   @Input() public dataTercero: any;
   listEvents: Array<any> = [];
   overCanvas: any;
@@ -32,13 +30,10 @@ export class DocumentosComponent implements OnInit {
   codeImageSelect: any;
   rotateImageSelect: any;
 
-
-
   isModalOpen: any = false;
   modalTypeInput: any = false;
   documents: any = [];
   fechaL: any = [];
-
 
   constructor(
     private reg: RegistroPage,
@@ -47,7 +42,9 @@ export class DocumentosComponent implements OnInit {
     private user: UserService,
     private loading: LoadingController,
     private platform: Platform,
-    private router: Router) {
+    private router: Router,
+    private imageCompressor: ImageCompressionService
+  ) {
   }
 
 
@@ -149,13 +146,10 @@ export class DocumentosComponent implements OnInit {
   }
 
   selectTypeDocument(code: any, rotate: any) {
-
-    this.codeImageSelect = code
-    this.rotateImageSelect = rotate
-    this.setModalType(true)
+    this.codeImageSelect = code;
+    this.rotateImageSelect = rotate;
+    this.setModalType(true);
   }
-
-
 
   selectDocument(a: any) {
     this.isModalOpen = true;
@@ -167,97 +161,123 @@ export class DocumentosComponent implements OnInit {
       this.cambiosDocs = true;
     }
 
-    const tag = this.documents[a].fechaTag
+    const tag = this.documents[a].fechaTag;
   }
 
   async addToGalery(name: any, rotate: any) {
+    try {
+      this.loadingData = await this.loading.create({
+        message: 'Guardando Foto...'
+      });
+      await this.loadingData.present();
 
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
-
-    this.loadingData.present();
-
-    this.photo.addNewToGallery(name).then((da) => {
-      this.processImage(da, name, rotate);
-      this.cambiosDocs = true;
-    });
+      const da = await this.photo.addNewToGallery(name);
+      if (da) {
+        await this.processImage(da, name, rotate);
+      }
+    } catch (error) {
+      console.error('Error al capturar desde galería:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) {}
+      }
+    }
   }
 
   async addToCamera(name: any, rotate: any) {
+    try {
+      this.loadingData = await this.loading.create({
+        message: 'Guardando Foto...'
+      });
+      await this.loadingData.present();
 
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
-    });
-
-    this.loadingData.present();
-
-    this.photo.addNewToCamera(name).then((da) => {
+      const da = await this.photo.addNewToCamera(name);
       if (da) {
-        this.processImage(da, name, rotate);
-        // loading.dismiss()
-        this.cambiosDocs = true;
-      } else {
-        this.loadingData.dismiss()
+        await this.processImage(da, name, rotate);
       }
-    });
-
+    } catch (error) {
+      console.error('Error al capturar con cámara:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) {}
+      }
+    }
   }
 
   async processImage(da: any, name: any, rotate: any) {
     try {
+      if (!da) return;
 
-      var rot = 0;
+      const rot = rotate ? 90 : 0;
+      let rawSource = da.base64 || da.webviewPath;
+      if (!rawSource) return;
 
-      if (rotate) {
-        rot = 90;
+      if (rot !== 0) {
+        rawSource = await this.photo.processAndRotationImage(rawSource, rot);
       }
 
-      const processedImagerotate: any = await this.photo.processAndRotationImage(da.base64, rot);
+      const compressed = await this.imageCompressor.compressImage(rawSource, {
+        maxDimension: 1024,
+        quality: 0.8,
+        preferredFormat: 'image/jpeg'
+      });
 
-      const dataPhoto1: Photo = {
-        webPath: processedImagerotate,
-        format: 'jpeg',
-        saved: false
-      };
+      const base64Url = compressed.dataUrl;
 
-      const data64 = await this.photo.readAsBase64(dataPhoto1)
-      // console.log(data64);
+      da.webviewPath = base64Url;
+      da.base64 = base64Url;
 
-      const desiredSizeX = 450;
-      const desiredSizeY = 290;
-      // const processedImageDataUrl = await this.photo.processAndCropImage(data64, desiredSizeX, desiredSizeY, 90);
-      const processedImageDataUrl = await this.photo.processImage(data64);
+      if (!this.reg.hubImag[name]) {
+        this.reg.hubImag[name] = {};
+      }
+      this.reg.hubImag[name].webviewPath = base64Url;
+      this.reg.hubImag[name].base64 = base64Url;
 
-      const dataPhoto2: Photo = {
-        webPath: processedImageDataUrl,
-        format: 'jpeg',
-        saved: false
-      };
+      // Asignar al subdocumento activo si existe en documentActive.docs
+      if (this.documentActive?.docs) {
+        const subDoc = this.documentActive.docs.find((d: any) => d.codigo === name);
+        if (subDoc) {
+          subDoc.imagen = base64Url;
+          subDoc.base64 = base64Url;
+          subDoc.fotobase64 = base64Url;
+          subDoc.webviewPath = base64Url;
+        }
+      }
 
-      // console.log(data64);
-      da.webviewPath = processedImageDataUrl;
-      da.base64 = await this.photo.readAsBase64(dataPhoto2)
-
-      this.reg.hubImag[name] = da;
-
-      this.loadingData.dismiss();
+      this.checkCompleto(this.documentActive);
+      this.cambiosDocs = true;
 
     } catch (error) {
-      console.error('Error al procesar la imagen:', error);
+      console.error(`Error al procesar imagen [${name}]:`, error);
     }
   }
 
-  async onFileSelected(event: any, name: any) {
-    this.loadingData = await this.loading.create({
-      message: 'Guradando Foto..'
+  checkCompleto(doc: any): boolean {
+    if (!doc || !doc.docs) return false;
+    const completos = doc.docs.every((d: any) => {
+      const hub = this.reg.hubImag[d.codigo];
+      return !!(hub && (hub.webviewPath || hub.base64));
     });
+    doc.status = completos;
+    return completos;
+  }
 
-    this.loadingData.present();
-
-    const file = event.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      this.processPdf(file, name);
+  async onFileSelected(event: any, name: any) {
+    try {
+      const file = event?.target?.files?.[0];
+      if (file && file.type === 'application/pdf') {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Archivo...'
+        });
+        await this.loadingData.present();
+        await this.processPdf(file, name);
+      }
+    } catch (error) {
+      console.error('Error al seleccionar archivo PDF:', error);
+    } finally {
+      if (this.loadingData) {
+        try { await this.loadingData.dismiss(); } catch (_) {}
+      }
     }
   }
 
@@ -268,27 +288,31 @@ export class DocumentosComponent implements OnInit {
 
   // Procesar y guardar PDF
   private async processPdf(file: File, name: any) {
-    const da: any = {};
-
-    console.log(name);
-
     const base64Data = await this.photo.convertFileToBase64(file);
+    const da: any = {
+      name: name,
+      webviewPath: 'assets/icon/pdf.png',
+      base64: base64Data
+    };
 
+    if (!this.reg.hubImag[name]) {
+      this.reg.hubImag[name] = {};
+    }
+    this.reg.hubImag[name].webviewPath = 'assets/icon/pdf.png';
+    this.reg.hubImag[name].base64 = base64Data;
 
+    if (this.documentActive?.docs) {
+      const subDoc = this.documentActive.docs.find((d: any) => d.codigo === name);
+      if (subDoc) {
+        subDoc.imagen = 'assets/icon/pdf.png';
+        subDoc.base64 = base64Data;
+        subDoc.fotobase64 = base64Data;
+        subDoc.webviewPath = 'assets/icon/pdf.png';
+      }
+    }
 
-    da.webviewPath = 'assets/icon/pdf.png';
-    da.base64 = base64Data
-
-    this.reg.hubImag[name] = da;
-
-    this.loadingData.dismiss();
-
-    // const savedPdfFile = {
-    //   fileName: `${file.name}`,
-    //   fileData: base64Data
-    // };
-
-    // this.fotos.unshift(savedPdfFile);
+    this.checkCompleto(this.documentActive);
+    this.cambiosDocs = true;
   }
 
   async documentValidate() {

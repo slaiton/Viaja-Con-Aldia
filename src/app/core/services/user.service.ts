@@ -751,15 +751,14 @@ export class UserService {
     return { status: statusDoc, docs: docs }
   }
 
-  async validateCap() {
+  async validateCap(): Promise<any[]> {
     const cedula = this.getCedula();
-    await this.getDataApi('lecturas=1&cedula=' + cedula, this.getToken(), 'api/capacitaciones').then(
-      data => {
-        if (data.length > 0) {
-          window.location.href = "https://www.3slogistica.com/tr_panel/process/capacitaciones/?token=" + this.getToken();
-        }
-      }
-    )
+    try {
+      const data = await this.getDataApi('lecturas=1&cedula=' + cedula, this.getToken(), 'api/capacitaciones');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   }
 
 

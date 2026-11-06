@@ -1,7 +1,12 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { UserService } from '../../../core/services/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { log } from 'console';
+import { ActionSheetController } from '@ionic/angular';
+import { CameraSource } from '@capacitor/camera';
+import { ViajeFacade } from '../viaje.facade';
+import { TurnoFacade } from '../../turnos/turno.facade';
+import { RegionalListItem } from '@core/models/turno.model';
+import { RemesaPOD } from '@core/models/viaje.model';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertController, IonModal, LoadingController, ModalController, Platform } from '@ionic/angular';
 import { GeodataService } from '../../../api/geodata.service';
@@ -53,6 +58,10 @@ export class HomePage implements OnInit {
   estado: any = false;
   botonInactivo: any = false;
   botonDocumentos: any = false;
+  // Control Bloqueo Capacitaciones Obligatorias
+  tieneCapacitacionesPendientes: boolean = false;
+  verificandoCapacitaciones: boolean = false;
+  cantidadCapacitaciones: number = 0;
   event: any; //variable para cuenta regresiva
   marca: any;
   carroceria: any;
@@ -111,12 +120,42 @@ export class HomePage implements OnInit {
     return (ini1 + ini2).toUpperCase();
   }
 
+  get fotoConductor(): string | null {
+    return this.fotoUser || null;
+  }
+
   get ubicacionActual(): string {
     return this.nombre || this.origen || this.ciudad || 'Colombia';
   }
 
   alertIcon: any = alertCircleOutline;
   secretsAldia: any = {}
+
+  public readonly viajeActivo$ = this.viajeFacade.viajeActivo$;
+  public readonly estadoOperativo$ = this.viajeFacade.estadoOperativo$;
+  public readonly modalQROpen$ = this.viajeFacade.modalQROpen$;
+  public readonly modalPODOpen$ = this.viajeFacade.modalPODOpen$;
+  public readonly remesaSeleccionada$ = this.viajeFacade.remesaSeleccionada$;
+  public readonly fotoPOD$ = this.viajeFacade.fotoPOD$;
+  public readonly isUploadingPOD$ = this.viajeFacade.isUploading$;
+  public readonly isOnline$ = this.viajeFacade.isOnline$;
+
+  // Observables TurnoFacade (Mockup v4 - Pantalla 5 y 6)
+  public readonly modalEnturnamientoOpen$ = this.turnoFacade.modalEnturnamientoOpen$;
+  public readonly modalSelectorDestinosOpen$ = this.turnoFacade.modalSelectorDestinosOpen$;
+  public readonly origenGps$ = this.turnoFacade.origenGps$;
+  public readonly isLoadingGps$ = this.turnoFacade.isLoadingGps$;
+  public readonly errorGps$ = this.turnoFacade.errorGps$;
+  public readonly destinos$ = this.turnoFacade.destinos$;
+  public readonly viajaVacio$ = this.turnoFacade.viajaVacio$;
+  public readonly tipoRemolque$ = this.turnoFacade.tipoRemolque$;
+  public readonly esArticulado$ = this.turnoFacade.esArticulado$;
+  public readonly slotsDestinos$ = this.turnoFacade.slotsDestinos$;
+  public readonly regionalesCalculadas$ = this.turnoFacade.regionalesCalculadas$;
+  public readonly filtroBusqueda$ = this.turnoFacade.filtroBusqueda$;
+  public readonly canSubmit$ = this.turnoFacade.canSubmit$;
+  public readonly puedeGuardarDestinos$ = this.turnoFacade.puedeGuardarDestinos$;
+  public readonly isSubmitting$ = this.turnoFacade.isSubmitting$;
 
   preoperacional: any = {}
 
@@ -148,7 +187,10 @@ export class HomePage implements OnInit {
     private loading: LoadingController,
     private platform: Platform,
     private localNoti: LocalNotificationService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    public viajeFacade: ViajeFacade,
+    public turnoFacade: TurnoFacade,
+    private actionSheetCtrl: ActionSheetController
   ) {
     this.secretsAldia = {
       'X-Client-Id': environment.aldia.client_id,
@@ -174,7 +216,7 @@ export class HomePage implements OnInit {
 
 
   async ngOnInit() {    
-
+    this.fotoUser = localStorage.getItem('fotoUser') || null;
     this.initializeApp()
 
     if (!this.token || this.userService.getToken() == null) {
@@ -207,8 +249,16 @@ export class HomePage implements OnInit {
       }
 
       await this.processData3SL(data3SL);
+      try {
+        const viaje = await this.viajeFacade.cargarViaje(this.placa);
+        if (!viaje || viaje.estado !== 'EN_VIAJE_RNDC') {
+          this.viajeFacade.desactivarViaje();
+        }
+      } catch {
+        this.viajeFacade.desactivarViaje();
+      }
 
-      await this.userService.validateCap();
+      await this.verificarCapacitaciones();
 
       this.loadingData.dismiss();
 
@@ -316,27 +366,30 @@ export class HomePage implements OnInit {
 
     this.getDocument(this.cedula, 'fotoperfil', 'conductor').then(
       (doc: any) => {
-        if (doc['code'] !== '204') {
+        if (doc && doc['code'] !== '204' && doc.data && doc.data.fotoperfil) {
           this.fotoUser = doc.data.fotoperfil;
+          localStorage.setItem('fotoUser', doc.data.fotoperfil);
         }
       }
     );
 
-    if (this.statusDoc) {
-      if (datos.numeroEstadoxx == 'ACTIVO') {
-        this.estado = true;
-        this.getTurnoTecero();
-      } else {
-        this.estado = false;
-        this.turnoExistente = false;
-        this.botonInactivo = true;
-        this.estadoBoton = 'Inactivo';
-        this.clase_estado = 'color-red';
-      }
+    const estadoVeh = (datos.numeroEstadoxx || '').toUpperCase();
+    this.botonInactivo = estadoVeh !== 'ACTIVO';
+
+    if (this.botonInactivo) {
+      this.estado = false;
+      this.turnoExistente = false;
+      this.estadoBoton = 'Inactivo';
+      this.clase_estado = 'color-red';
+    } else if (this.statusDoc) {
+      this.estado = true;
+      this.getTurnoTecero();
     } else {
+      this.estado = false;
+      this.turnoExistente = false;
       this.estadoBoton = 'Documentos Vencidos';
       this.botonDocumentos = true;
-      this.router.navigateByUrl('/datos');
+      // Redirección forzosa eliminada: el conductor permanece en /home con advertencia visual
     }
   }
 
@@ -583,9 +636,204 @@ export class HomePage implements OnInit {
     }
 
   }
-  async nuevoTurno() {
+  irAMisVehiculos(): void {
+    this.router.navigate(['/vehiculos']);
+  }
 
-    this.modalTurno.present();
+  async abrirEnturnamiento() {
+    if (this.tieneCapacitacionesPendientes) {
+      await this.mostrarAlertaCapacitacionesPendientes();
+      return;
+    }
+    if (this.botonInactivo) {
+      await this.mostrarAlertaVehiculoInactivo();
+      return;
+    }
+    if (!this.statusDoc) {
+      await this.mostrarAlertaDocsPendientes();
+      return;
+    }
+    await this.turnoFacade.iniciarEnturnamiento(this.origen);
+  }
+
+  async nuevoTurno() {
+    if (this.tieneCapacitacionesPendientes) {
+      await this.mostrarAlertaCapacitacionesPendientes();
+      return;
+    }
+    if (this.botonInactivo) {
+      await this.mostrarAlertaVehiculoInactivo();
+      return;
+    }
+    if (!this.statusDoc) {
+      await this.mostrarAlertaDocsPendientes();
+      return;
+    }
+    await this.turnoFacade.iniciarEnturnamiento(this.origen);
+  }
+
+  async verificarCapacitaciones(): Promise<boolean> {
+    try {
+      const data = await this.userService.validateCap();
+      if (data && data.length > 0) {
+        this.tieneCapacitacionesPendientes = true;
+        this.cantidadCapacitaciones = data.length;
+        return false;
+      }
+      this.tieneCapacitacionesPendientes = false;
+      this.cantidadCapacitaciones = 0;
+      return true;
+    } catch {
+      this.tieneCapacitacionesPendientes = false;
+      return true;
+    }
+  }
+
+  async abrirPlataformaCapacitacion(): Promise<void> {
+    const token = this.token || this.userService.getToken() || '';
+    const url = `https://www.3slogistica.com/tr_panel/process/capacitaciones/?token=${token}`;
+    try {
+      await Browser.open({ url });
+    } catch {
+      window.open(url, '_system');
+    }
+  }
+
+  async revalidarCapacitaciones(): Promise<void> {
+    if (this.verificandoCapacitaciones) return;
+    this.verificandoCapacitaciones = true;
+
+    try {
+      const ok = await this.verificarCapacitaciones();
+      if (ok) {
+        const alert = await this.alertController.create({
+          header: '¡Capacitaciones al Día!',
+          message: 'Se ha verificado tu cumplimiento normativo con éxito. Ya puedes operar en el sistema.',
+          buttons: ['Continuar']
+        });
+        await alert.present();
+      } else {
+        const alert = await this.alertController.create({
+          header: 'Capacitaciones Pendientes',
+          message: `Aún registras ${this.cantidadCapacitaciones} módulo(s) pendiente(s). Por favor completa todas las lecturas requeridas en la plataforma formativa.`,
+          buttons: ['Entendido']
+        });
+        await alert.present();
+      }
+    } finally {
+      this.verificandoCapacitaciones = false;
+    }
+  }
+
+  async cerrarSesionCapacitacion(): Promise<void> {
+    this.tieneCapacitacionesPendientes = false;
+    await this.auth.logout();
+    this.router.navigate(['/login']);
+  }
+
+  async mostrarAlertaCapacitacionesPendientes() {
+    const alert = await this.alertController.create({
+      header: 'Capacitación Pendiente',
+      subHeader: 'Cumplimiento normativo requerido',
+      message: `Tienes ${this.cantidadCapacitaciones || ''} capacitación(es) obligatoria(s) pendiente(s). Debes completarlas para realizar operaciones en la cabina.`,
+      buttons: ['Entendido']
+    });
+    await alert.present();
+  }
+
+  async mostrarAlertaVehiculoInactivo() {
+    const alert = await this.alertController.create({
+      header: 'Vehículo Inactivo',
+      subHeader: 'Operación no permitida',
+      message: `Tu vehículo (${this.placa}) se encuentra inactivo en el sistema. Comunícate con el área de Tráfico para habilitarlo.`,
+      buttons: ['Entendido']
+    });
+    await alert.present();
+  }
+
+  async mostrarAlertaDocsPendientes() {
+    const alert = await this.alertController.create({
+      header: 'Documentos Pendientes',
+      subHeader: 'Atención requerida en 3SL',
+      message: 'Tienes documentos pendientes o vencidos en 3SL. Para poder solicitar turno, debes tener tus documentos al día. ¿Deseas actualizarlos ahora?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Ir a Documentos',
+          role: 'confirm',
+          handler: () => {
+            this.router.navigate(['/datos']);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  // Acciones TurnoFacade (Mockup v4 - Pantalla 5 & 6)
+  cerrarEnturnamiento() {
+    this.turnoFacade.cerrarEnturnamiento();
+  }
+
+  refrescarGps() {
+    this.turnoFacade.detectarUbicacionGps();
+  }
+
+  abrirSelectorDestinos() {
+    this.turnoFacade.abrirSelectorDestinos();
+  }
+
+  cerrarSelectorDestinos() {
+    this.turnoFacade.cerrarSelectorDestinos();
+  }
+
+  onToggleDestino(reg: RegionalListItem) {
+    if (!reg.bloqueada) {
+      this.turnoFacade.toggleDestino(reg.nombre);
+    }
+  }
+
+  removerDestinoPorIndice(index: number) {
+    this.turnoFacade.removerDestinoPorIndice(index);
+  }
+
+  guardarDestinos() {
+    this.turnoFacade.guardarDestinos();
+  }
+
+  limpiarDestinos() {
+    this.turnoFacade.limpiarDestinos();
+  }
+
+  setViajaVacio(val: 'SI' | 'NO') {
+    this.turnoFacade.setViajaVacio(val);
+  }
+
+  setTipoRemolque(val: 'CONTENEDOR' | 'PLANCHA') {
+    this.turnoFacade.setTipoRemolque(val);
+  }
+
+  onFiltroInput(event: any) {
+    this.turnoFacade.setFiltro(event?.target?.value || '');
+  }
+
+  limpiarFiltro() {
+    this.turnoFacade.setFiltro('');
+  }
+
+  async confirmarTurno() {
+    const res = await this.turnoFacade.confirmarTurno();
+    if (res.success) {
+      await this.getTurnoTecero();
+    }
+  }
+
+  async _legacyNuevoTurno() {
+
+    this.modalTurno?.present();
 
     await this.getLocation()
 
@@ -596,7 +844,7 @@ export class HomePage implements OnInit {
     const data: any = await this.userService.getTurnoUser();
     this.listTurnos = data;
 
-    this.modalTurno.present();
+    this.modalTurno?.present();
 
     this.loadForm(data);
 
@@ -697,6 +945,71 @@ export class HomePage implements OnInit {
     }, 2000);
   }
 
+
+  abrirQRDITRA(): void {
+    this.viajeFacade.abrirQRDITRA();
+  }
+
+  cerrarQRDITRA(): void {
+    this.viajeFacade.cerrarQRDITRA();
+  }
+
+  abrirCapturaPOD(remesa: RemesaPOD): void {
+    this.viajeFacade.abrirCapturaPOD(remesa);
+  }
+
+  cerrarCapturaPOD(): void {
+    this.viajeFacade.cerrarCapturaPOD();
+  }
+
+  async seleccionarFuentePOD(): Promise<void> {
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Captura de Cumplido (POD)',
+      subHeader: 'Selecciona el origen de la fotografía',
+      buttons: [
+        {
+          text: 'Tomar Foto de Remesa (Cámara)',
+          icon: 'camera-outline',
+          handler: () => {
+            this.viajeFacade.capturarFotoPOD(CameraSource.Camera);
+          }
+        },
+        {
+          text: 'Seleccionar de Galería',
+          icon: 'image-outline',
+          handler: () => {
+            this.viajeFacade.capturarFotoPOD(CameraSource.Photos);
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+    await sheet.present();
+  }
+
+  async confirmarEnvioPOD(): Promise<void> {
+    const res = await this.viajeFacade.confirmarEnvioPOD();
+    const alert = await this.alertController.create({
+      header: res.success ? (res.offline ? 'Cumplido Guardado Localmente' : 'Cumplido Enviado') : 'Atención',
+      subHeader: res.offline ? 'Sin señal en muelle' : 'Entrega Legalizada',
+      message: res.message,
+      buttons: ['Aceptar']
+    });
+    await alert.present();
+  }
+
+  toggleModoViajeDemo(): void {
+    const actual = (this.viajeFacade as any).viajeActivoSubject?.getValue();
+    if (actual) {
+      this.viajeFacade.desactivarViaje();
+    } else {
+      this.viajeFacade.activarViajeDemo(this.placa, this.nombreCorto);
+    }
+  }
 
   loadForm(data: any) {
     this.turnoForm.patchValue({

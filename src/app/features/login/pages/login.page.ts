@@ -19,6 +19,10 @@ export class LoginPage implements OnInit {
   fechaActual = new Date().getFullYear();
   submitClick = false;
 
+  // Soporte y transicion hacia Pantalla 2 (OTP 2FA)
+  mostrarPasoOtp = false;
+  codigoOtp = '';
+  celularMask = '••21';
 
   constructor(
     private fb: FormBuilder,
@@ -27,7 +31,6 @@ export class LoginPage implements OnInit {
     private platform: Platform
   ) {
   }
-
 
   ngOnInit(): void {
     this.buildForm();
@@ -50,8 +53,20 @@ export class LoginPage implements OnInit {
 
   private handleBackButton(): void {
     this.platform.backButton.subscribeWithPriority(10, () => {
-      App.exitApp();
+      if (this.mostrarPasoOtp) {
+        this.mostrarPasoOtp = false;
+      } else {
+        App.exitApp();
+      }
     });
+  }
+
+  irARegistro(): void {
+    this.router.navigate(['/registro']);
+  }
+
+  volverAPaso1(): void {
+    this.mostrarPasoOtp = false;
   }
 
   onLogin(): void {

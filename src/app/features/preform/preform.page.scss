@@ -1,4 +1,4 @@
-$blue: #0094DA;
+$blue: #0083CB;
 $white: #FFFFFF;
 
 .header-aldia { --background: #{$blue}; --color: #{$white}; }
@@ -15,21 +15,23 @@ $white: #FFFFFF;
   align-items: center;
   gap: 4px;
 }
-.chip-online { background: #E5F4EA; color: #1A7F37; }
+.chip-online { background: #E4F3E8; color: #1A7037; }
 .chip-offline { background: #FFF3E0; color: #9A5B00; }
 
-.preform-content { --background: #F4F6F9; }
+.preform-content { --background: #F4F7FA; }
 
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 60px 20px;
-  color: #5B6B7B;
+  color: #526273;
   gap: 12px;
 }
 
 .wizard-body {
+  max-width: 480px;
+  margin: 0 auto;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -38,6 +40,8 @@ $white: #FFFFFF;
 }
 
 .step-container {
+  max-width: 480px;
+  margin: 0 auto;
   padding: 16px 16px 100px;
   display: flex;
   flex-direction: column;

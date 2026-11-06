@@ -14,6 +14,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Photo } from '@capacitor/camera';
 import { firstValueFrom } from 'rxjs';
 import { VehiculosFacade } from './vehiculos.facade';
+import { ImageCompressionService } from '@core/services/image-compression.service';
 import { VehiculoListItem } from '@core/models/vehiculo.model';
 
 @Component({
@@ -91,7 +92,8 @@ export class VehiculoComponent implements OnInit {
     private actionSheetCtrl: ActionSheetController,
     private auth: AuthService,
     private platform: Platform,
-    private facade: VehiculosFacade
+    private facade: VehiculosFacade,
+    private imageCompressor: ImageCompressionService
   ) {
     this.platform.ready().then(() => this.setStatusBarColor());
 
@@ -387,7 +389,11 @@ export class VehiculoComponent implements OnInit {
   setOpenVehiculo(v: boolean): void { this.isModalOpen = v; }
   setOpenCode(v: boolean):     void { this.modalCodeOpen = v; }
   onWillPresent():             void { this.canDismissOverride = false; }
-  onDismissChange(v: boolean): void { this.dismissChange.emit(v); this.canDismissOverride = v; }
+  onDismissChange(v: boolean): void {
+    this.dismissChange.emit(v);
+    this.canDismissOverride = v;
+    this.router.navigate(['/home']);
+  }
 
   handleRefresh(event: any): void {
     this.cargarVehiculos().then(() => event.target.complete());
@@ -415,16 +421,23 @@ export class VehiculoComponent implements OnInit {
   async processImage(da: any, name: string, rotate: any): Promise<void> {
     try {
       const rot = rotate ? 90 : 0;
-      const processed: any = await this.photo.processAndRotationImage(da.base64, rot);
-      const dataPhoto1: Photo = { webPath: processed, format: 'jpeg', saved: false };
-      const data64 = await this.photo.readAsBase64(dataPhoto1);
-      const dataUrl  = await this.photo.processImage(data64);
-      const dataPhoto2: Photo = { webPath: dataUrl, format: 'jpeg', saved: false };
-      da.webviewPath = dataUrl;
-      da.base64 = await this.photo.readAsBase64(dataPhoto2);
+      let rawSource = da.base64 || da.webviewPath;
+      if (rot !== 0) {
+        rawSource = await this.photo.processAndRotationImage(rawSource, rot);
+      }
+      const compressed = await this.imageCompressor.compressImage(rawSource, {
+        maxDimension: 1024,
+        quality: 0.8,
+        preferredFormat: 'image/webp'
+      });
+      da.webviewPath = compressed.dataUrl;
+      da.base64 = compressed.dataUrl;
       this.hubImag[name] = da;
-      this.loadingData.dismiss();
-    } catch (err) { console.error('Error al procesar imagen:', err); }
+      if (this.loadingData) await this.loadingData.dismiss();
+    } catch (err) {
+      console.error('Error al procesar imagen:', err);
+      if (this.loadingData) await this.loadingData.dismiss();
+    }
   }
 
   async cambiarVehiculoActivo(json: { placa: string; cedula: string }): Promise<void> {

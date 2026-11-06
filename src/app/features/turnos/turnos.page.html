@@ -1,96 +1,282 @@
-<ion-header>
-    <ion-toolbar>
-        <ion-buttons slot="start">
-            <ion-menu-button></ion-menu-button>
-        </ion-buttons>
-        <ion-title>Enturnamiento</ion-title>
-    </ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="header-enturnamiento">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title class="title-enturnamiento">Hoja de Enturnamiento</ion-title>
+  </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content class="ion-padding content-enturnamiento">
+  <div class="enturnamiento-form-wrap">
 
-    <div class="">
-
-        <div class="d-flex justify-content-center">
-
-
-
-            <form [formGroup]="turnoForm" (ngSubmit)="onSubmit()">
-
-                <div class="panel-turno">
-                    <div class="col-md-12 p-4 d-flex mb-4 justify-content-center text-center text-white">
-                        <!-- <h3>Enturnamiento</h3> -->
-                        <label id="origenLabel" for="">Bucando Ubicacion: <ion-spinner></ion-spinner></label>
-                        <input [ngModel]="nombre" type="hidden" id="origen" formControlName="origen">
-                    </div>
-
-                </div>
-
-                <div class="form-row p-2">
-
-                    <ion-item class="col-md-12 mt-2">
-                        <!-- <label for="destino1">Destino 1</label> -->
-                        <!-- <select class="form-control" formControlName="destino1" id="destino1" required> -->
-                        <ion-select class="input-registro" formControlName="destino1" interface="action-sheet"
-                            placeholder="* Selecciona la ciudad de destino 1 ...">
-                            <ion-select-option></ion-select-option>
-                            <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre
-                                }}</ion-select-option>
-                        </ion-select>
-                        <!-- </select> -->
-                    </ion-item>
-                    <ion-item class="col-md-12 mt-2">
-                        <!-- <label for="destino2">Destino 2</label> -->
-                        <ion-select class="input-registro" formControlName="destino2" interface="action-sheet"
-                            placeholder="* Selecciona la ciudad de destino 2 ...">
-                            <ion-select-option></ion-select-option>
-                            <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre
-                                }}</ion-select-option>
-                        </ion-select>
-                    </ion-item>
-                    <ion-item class="col-md-12 mt-2">
-                        <!-- <label for="">Destino 3</label> -->
-                        <ion-select class="input-registro" formControlName="destino3" interface="action-sheet"
-                            placeholder="* Selecciona la ciudad de destino 3 ...">
-                            <ion-select-option></ion-select-option>
-                            <ion-select-option *ngFor="let p of regionales" value="{{ p.nombre }}">{{ p.nombre
-                                }}</ion-select-option>
-                        </ion-select>
-                    </ion-item>
-
-                    <div *ngIf="vehiculo.tipo == 'ARTICULADO'" class="col-md-12 mt-2 mb-3">
-                        <label for="remolque">Tipo de Remolque</label>
-                        <ion-select interface="action-sheet" formControlName="remolque" id="remolque">
-                            <ion-select-option selected>Seleccionar</ion-select-option>
-                            <ion-select-option value="CONTENEDOR">CONTENEDOR</ion-select-option>
-                            <ion-select-option value="PLANCHA">PLANCHA</ion-select-option>
-                        </ion-select>
-                    </div>
-
-                    <h6 style="margin-top:20px; color: #DB1824; font-size: 12px;" id="labelPorcentaje">* De detectar que
-                        la información brindada no es cierta podrá incurrir en sanciones drásticas por parte de la
-                        compañía.</h6>
-
-                    <ion-item class="col-md-12 mt-2">
-                        <!-- <label for="">Vechiulo vacio</label> -->
-                        <ion-select class="input-registro" interface="action-sheet" formControlName="vehiculovac"
-                            id="vehiculovac" placeholder="Vehiculo Vacio*" required>
-                            <ion-select-option selected>Seleccionar</ion-select-option>
-                            <ion-select-option value="SI">SI</ion-select-option>
-                            <ion-select-option value="NO">NO</ion-select-option>
-                        </ion-select>
-                    </ion-item>
-                </div>
-
-                <ion-button expand="full" type="submit" [disabled]="turnoForm.invalid || isSubmitting">
-                    {{ isSubmitting ? 'Enviando...' : 'Enturnarme' }}
-                </ion-button>
-
-            </form>
-
+    <!-- 1. CAJA ORIGEN GPS (Celeste #E5F4FC) -->
+    <div class="box-origen-gps">
+      <div class="origen-left">
+        <div class="icon-gps-wrap">
+          <ion-icon name="navigate-circle" class="icon-gps"></ion-icon>
         </div>
-
+        <div class="origen-texts">
+          <span class="origen-label">ORIGEN DETECTADO (GPS)</span>
+          <div class="origen-value" *ngIf="!(isLoadingGps$ | async)">
+            <strong *ngIf="origenGps$ | async as orig">{{ orig }}</strong>
+            <span class="text-error" *ngIf="!(origenGps$ | async) && (errorGps$ | async) as err">
+              {{ err }}
+            </span>
+            <span class="text-muted" *ngIf="!(origenGps$ | async) && !(errorGps$ | async)">
+              Sin ubicación GPS
+            </span>
+          </div>
+          <div class="origen-loading" *ngIf="isLoadingGps$ | async">
+            <ion-spinner name="crescent" class="gps-spinner"></ion-spinner>
+            <span>Identificando regional...</span>
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-refresh-gps"
+        (click)="refrescarGps()"
+        [disabled]="isLoadingGps$ | async"
+        title="Refrescar ubicación GPS"
+      >
+        <ion-icon name="refresh-outline"></ion-icon>
+      </button>
     </div>
 
+    <!-- 2. CARD SELECTOR DE 3 DESTINOS -->
+    <div class="card-destinos-selector" (click)="abrirSelectorDestinos()">
+      <div class="destinos-header">
+        <div class="destinos-title-wrap">
+          <ion-icon name="map-outline" class="icon-map"></ion-icon>
+          <span class="destinos-title">Destinos de Preferencia (3 Obligatorios)</span>
+        </div>
+        <span class="destinos-badge-count" [class.badge-complete]="(destinos$ | async)?.length === 3">
+          {{ (destinos$ | async)?.length || 0 }} / 3
+        </span>
+      </div>
 
+      <!-- Chips de destinos seleccionados -->
+      <div class="destinos-chips-row" *ngIf="(destinos$ | async)?.length; else noDestinosTpl">
+        <div class="chip-destino-item" *ngFor="let dest of (destinos$ | async); let i = index">
+          <span class="chip-prio-badge">{{ i + 1 }}°</span>
+          <span class="chip-dest-name">{{ dest }}</span>
+        </div>
+      </div>
+      <ng-template #noDestinosTpl>
+        <div class="destinos-placeholder">
+          <ion-icon name="add-circle-outline" class="placeholder-icon"></ion-icon>
+          <span>Toca aquí para seleccionar tus 3 destinos ordenados</span>
+        </div>
+      </ng-template>
+
+      <div class="destinos-action-footer">
+        <span class="destinos-action-hint">
+          {{ (destinos$ | async)?.length === 3 ? 'Modificar preferencias' : 'Elegir regionales' }}
+        </span>
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+      </div>
+    </div>
+
+    <!-- 3. CONTROLES: VIAJA VACÍO -->
+    <div class="control-section">
+      <label class="control-label">¿El vehículo viaja vacío?</label>
+      <div class="chips-toggle-row">
+        <button
+          type="button"
+          class="chip-toggle-btn"
+          [class.chip-active]="(viajaVacio$ | async) === 'SI'"
+          (click)="setViajaVacio('SI')"
+        >
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <span>SÍ (Vacío)</span>
+        </button>
+        <button
+          type="button"
+          class="chip-toggle-btn"
+          [class.chip-active]="(viajaVacio$ | async) === 'NO'"
+          (click)="setViajaVacio('NO')"
+        >
+          <ion-icon name="cube-outline"></ion-icon>
+          <span>NO (Con carga)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. CONTROLES: TIPO DE REMOLQUE (Para Articulados) -->
+    <div class="control-section" *ngIf="esArticulado$ | async">
+      <label class="control-label">Tipo de Remolque (Tractocamión)</label>
+      <div class="chips-toggle-row">
+        <button
+          type="button"
+          class="chip-toggle-btn"
+          [class.chip-active]="(tipoRemolque$ | async) === 'CONTENEDOR'"
+          (click)="setTipoRemolque('CONTENEDOR')"
+        >
+          <ion-icon name="file-tray-stacked-outline"></ion-icon>
+          <span>CONTENEDOR</span>
+        </button>
+        <button
+          type="button"
+          class="chip-toggle-btn"
+          [class.chip-active]="(tipoRemolque$ | async) === 'PLANCHA'"
+          (click)="setTipoRemolque('PLANCHA')"
+        >
+          <ion-icon name="browsers-outline"></ion-icon>
+          <span>PLANCHA</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. NOTA LEGAL -->
+    <div class="banner-legal-aviso">
+      <ion-icon name="alert-circle-outline" class="icon-legal"></ion-icon>
+      <span class="text-legal">
+        De detectar que la información brindada no es cierta, incurrirá en sanciones drásticas según la normativa de la compañía.
+      </span>
+    </div>
+
+    <!-- 6. BOTÓN CONFIRMAR TURNO -->
+    <div class="btn-confirmar-wrap">
+      <button
+        type="button"
+        class="btn-confirmar-turno"
+        [disabled]="!(canSubmit$ | async)"
+        (click)="confirmarTurno()"
+      >
+        <ion-spinner *ngIf="isSubmitting$ | async" name="crescent" class="submit-spinner"></ion-spinner>
+        <ion-icon *ngIf="!(isSubmitting$ | async)" name="shield-checkmark" class="btn-confirm-icon"></ion-icon>
+        <span>{{ (isSubmitting$ | async) ? 'Enturnando vehículo...' : 'Confirmar turno' }}</span>
+      </button>
+    </div>
+
+  </div>
 </ion-content>
+
+<!-- ============================================================== -->
+<!-- MODAL: SELECTOR DE 3 DESTINOS (Mockup v4 - Pantalla 6)        -->
+<!-- ============================================================== -->
+<ion-modal
+  [isOpen]="modalSelectorDestinosOpen$ | async"
+  (didDismiss)="cerrarSelectorDestinos()"
+  class="modal-selector-destinos"
+>
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="header-selector">
+        <ion-buttons slot="start">
+          <ion-button (click)="cerrarSelectorDestinos()">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title class="title-selector">Selecciona 3 Destinos</ion-title>
+      </ion-toolbar>
+
+      <!-- 3 SLOTS SUPERIORES FIJOS -->
+      <div class="slots-destinos-container">
+        <div class="slots-grid">
+          <div
+            class="slot-item"
+            *ngFor="let slot of (slotsDestinos$ | async)"
+            [class.slot-filled]="slot.regional"
+          >
+            <div class="slot-header">
+              <span class="slot-prio-badge">{{ slot.prioridad }}°</span>
+              <span class="slot-label">{{ slot.label }}</span>
+              <button
+                type="button"
+                class="btn-remove-slot"
+                *ngIf="slot.regional"
+                (click)="removerDestinoPorIndice(slot.index); $event.stopPropagation();"
+                title="Eliminar destino"
+              >
+                <ion-icon name="close-circle"></ion-icon>
+              </button>
+            </div>
+            <div class="slot-body">
+              <span class="slot-dest-name" *ngIf="slot.regional">{{ slot.regional }}</span>
+              <span class="slot-placeholder" *ngIf="!slot.regional">
+                <ion-icon name="add-outline"></ion-icon> Elegir...
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUSCADOR RÁPIDO DE REGIONALES -->
+      <div class="search-regionales-wrap">
+        <div class="search-input-box">
+          <ion-icon name="search-outline" class="icon-search"></ion-icon>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Buscar regional (ej: Cali, Bogotá)..."
+            [value]="filtroBusqueda$ | async"
+            (input)="onFiltroInput($event)"
+          />
+          <button
+            type="button"
+            class="btn-clear-search"
+            *ngIf="filtroBusqueda$ | async"
+            (click)="limpiarFiltro()"
+          >
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </ion-header>
+
+    <ion-content class="content-regionales">
+      <div class="lista-regionales-wrap">
+        <div
+          class="regional-row-item"
+          *ngFor="let reg of (regionalesCalculadas$ | async)"
+          [class.row-selected]="reg.seleccionada"
+          [class.row-disabled]="reg.bloqueada"
+          (click)="onToggleDestino(reg)"
+        >
+          <div class="regional-info">
+            <ion-icon
+              [name]="reg.seleccionada ? 'location' : 'location-outline'"
+              class="icon-regional"
+              [class.icon-active]="reg.seleccionada"
+            ></ion-icon>
+            <span class="regional-name">{{ reg.nombre }}</span>
+          </div>
+
+          <div class="regional-action">
+            <span class="prio-circle-badge" *ngIf="reg.seleccionada">
+              {{ reg.prioridad }}°
+            </span>
+            <span class="circle-empty" *ngIf="!reg.seleccionada && !reg.bloqueada"></span>
+            <ion-icon name="lock-closed" class="icon-locked" *ngIf="reg.bloqueada"></ion-icon>
+          </div>
+        </div>
+
+        <div
+          class="empty-search-state"
+          *ngIf="(regionalesCalculadas$ | async)?.length === 0"
+        >
+          <ion-icon name="search-outline"></ion-icon>
+          <p>No se encontraron regionales con esa búsqueda</p>
+        </div>
+      </div>
+    </ion-content>
+
+    <ion-footer class="footer-selector ion-no-border">
+      <div class="footer-actions-row">
+        <button type="button" class="btn-selector-clean" (click)="limpiarDestinos()">
+          Limpiar
+        </button>
+        <button
+          type="button"
+          class="btn-selector-save"
+          [disabled]="!(puedeGuardarDestinos$ | async)"
+          (click)="guardarDestinos()"
+        >
+          Guardar 3 destinos
+        </button>
+      </div>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

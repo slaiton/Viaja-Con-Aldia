@@ -1,119 +1,165 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="header-aldia">
-    <ion-title class="font-display header-title">Documentos</ion-title>
-    <ion-buttons slot="end" class="header-badge-wrap">
-      <app-plate-badge [placa]="placaActual" size="sm"></app-plate-badge>
-    </ion-buttons>
-  </ion-toolbar>
+  <!-- Cabecera .aldia-header-pattern (#0094DA) con título "Documentos", subtítulo y <app-plate-badge> -->
+  <div class="aldia-header-pattern docs-header">
+    <div class="docs-header-left">
+      <h2 class="docs-title">Documentos</h2>
+      <p class="docs-subtitle">Vigencias conductor y vehículo</p>
+    </div>
+    <div class="docs-header-right">
+      <app-plate-badge [placa]="placaActual"></app-plate-badge>
+    </div>
+  </div>
 </ion-header>
 
 <ion-content class="docs-content">
-
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
   <div class="docs-wrapper">
+    <!-- Control Segmentado Conductor / Vehículo (Mockup v4 Pantalla 9) -->
+    <div class="docs-segmented-control">
+      <button
+        type="button"
+        class="segmented-tab"
+        [class.tab-active]="tabSeleccionada === 'conductor'"
+        (click)="seleccionarTab('conductor')"
+      >
+        <span>Conductor</span>
+        <span *ngIf="alertasConductor > 0" class="tab-badge-red">{{ alertasConductor }}</span>
+      </button>
 
-    <!-- ─── Tarjeta Semáforo (Resumen de Métricas) ───────────────────────── -->
-    <div class="semaforo-card">
-      <div class="semaforo-col">
-        <span class="semaforo-num text-vigente">{{ semaforo.vigentes }}</span>
-        <span class="semaforo-lbl">Vigentes</span>
-      </div>
-      <div class="semaforo-divider"></div>
-      <div class="semaforo-col">
-        <span class="semaforo-num text-por-vencer">{{ semaforo.porVencer }}</span>
-        <span class="semaforo-lbl">Por Vencer</span>
-      </div>
-      <div class="semaforo-divider"></div>
-      <div class="semaforo-col">
-        <span class="semaforo-num text-vencido">{{ semaforo.vencidos }}</span>
-        <span class="semaforo-lbl">Vencidos</span>
-      </div>
+      <button
+        type="button"
+        class="segmented-tab"
+        [class.tab-active]="tabSeleccionada === 'vehiculo'"
+        (click)="seleccionarTab('vehiculo')"
+      >
+        <span>Vehículo</span>
+        <span *ngIf="alertasVehiculo > 0" class="tab-badge-red">{{ alertasVehiculo }}</span>
+      </button>
     </div>
 
-    <!-- ─── Spinner de Carga ─────────────────────────────────────────────── -->
+    <!-- Spinner de Carga -->
     <div *ngIf="cargando" class="loading-state">
       <ion-spinner name="crescent" color="primary"></ion-spinner>
       <p>Consultando vigencias ante 3SL...</p>
     </div>
 
-    <!-- ─── Listado de Tarjetas por Documento ────────────────────────────── -->
+    <!-- Lista de Documentos -->
     <div *ngIf="!cargando" class="docs-list">
 
-      <div *ngFor="let doc of documentos" class="doc-card" [ngClass]="{
-        'card-vigente': doc.estado === 'VIGENTE',
-        'card-por-vencer': doc.estado === 'POR_VENCER',
-        'card-vencido': doc.estado === 'VENCIDO'
-      }">
-
-        <div class="doc-card-header">
-          <div class="doc-header-left">
-            <ion-icon *ngIf="doc.estado === 'VIGENTE'" name="checkmark-circle" class="icon-estado icon-vigente"></ion-icon>
-            <ion-icon *ngIf="doc.estado === 'POR_VENCER'" name="alert-circle" class="icon-estado icon-por-vencer"></ion-icon>
-            <ion-icon *ngIf="doc.estado === 'VENCIDO'" name="close-circle" class="icon-estado icon-vencido"></ion-icon>
-
-            <div class="doc-titles">
-              <h3 class="doc-title">{{ doc.titulo }}</h3>
-              <span class="doc-tipo">{{ doc.tipoRegistro === 'vehiculo' ? 'Vehículo' : 'Conductor' }}</span>
-            </div>
-          </div>
-
-          <div class="doc-header-right">
-            <span *ngIf="doc.estado === 'VIGENTE'" class="chip-estado chip-vigente">Vigente</span>
-            <span *ngIf="doc.estado === 'POR_VENCER'" class="chip-estado chip-por-vencer">
-              {{ doc.diasRestantes !== undefined ? 'Vence en ' + doc.diasRestantes + 'd' : 'Por vencer' }}
-            </span>
-            <span *ngIf="doc.estado === 'VENCIDO'" class="chip-estado chip-vencido">Vencido</span>
-          </div>
-        </div>
-
-        <div class="doc-card-body">
-          <div class="doc-fecha-row">
-            <ion-icon name="calendar-outline" class="calendar-icon"></ion-icon>
-            <span class="fecha-lbl">Vigencia: <strong>{{ doc.fechaFormateada }}</strong></span>
-          </div>
-
-          <!-- Botón de acción para Por Vencer -->
-          <div *ngIf="doc.estado === 'POR_VENCER'" class="doc-btn-wrap">
-            <ion-button fill="outline" class="btn-warning-outline" (click)="abrirActualizar(doc)">
-              <ion-icon slot="start" name="camera-outline"></ion-icon>
-              Actualizar foto del documento
-            </ion-button>
-          </div>
-
-          <!-- Botón de acción para Vencido -->
-          <div *ngIf="doc.estado === 'VENCIDO'" class="doc-btn-wrap">
-            <ion-button class="btn-danger-solid" (click)="abrirActualizar(doc)">
-              <ion-icon slot="start" name="alert-circle-outline"></ion-icon>
-              Actualizar ahora
-            </ion-button>
-          </div>
-
-          <!-- Botón sutil para Vigente -->
-          <div *ngIf="doc.estado === 'VIGENTE'" class="doc-btn-wrap">
-            <ion-button fill="clear" size="small" class="btn-clear-actualizar" (click)="abrirActualizar(doc)">
-              <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
-              Renovar foto
-            </ion-button>
-          </div>
-        </div>
-
+      <div *ngIf="documentosFiltrados.length === 0" class="docs-empty-state">
+        <ion-icon name="document-text-outline" class="empty-icon"></ion-icon>
+        <p class="empty-msg">No hay documentos en esta categoría</p>
       </div>
 
-    </div>
+      <ng-container *ngFor="let doc of documentosFiltrados">
 
+        <!-- CASO 1: VIGENTE / AL DÍA -->
+        <div *ngIf="doc.estado === 'VIGENTE'" class="card-doc-vigente" (click)="abrirActualizar(doc)">
+          <div class="doc-card-top-row">
+            <!-- Miniatura foto previa o icono representativo -->
+            <div *ngIf="doc.previewUrl" class="doc-thumb-box" (click)="verFotoCompleta(doc.previewUrl, doc.titulo); $event.stopPropagation();" title="Ver foto ampliada">
+              <img [src]="doc.previewUrl" class="doc-thumb-img" alt="Foto del documento" />
+              <span class="thumb-zoom-badge"><ion-icon name="eye"></ion-icon></span>
+            </div>
+            <div *ngIf="!doc.previewUrl" class="doc-icon-box box-green">
+              <ion-icon name="document-text-outline"></ion-icon>
+            </div>
+
+            <div class="doc-info-block">
+              <b class="doc-title-text">{{ doc.titulo }}</b>
+              <span class="doc-sub-text">{{ doc.fechaFormateada ? 'Vence el ' + doc.fechaFormateada : 'Vigencia confirmada' }}</span>
+            </div>
+
+            <span class="doc-pill pill-green">
+              {{ doc.titulo.includes('Cédula') ? 'Al día' : 'Vigente' }}
+            </span>
+          </div>
+
+          <!-- Acción para cambiar o subir foto en cualquier momento -->
+          <button type="button" class="btn-doc-action-subtle" (click)="abrirActualizar(doc); $event.stopPropagation();">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>{{ doc.previewUrl ? 'Cambiar o actualizar foto' : 'Subir documento' }}</span>
+          </button>
+        </div>
+
+        <!-- CASO 2: POR VENCER -->
+        <div *ngIf="doc.estado === 'POR_VENCER'" class="card-doc-por-vencer" (click)="abrirActualizar(doc)">
+          <div class="doc-card-top-row">
+            <div *ngIf="doc.previewUrl" class="doc-thumb-box" (click)="verFotoCompleta(doc.previewUrl, doc.titulo); $event.stopPropagation();" title="Ver foto ampliada">
+              <img [src]="doc.previewUrl" class="doc-thumb-img" alt="Foto del documento" />
+              <span class="thumb-zoom-badge"><ion-icon name="eye"></ion-icon></span>
+            </div>
+            <div *ngIf="!doc.previewUrl" class="doc-icon-box box-amber">
+              <ion-icon name="time-outline"></ion-icon>
+            </div>
+
+            <div class="doc-info-block">
+              <b class="doc-title-text">{{ doc.titulo }}</b>
+              <span class="doc-sub-text">Vence el {{ doc.fechaFormateada }}</span>
+            </div>
+
+            <span class="doc-pill pill-amber">
+              {{ doc.diasRestantes !== undefined ? 'Vence en ' + doc.diasRestantes + 'd' : 'Por vencer' }}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="btn-doc-action-outline"
+            (click)="abrirActualizar(doc); $event.stopPropagation();"
+          >
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>Actualizar foto</span>
+          </button>
+        </div>
+
+        <!-- CASO 3: VENCIDO -->
+        <div *ngIf="doc.estado === 'VENCIDO'" class="card-doc-vencido" (click)="abrirActualizar(doc)">
+          <div class="doc-card-top-row">
+            <div *ngIf="doc.previewUrl" class="doc-thumb-box" (click)="verFotoCompleta(doc.previewUrl, doc.titulo); $event.stopPropagation();" title="Ver foto ampliada">
+              <img [src]="doc.previewUrl" class="doc-thumb-img" alt="Foto del documento" />
+              <span class="thumb-zoom-badge"><ion-icon name="eye"></ion-icon></span>
+            </div>
+            <div *ngIf="!doc.previewUrl" class="doc-icon-box box-red">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+            </div>
+
+            <div class="doc-info-block">
+              <b class="doc-title-text">{{ doc.titulo }}</b>
+              <span class="doc-sub-text">Venció el {{ doc.fechaFormateada }}</span>
+            </div>
+
+            <span class="doc-pill pill-red">
+              Vencido
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="btn-doc-action-solid"
+            (click)="abrirActualizar(doc); $event.stopPropagation();"
+          >
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>Actualizar ahora</span>
+          </button>
+        </div>
+
+      </ng-container>
+
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       MODAL: Captura con Compresión WebP Obligatoria
+       MODAL — Carga, Visualización y Actualización de Documento
   ═══════════════════════════════════════════════════════════════════ -->
   <ion-modal [isOpen]="isModalOpen" (didDismiss)="cerrarModal()">
     <ng-template>
-      <ion-header>
-        <ion-toolbar class="header-aldia">
-          <ion-title class="font-display header-title">{{ docSeleccionado?.titulo }}</ion-title>
+      <ion-header class="ion-no-border">
+        <ion-toolbar class="header-modal-aldia">
+          <ion-title class="modal-title font-display">{{ docSeleccionado?.titulo }}</ion-title>
           <ion-buttons slot="end">
             <ion-button color="light" (click)="cerrarModal()">Cerrar</ion-button>
           </ion-buttons>
@@ -122,24 +168,40 @@
 
       <ion-content class="modal-content ion-padding">
 
-        <!-- Selector de cara (si hay varias, ej. Frontal / Posterior) -->
+        <!-- Selector de Subdocumento (Frente / Reverso) -->
         <div *ngIf="docSeleccionado && docSeleccionado.subdocumentos.length > 1" class="subdocs-selector">
-          <p class="selector-lbl">Selecciona la cara a actualizar:</p>
-          <ion-segment [value]="subDocSeleccionado?.codigo" (ionChange)="seleccionarSubDoc($any($event).detail.value)">
+          <p class="selector-lbl">Selecciona la cara a gestionar:</p>
+          <ion-segment [value]="subDocSeleccionado?.codigo" (ionChange)="seleccionarSubDocPorCodigo($any($event).detail.value)">
             <ion-segment-button *ngFor="let s of docSeleccionado.subdocumentos" [value]="s.codigo">
               <ion-label>{{ s.nombre }}</ion-label>
             </ion-segment-button>
           </ion-segment>
         </div>
 
-        <!-- Campo opcional de fecha de vigencia si aplica -->
-        <div *ngIf="docSeleccionado?.tagFecha" class="fecha-input-wrap">
-          <label class="input-lbl">Nueva fecha de vigencia (opcional)</label>
-          <input type="date" [(ngModel)]="nuevaFechaVigencia" class="date-field">
+        <!-- FOTO REGISTRADA PREVIAMENTE EN EL SISTEMA -->
+        <div *ngIf="subDocSeleccionado?.previewUrl" class="previa-existente-card">
+          <div class="previa-header">
+            <span class="previa-lbl">
+              <ion-icon name="checkmark-circle" class="previa-check-icon"></ion-icon>
+              Foto actual registrada:
+            </span>
+            <button type="button" class="btn-ver-zoom" (click)="verFotoCompleta(subDocSeleccionado?.previewUrl, subDocSeleccionado?.nombre)">
+              <ion-icon name="expand-outline"></ion-icon> Ampliar
+            </button>
+          </div>
+          <div class="previa-img-wrap" (click)="verFotoCompleta(subDocSeleccionado?.previewUrl, subDocSeleccionado?.nombre)">
+            <img [src]="subDocSeleccionado?.previewUrl" alt="Foto registrada" class="previa-img" />
+          </div>
         </div>
 
-        <!-- Botones de Captura Fotográfica -->
+        <div *ngIf="!subDocSeleccionado?.previewUrl" class="previa-sin-foto-card">
+          <ion-icon name="image-outline" class="sin-foto-icon"></ion-icon>
+          <span>Aún no hay foto registrada para esta cara</span>
+        </div>
+
+        <!-- ACCIONES DE CAPTURA NUEVA FOTO -->
         <div class="capture-actions">
+          <p class="selector-lbl">{{ subDocSeleccionado?.previewUrl ? 'Cambiar por nueva foto:' : 'Tomar o seleccionar foto:' }}</p>
           <ion-button expand="block" class="btn-camara" (click)="tomarFoto()">
             <ion-icon slot="start" name="camera"></ion-icon>
             Tomar foto con cámara
@@ -151,7 +213,7 @@
           </ion-button>
         </div>
 
-        <!-- Vista Previa de la Foto Comprimida con Badge WebP -->
+        <!-- PREVIEW DE LA NUEVA FOTO COMPRIMIDA (WebP) -->
         <div *ngIf="previewComprimido" class="preview-box">
           <ion-img [src]="previewComprimido" class="img-preview" alt="Foto optimizada"></ion-img>
           <div class="webp-badge">
@@ -160,7 +222,13 @@
           </div>
         </div>
 
-        <!-- Botón de Envío -->
+        <!-- FECHA DE VIGENCIA (SI APLICA) -->
+        <div *ngIf="docSeleccionado?.tagFecha" class="fecha-input-wrap">
+          <label class="input-lbl">Fecha de vigencia</label>
+          <input type="date" [(ngModel)]="nuevaFechaVigencia" class="date-field">
+        </div>
+
+        <!-- CONFIRMACIÓN Y SUBIDA -->
         <div class="submit-wrap">
           <ion-button
             expand="block"
@@ -168,10 +236,30 @@
             [disabled]="!previewComprimido || guardando"
             (click)="confirmarSubida()">
             <ion-icon slot="start" name="cloud-upload"></ion-icon>
-            Subir documento optimizado
+            Confirmar y guardar documento
           </ion-button>
         </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MODAL — Visor Zoom / Ampliación de Fotografía
+  ═══════════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isZoomModalOpen" (didDismiss)="cerrarZoomFoto()" class="modal-zoom-foto">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar class="header-modal-aldia">
+          <ion-title class="modal-title font-display">{{ zoomFotoTitulo }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button color="light" (click)="cerrarZoomFoto()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="zoom-modal-content ion-padding">
+        <div class="zoom-img-container">
+          <img *ngIf="zoomFotoUrl" [src]="zoomFotoUrl" alt="Foto ampliada" class="zoom-full-img" />
+        </div>
       </ion-content>
     </ng-template>
   </ion-modal>

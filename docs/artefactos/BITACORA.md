@@ -15,6 +15,63 @@ Plantilla:
 
 ---
 
+## 2026-11-06 · Fix OTP Residual en Registro, Acceso a Mis Vehículos y Bloqueo de Capacitaciones
+- **Pedido:** Eliminar la aparición indebida del modal SMS OTP al finalizar el registro, habilitar el acceso y navegación bidireccional hacia "Mis Vehículos" (`/vehiculos`) desde el menú de perfil y la placa del Home, e implementar el bloqueo estricto con modal corporativo y revalidación en vivo para conductores con capacitaciones obligatorias pendientes.
+- **Cambios:**
+  - `src/app/features/registro/registro.page.ts`:
+    - En `saveUser()`: forzada la destrucción y cierre preventivo de todos los modales residuales (`modalCodeOpen = false`, `this.setOpenCode(false)`, `codeValidation = false`, `isModalOpen` 1 al 6).
+    - Blindado el flujo de finalización: si `registroApiAldia()` falla, detiene la ejecución inmediatamente sin invocar `loginUser()`.
+    - Garantizado el login automático y redirección limpia hacia `/home` cuando hay `access_token`, u orientación clara hacia `/login` con credenciales limpias en caso alternativo.
+  - `src/app/app.component.ts`:
+    - Agregada la opción `"Mis Vehículos"` con icono `'car-sport-outline'` en el ActionSheet de Perfil (`openPerfilMenu()`) navegando a `['/vehiculos']`.
+  - `src/app/features/home/pages/home.page.html`:
+    - Convertido `<app-plate-badge>` en botón clickeable con `(click)="irAMisVehiculos()"`, `cursor-pointer`, `active:opacity-80` y tooltip en la cabecera estándar y en la cabecera RNDC activa.
+    - Agregado el `<ion-modal>` corporativo bloqueante `[isOpen]="tieneCapacitacionesPendientes"` con `backdropDismiss="false"` y `canDismiss="false"`, cabecera `#0094DA`, badge dinámico de módulos pendientes, botón para abrir plataforma formativa en In-App Browser y botón con spinner para verificar aprobación en tiempo real.
+  - `src/app/features/home/pages/home.page.ts`:
+    - Implementado `irAMisVehiculos()` para navegación fluida.
+    - Declaradas banderas `tieneCapacitacionesPendientes`, `verificandoCapacitaciones` y `cantidadCapacitaciones`.
+    - Implementados métodos `verificarCapacitaciones()`, `abrirPlataformaCapacitacion()` (usando Capacitor `Browser.open` sin destruir la SPA), `revalidarCapacitaciones()`, `cerrarSesionCapacitacion()` y alerta informativa.
+    - Blindadas las acciones de enturnamiento (`abrirEnturnamiento()` y `nuevoTurno()`) ante capacitaciones no completadas.
+  - `src/app/features/home/pages/home.page.scss`:
+    - Agregados estilos con backdrop desenfocado y bordes curvos para `.modal-capacitaciones-bloqueo`.
+  - `src/app/features/vehiculo/vehiculo.component.ts`:
+    - En `onDismissChange()`: inyectada navegación de retorno `this.router.navigate(['/home'])` para garantizar que el conductor pueda salir del listado al navegar de forma ruteada.
+  - `src/app/core/services/user.service.ts`:
+    - Refactorizado `validateCap()` para eliminar la llamada destructiva `window.location.href`, devolviendo la lista de capacitaciones pendientes como `Promise<any[]>`.
+- **Verificación:** `npx ng build` ejecutado exitosamente con **Exit Code 0 (0 errores, 0 fallos de presupuesto)** (Build Hash: `47e96d239144b030`, tiempo 30.6s).
+- **Pendiente:** Ninguno en el frente de frontend para estos 3 incidentes.
+- **Commit sugerido:** `fix(registro-vehiculos-capacitaciones): resolve residual otp, restore vehiculos nav, and add mandatory training modal`
+
+---
+
+## 2026-11-05 · Bloqueo de Vehículo Inactivo en /home y Cumplimiento Legal en /registro
+- **Pedido:** Implementar el bloqueo visual y operativo de vehículos con estado inactivo en 3SL (`datos.numeroEstadoxx !== 'ACTIVO'`) en Cabina (`/home`), impidiendo el enturnamiento con alerta informativa y desactivando el botón de acción principal. En el Asistente de Registro (`/registro`), eliminar la apertura prematura del modal de términos durante la búsqueda de cédula y reubicar la aceptación obligatoria de Términos y Condiciones y Tratamiento de Datos (Habeas Data) mediante checkboxes al final del formulario antes de guardar.
+- **Cambios:**
+  - `src/app/features/home/pages/home.page.ts`:
+    - Desacoplada la evaluación de `datos.numeroEstadoxx` en `processData3SL()`: el estado inactivo se evalúa con prioridad máxima de forma independiente a `statusDoc`.
+    - Agregado método `mostrarAlertaVehiculoInactivo()` mediante `AlertController` informando que el vehículo está inactivo y debe contactarse a Tráfico.
+    - Blindadas las acciones `nuevoTurno()` y `abrirEnturnamiento()` para detener el flujo si `botonInactivo === true` y presentar la alerta correspondiente.
+  - `src/app/features/home/pages/home.page.html`:
+    - Cabecera: reemplazado el texto estático por badge interactivo `.header-status-badge` (`.badge-inactivo` rojo `#D3302F` "Vehículo Inactivo" o verde `#1A7F37` "Conductor activo").
+    - Hero Card: botón de acción vinculado dinámicamente con `[disabled]="botonInactivo"` y clase `.btn-hero-disabled`, mostrando icono de candado y texto `"Vehículo Inactivo"`.
+    - Insertado banner de alerta crítica `.banner-alerta-inactivo` (`#FDE9E8`, borde `#D3302F`) con prioridad sobre la alerta de documentos.
+  - `src/app/features/registro/registro.page.ts`:
+    - Eliminado el trigger prematuro `this.setOpenTermsData(true)` dentro de `searchUser()`.
+    - Declaradas propiedades `aceptaTerminos: boolean = false;` y `aceptaHabeasData: boolean = false;`.
+    - Agregados métodos auxiliares `toggleTerminos()`, `toggleHabeasData()`, `abrirModalTerminos()` y `abrirModalHabeasData()`.
+    - Actualizados métodos `acept()` y `acept2()` para sincronizar los checkboxes booleanos al aceptar desde los modales de lectura.
+    - Actualizado `onSubmit()` para validar obligatoriedad de ambos consentimientos legales y asegurar las firmas digitales (`firmaContrato(1, ...)` y `firmaContrato(2, ...)`).
+  - `src/app/features/registro/registro.page.html`:
+    - Inyectada la tarjeta `.legal-terms-card` con dos filas de `ion-checkbox` y enlaces modales antes del botón `"Guardar Registro"`.
+    - Deshabilitado el botón de guardado mediante `[disabled]="!aceptaTerminos || !aceptaHabeasData"` y `.btn-disabled`.
+  - `src/global.scss`:
+    - Añadidas clases maestras: `.header-status-badge`, `.btn-hero-disabled`, `.banner-alerta-inactivo`, `.inactivo-icon-circle`, `.inactivo-title`, `.inactivo-sub`, `.legal-terms-card`, `.legal-item-row`, `.legal-checkbox`, `.legal-item-text`, `.legal-link` y `.btn-registro-submit[disabled]`.
+- **Verificación:** `npx ng build` ejecutado exitosamente con **Código de salida 0 (0 errores, 0 warnings de presupuesto)** (Hash: `e341118f27f0a9ae`).
+- **Pendiente:** Pasar a las tareas de Backend en `Aldia-Backend` (Autenticación BFF, 2FA, JWT, firmas).
+- **Commit sugerido:** `feat(cabina-registro): enforce vehicle inactive block and legal terms consent`
+
+---
+
 ## 2026-10-30 · Fase 3 (Pantallas Operativas): Rediseño Preoperacional Modo Asistente Táctil, Dexie Outbox y Aislamiento de Client Secret
 - **Pedido:** rediseñar el Preoperacional (`preform.page.ts`) transformándolo en un asistente paso a paso optimizado ergonómicamente para cabina, aislar `client_secret` en la capa API de Dominio, implementar resiliencia Offline-First (caché local de preguntas en Dexie y encolamiento en `db.outbox_queue` si no hay señal o hay timeout), e integrar compresión WebP en cliente (`ImageCompressionService`) para la fotografía final del vehículo.
 - **Cambios:**

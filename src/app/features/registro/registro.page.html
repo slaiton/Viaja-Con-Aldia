@@ -1,200 +1,286 @@
-<ion-header>
-  <!-- <ion-toolbar>
-    <ion-title>Registro</ion-title>
-  </ion-toolbar> -->
-</ion-header>
+<ion-content *ngIf="!openDocs" [fullscreen]="true" class="registro-ion-content">
+  <div class="registro-main-container">
 
-<ion-content *ngIf="!openDocs" class="color">
-  <!-- <ion-action-sheet trigger="open-action-sheet" header="Actions" [buttons]="actionSheetButtons"></ion-action-sheet> -->
+    <!-- Cabecera Corporativa Curva #0094DA -->
+    <div class="registro-header aldia-header-pattern">
+      <div class="registro-header-row">
+        <a routerLink="/login" class="btn-header-back" aria-label="Volver">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <div>
+          <span class="registro-header-sub">Aldia Logística</span>
+          <h1 class="registro-header-title">Registro de Conductor</h1>
+        </div>
+      </div>
+      <p class="registro-header-desc">Ingresa tu cédula y la información del vehículo para vincularte a la plataforma.</p>
+    </div>
 
-
-  <div class="registro text-center">
-    <main class="form-signin w-100 m-auto p-2">
-      <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
-        <img class="mb-4" src="" alt="" height="150" />
-
-        <div class="mb-5">
-          <h1>Registro</h1>
+    <!-- Cuerpo del Formulario en Tarjeta Flotante -->
+    <div class="registro-body">
+      <div class="registro-card">
+        <div class="registro-card-header">
+          <span class="registro-card-badge">Paso 1 · Identificación</span>
+          <h2 class="registro-card-title">Datos de Vinculación</h2>
+          <p class="registro-card-subtitle">Verifica cada dato ingresado con el sistema central</p>
         </div>
 
+        <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
 
-        <div class="form-floating">
-          <input type="number" formControlName="cedula" name="cedula" matInput class="form-control" id="cedula"
-            placeholder="Cedula" (change)="searchConductor($event, false)" required />
+          <!-- Campo Cédula -->
+          <div class="registro-field">
+            <label class="registro-field-label" for="cedula">Cédula de ciudadanía</label>
+            <div class="registro-input-wrap">
+              <input
+                type="number"
+                formControlName="cedula"
+                name="cedula"
+                matInput
+                class="form-control"
+                id="cedula"
+                placeholder="Número de cédula"
+                (change)="searchConductor($event, false)"
+                required
+              />
 
-          <ion-icon class="icon" *ngIf="newTercero" name="add-circle" (click)="nuevoTercero()"></ion-icon>
+              <div class="icon-action-btn">
+                <button type="button" class="btn-action-nuevo" *ngIf="newTercero" (click)="nuevoTercero()">
+                  <ion-icon name="add-circle"></ion-icon>
+                  <span>Crear</span>
+                </button>
 
-          <div *ngIf="checkTercero" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editTercero()"></ion-icon>
-            <ion-icon class="icon-a" name="checkmark-circle"></ion-icon>
+                <div *ngIf="checkTercero" class="badge-status-ok">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editTercero()"></ion-icon>
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+
+                <div *ngIf="incompletoTercero" class="badge-status-warn">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editTercero()"></ion-icon>
+                  <ion-icon name="close-circle"></ion-icon>
+                </div>
+
+                <ion-icon class="badge-status-err" *ngIf="alertTercero" name="close-circle"></ion-icon>
+              </div>
+            </div>
           </div>
 
-          <div *ngIf="incompletoTercero" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editTercero()"></ion-icon>
-            <ion-icon class="icon-a" name="close-circle"></ion-icon>
+          <!-- Campo Placa (Vehículo) -->
+          <div *ngIf="checkTercero" class="registro-field">
+            <label class="registro-field-label" for="placa">Placa del Vehículo</label>
+            <div class="registro-input-wrap">
+              <input
+                type="text"
+                formControlName="placa"
+                name="placa"
+                matInput
+                class="form-control font-plate"
+                id="placa"
+                placeholder="Ej: SXT482"
+                maxlength="6"
+                (input)="searchVehicle($event)"
+                required
+              />
+
+              <div class="icon-action-btn">
+                <button type="button" class="btn-action-nuevo" *ngIf="newVehicle" (click)="nuevoVehiculo()">
+                  <ion-icon name="add-circle"></ion-icon>
+                  <span>Crear</span>
+                </button>
+
+                <div *ngIf="checkVehicle" class="badge-status-ok">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editVehiculo()"></ion-icon>
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+
+                <div *ngIf="incompletoVehiculo" class="badge-status-warn">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editVehiculo()"></ion-icon>
+                  <ion-icon name="close-circle"></ion-icon>
+                </div>
+
+                <ion-icon class="badge-status-err" *ngIf="alertVehiculo" name="close-circle"></ion-icon>
+              </div>
+            </div>
           </div>
 
-          <ion-icon class="icon" *ngIf="alertTercero" name="close-circle"></ion-icon>
+          <!-- Campo Propietario -->
+          <div *ngIf="!isPropietario" class="registro-field">
+            <label class="registro-field-label" for="propietario">Cédula del Propietario</label>
+            <div class="registro-input-wrap">
+              <input
+                type="number"
+                formControlName="propietario"
+                name="propietario"
+                matInput
+                class="form-control"
+                id="propietario"
+                placeholder="Cédula Propietario"
+                (change)="searchPropietario($event)"
+                required
+              />
 
-          <label for="floatingPassword">Cedula</label>
-        </div>
+              <div class="icon-action-btn">
+                <button type="button" class="btn-action-nuevo" *ngIf="newPropiet" (click)="nuevoPropietario()">
+                  <ion-icon name="add-circle"></ion-icon>
+                  <span>Crear</span>
+                </button>
 
+                <div *ngIf="checkPropi" class="badge-status-ok">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editPropietario()"></ion-icon>
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
 
-        <div *ngIf="checkTercero" class="form-floating">
-          <input type="text" formControlName="placa" name="placa" matInput class="form-control" id="placa"
-            placeholder="Placa" maxlength="6" (input)="searchVehicle($event)" required />
-          <ion-icon class="icon" *ngIf="newVehicle" name="add-circle" (click)="nuevoVehiculo()"></ion-icon>
+                <div *ngIf="incompletoPropiet" class="badge-status-warn">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editPropietario()"></ion-icon>
+                  <ion-icon name="close-circle"></ion-icon>
+                </div>
 
-          <div *ngIf="checkVehicle" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editVehiculo()"></ion-icon>
-            <ion-icon class="icon-a" name="checkmark-circle"></ion-icon>
+                <ion-icon class="badge-status-err" *ngIf="alertPropi" name="close-circle"></ion-icon>
+              </div>
+            </div>
           </div>
 
+          <!-- Campo Tenedor -->
+          <div *ngIf="!isTenedor" class="registro-field">
+            <label class="registro-field-label" for="tenedor">Cédula del Tenedor</label>
+            <div class="registro-input-wrap">
+              <input
+                type="number"
+                formControlName="tenedor"
+                name="tenedor"
+                matInput
+                class="form-control"
+                id="tenedor"
+                placeholder="Cédula Tenedor"
+                (change)="searchTenedor($event)"
+                required
+              />
 
-          <div *ngIf="incompletoVehiculo" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editVehiculo()"></ion-icon>
-            <ion-icon class="icon-a" name="close-circle"></ion-icon>
+              <div class="icon-action-btn">
+                <button type="button" class="btn-action-nuevo" *ngIf="newTenedor" (click)="nuevoTenedor()">
+                  <ion-icon name="add-circle"></ion-icon>
+                  <span>Crear</span>
+                </button>
+
+                <div *ngIf="checkTened" class="badge-status-ok">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editTenedor()"></ion-icon>
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+
+                <div *ngIf="incompletoTenedor" class="badge-status-warn">
+                  <ion-icon class="btn-action-edit" name="create" (click)="editTenedor()"></ion-icon>
+                  <ion-icon name="close-circle"></ion-icon>
+                </div>
+
+                <ion-icon class="badge-status-err" *ngIf="alertTened" name="close-circle"></ion-icon>
+              </div>
+            </div>
           </div>
 
-          <ion-icon class="icon" *ngIf="alertVehiculo" name="close-circle"></ion-icon>
+          <!-- Sección Foto Perfil -->
+          <div class="foto-perfil-section" *ngIf="checkVehicle && checkPropi && checkTened">
+            <h3 class="foto-section-title">Foto de Perfil del Conductor</h3>
 
-          <label for="floatingInput">Vehiculo</label>
-        </div>
-
-
-        <div *ngIf="!isPropietario" class="form-floating">
-          <input type="number" formControlName="propietario" name="propietario" matInput class="form-control"
-            id="propietario" placeholder="Cedula Propietario" (change)="searchPropietario($event)" required />
-          <ion-icon class="icon" *ngIf="newPropiet" name="add-circle" (click)="nuevoPropietario()"></ion-icon>
-
-          <div *ngIf="checkPropi" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editPropietario()"></ion-icon>
-            <ion-icon class="icon-a" name="checkmark-circle"></ion-icon>
+            <div class="card-doc-registro" (click)="getFoto()">
+              <div class="doc-left-wrap">
+                <div class="doc-icon-box" [class.doc-icon-done]="hubImag.fotoperfil.webviewPath">
+                  <ion-icon [name]="hubImag.fotoperfil.webviewPath ? 'checkmark-circle' : 'person-circle-outline'"></ion-icon>
+                </div>
+                <div class="doc-info-body">
+                  <b class="doc-title">Fotografía de Perfil</b>
+                  <span class="doc-sub">Rostro descubierto y fondo claro</span>
+                </div>
+              </div>
+              <div class="doc-action-zone">
+                <div *ngIf="hubImag.fotoperfil.webviewPath" class="doc-preview-thumb-wrap">
+                  <img [src]="hubImag.fotoperfil.webviewPath" alt="Perfil" class="doc-preview-thumb" />
+                  <span class="doc-badge-pill-done">Cambiar</span>
+                </div>
+                <button *ngIf="!hubImag.fotoperfil.webviewPath" type="button" class="btn-doc-action">
+                  <ion-icon name="camera-outline"></ion-icon>
+                  <span>Tomar Foto</span>
+                </button>
+              </div>
+            </div>
           </div>
 
+          <!-- Cumplimiento Legal: Términos y Condiciones y Habeas Data -->
+          <div class="legal-terms-card" *ngIf="completeData && checkVehicle && checkPropi && checkTened">
+            <div class="legal-item-row">
+              <ion-checkbox
+                [checked]="aceptaTerminos"
+                (ionChange)="toggleTerminos($event)"
+                class="legal-checkbox"
+              ></ion-checkbox>
+              <div class="legal-item-text">
+                <span>Acepto los <a (click)="abrirModalTerminos($event)" class="legal-link">Términos y Condiciones</a> y regulaciones SAGRILAFT de ALDÍA Logística.</span>
+              </div>
+            </div>
 
-          <div *ngIf="incompletoPropiet" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editPropietario()"></ion-icon>
-            <ion-icon class="icon-a" name="close-circle"></ion-icon>
+            <div class="legal-item-row mt-3">
+              <ion-checkbox
+                [checked]="aceptaHabeasData"
+                (ionChange)="toggleHabeasData($event)"
+                class="legal-checkbox"
+              ></ion-checkbox>
+              <div class="legal-item-text">
+                <span>Autorizo el tratamiento de mis datos personales (<a (click)="abrirModalHabeasData($event)" class="legal-link">Política de Habeas Data</a>).</span>
+              </div>
+            </div>
           </div>
 
-          <ion-icon class="icon" *ngIf="alertPropi" name="close-circle"></ion-icon>
+          <!-- Botón Guardar Principal -->
+          <button
+            class="btn-registro-submit"
+            *ngIf="completeData && checkVehicle && checkPropi && checkTened"
+            [disabled]="!aceptaTerminos || !aceptaHabeasData"
+            [class.btn-disabled]="!aceptaTerminos || !aceptaHabeasData"
+            type="submit"
+          >
+            Guardar Registro
+          </button>
 
-          <label for="floatingInput">Propietario</label>
-        </div>
-
-
-        <div *ngIf="!isTenedor" class="form-floating">
-          <input type="number" formControlName="tenedor" name="tenedor" matInput class="form-control" id="tenedor"
-            placeholder="Cedula Tenedor" (change)="searchTenedor($event)" required />
-          <ion-icon class="icon" *ngIf="newTenedor" name="add-circle" (click)="nuevoTenedor()"></ion-icon>
-
-          <div *ngIf="checkTened" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editTenedor()"></ion-icon>
-            <ion-icon class="icon-a" name="checkmark-circle"></ion-icon>
-          </div>
-
-
-          <div *ngIf="incompletoTenedor" class="group-icons">
-            <ion-icon class="icon-a" name="create" (click)="editTenedor()"></ion-icon>
-            <ion-icon class="icon-a" name="close-circle"></ion-icon>
-          </div>
-
-          <ion-icon class="icon" *ngIf="alertTened" name="close-circle"></ion-icon>
-
-          <label for="floatingInput">Tenedor</label>
-        </div>
-
-
-
-        <div class="write" *ngIf="checkVehicle && checkPropi && checkTened">
-          <h2 class="ml-4 p-4">
-            <strong> Foto Perfil </strong>
-          </h2>
-
-          <div (click)="getFoto()" class="container-upload">
-            <ion-img *ngIf="hubImag.fotoperfil.webviewPath" [src]="hubImag.fotoperfil.webviewPath"></ion-img>
-            <div *ngIf="!hubImag.fotoperfil.webviewPath" class="camera"></div>
-          </div>
-
-
-        </div>
-
-        <!-- Aceptacion de terminos y condiciones -->
-
-
-        <!-- <ion-row>
-        <ion-col>
-           <p>Ver política de privacidad  </p>
-        </ion-col>
-      </ion-row> -->
-
-
-        <!-- <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
-        <label class="form-check-label" for="flexCheckChecked">
-          Declaro haber leído la política de privacidad
-        </label>
-      </div> -->
-
-        <ion-button class="mt-5" *ngIf="completeData && checkVehicle && checkPropi && checkTened" expand="block"
-          type="bottom">
-          Guardar
-        </ion-button>
-
-      </form>
-
-    </main>
+        </form>
+      </div>
+    </div>
   </div>
 
-
+  <!-- ===================================================================
+       MODAL 1: DATOS VEHÍCULO
+       =================================================================== -->
   <ion-modal #modal [isOpen]="isModalOpen">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Datos Vechiculo</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Datos del Vehículo</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="onSubmitNewVehicle()">Guardar</ion-button>
+            <ion-button (click)="onSubmitNewVehicle()" class="btn-modal-save">Guardar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
       <ion-content color="light" class="ion-padding">
 
         <form [formGroup]="formNewVehicle" (ngSubmit)="onSubmitNewVehicle()" method="post">
-
           <ion-list class="p-2" [inset]="true">
             <ion-grid>
-              <!-- <ion-row> -->
 
-              <div class="container-prop">
-                <div class="prop-flotante">
-                  <ion-row class="ion-align-items-center mt-4">
+              <div class="modal-prop-toggle-card">
+                <ion-row class="ion-align-items-center">
+                  <ion-col size="12" size-sm="6" class="mb-2">
+                    <ion-item lines="none">
+                      <ion-label>{{ isPropietario ? 'Soy el Propietario' : 'No soy el Propietario' }}</ion-label>
+                      <ion-toggle slot="end" [checked]="isPropietario" (ionChange)="checkPropietario()"></ion-toggle>
+                    </ion-item>
+                  </ion-col>
 
-                    <ion-col size="12" size-sm="6" class="mb-2">
-
-                      <ion-item lines="none">
-                        <ion-label>{{ isPropietario ? 'Soy el Propietario' : 'No soy el Propietario' }}</ion-label>
-                        <ion-toggle slot="end" [checked]="isPropietario" (ionChange)="checkPropietario()"></ion-toggle>
-                      </ion-item>
-
-
-                    </ion-col>
-
-                    <ion-col size="12" size-sm="6">
-
-                      <ion-item lines="none">
-                       <ion-label>{{ isTenedor ? 'Soy el Tenedor' : 'No soy el Tenedor' }}</ion-label>
-                        <ion-toggle slot="end" [checked]="isTenedor" (ionChange)="checkTenedor()"></ion-toggle>
-                      </ion-item>
-
-                    </ion-col>
-
-
-                  </ion-row>
-                </div>
+                  <ion-col size="12" size-sm="6">
+                    <ion-item lines="none">
+                      <ion-label>{{ isTenedor ? 'Soy el Tenedor' : 'No soy el Tenedor' }}</ion-label>
+                      <ion-toggle slot="end" [checked]="isTenedor" (ionChange)="checkTenedor()"></ion-toggle>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
               </div>
-
-
 
               <ion-col>
                 <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
@@ -203,13 +289,6 @@
                   </strong>
                 </div>
               </ion-col>
-
-
-              <!-- <ion-input
-                  [ngModel]="claseVehiculo"
-                    id="claseVehiculo"
-                    formControlName="claseVehiculo"
-                    ></ion-input> -->
 
               <ion-row class="mb-4">
                 <ion-col>
@@ -220,87 +299,111 @@
 
               <ion-row>
                 <ion-col>
-
                   <div class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Clase Vehiculo</ion-label>
-
-                    <ng-autocomplete formControlName="claseVehiculo" [ngModel]="vehiculo.claseVehiculo"
-                      [data]="dataClases" [searchKeyword]="keyword" placeholder="" (selected)='selectEvent($event)'
-                      (inputChanged)='onChangeSearch($event)' (inputFocused)='onFocused($event)'
-                      (focusout)="onBlurClase($event)" [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="claseVehiculo"
+                      [ngModel]="vehiculo.claseVehiculo"
+                      [data]="dataClases"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectEvent($event)'
+                      (inputChanged)='onChangeSearch($event)'
+                      (inputFocused)='onFocused($event)'
+                      (focusout)="onBlurClase($event)"
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
-
                   </div>
                 </ion-col>
               </ion-row>
 
-
               <ion-row>
                 <ion-col>
-
                   <div #autocompleteContainer class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Marca</ion-label>
-
-                    <ng-autocomplete formControlName="marca" [ngModel]="vehiculo.marca" [data]="dataMarcas"
-                      [searchKeyword]="keyword" placeholder="" (selected)='selectMarca($event)'
-                      (focusout)="onBlurMarca($event)" (inputChanged)='onChangeMarca($event)'
-                      (inputFocused)='onFocusedMarca($event)' [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="marca"
+                      [ngModel]="vehiculo.marca"
+                      [data]="dataMarcas"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectMarca($event)'
+                      (focusout)="onBlurMarca($event)"
+                      (inputChanged)='onChangeMarca($event)'
+                      (inputFocused)='onFocusedMarca($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
                   </div>
-
                 </ion-col>
               </ion-row>
 
               <ion-row>
                 <ion-col>
-
                   <div class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Clase Linea</ion-label>
-
-                    <ng-autocomplete formControlName="linea" [ngModel]="vehiculo.linea" [data]="dataLineas"
-                      [searchKeyword]="keyword" placeholder="" (selected)='selectLinea($event)'
-                      (focusout)="onBlurLinea($event)" (inputChanged)='onChangeLinea($event)'
-                      (inputFocused)='onFocusedLinea($event)' [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="linea"
+                      [ngModel]="vehiculo.linea"
+                      [data]="dataLineas"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectLinea($event)'
+                      (focusout)="onBlurLinea($event)"
+                      (inputChanged)='onChangeLinea($event)'
+                      (inputFocused)='onFocusedLinea($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
                   </div>
-
                 </ion-col>
               </ion-row>
 
               <ion-row>
                 <ion-col>
-
                   <div class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Carroceria</ion-label>
-
-                    <ng-autocomplete formControlName="carroceria" [ngModel]="vehiculo.carroceria" [data]="dataCarroc"
-                      [searchKeyword]="keyword" placeholder="" (selected)='selectCarroceria($event)'
-                      (focusout)="onBlurCarroceria($event)" (inputChanged)='onChangeCarroceria($event)'
-                      (inputFocused)='onFocusedCarroceria($event)' [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="carroceria"
+                      [ngModel]="vehiculo.carroceria"
+                      [data]="dataCarroc"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectCarroceria($event)'
+                      (focusout)="onBlurCarroceria($event)"
+                      (inputChanged)='onChangeCarroceria($event)'
+                      (inputFocused)='onFocusedCarroceria($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
                   </div>
-
                 </ion-col>
               </ion-row>
 
               <ion-row>
                 <ion-col>
-
                   <div class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Color </ion-label>
-
-                    <ng-autocomplete formControlName="color" [ngModel]="vehiculo.color" [data]="dataColores"
-                      [searchKeyword]="keyword" placeholder="" (selected)='selectColor($event)'
-                      (focusout)="onBlurColor($event)" (inputChanged)='onChangeColor($event)'
-                      (inputFocused)='onFocusedColor($event)' [itemTemplate]="itemTemplate"
-                      [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="color"
+                      [ngModel]="vehiculo.color"
+                      [data]="dataColores"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (selected)='selectColor($event)'
+                      (focusout)="onBlurColor($event)"
+                      (inputChanged)='onChangeColor($event)'
+                      (inputFocused)='onFocusedColor($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
                   </div>
-
                 </ion-col>
               </ion-row>
 
@@ -313,38 +416,39 @@
 
               <ion-row>
                 <ion-col>
-
                   <div class="autocomplete-container2 mb-4 col-md-12">
                     <ion-label position="floating">Empresa GPS</ion-label>
-
-                    <ng-autocomplete formControlName="empresaSatelital" [ngModel]="vehiculo.empresaSatelital"
-                      [data]="dataSatelital" [searchKeyword]="keyword" placeholder=""
-                      (focusout)="onBlurSatelital($event)" (selected)='selectSatelital($event)'
-                      (inputChanged)='onChangeSatelital($event)' (inputFocused)='onFocusedSatelital($event)'
-                      [itemTemplate]="itemTemplate" [notFoundTemplate]="notFoundTemplate">
+                    <ng-autocomplete
+                      formControlName="empresaSatelital"
+                      [ngModel]="vehiculo.empresaSatelital"
+                      [data]="dataSatelital"
+                      [searchKeyword]="keyword"
+                      placeholder=""
+                      (focusout)="onBlurSatelital($event)"
+                      (selected)='selectSatelital($event)'
+                      (inputChanged)='onChangeSatelital($event)'
+                      (inputFocused)='onFocusedSatelital($event)'
+                      [itemTemplate]="itemTemplate"
+                      [notFoundTemplate]="notFoundTemplate"
+                    >
                     </ng-autocomplete>
                   </div>
-
                 </ion-col>
               </ion-row>
-
 
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Usuario Gps</label>
-                  <input type="text" [ngModel]="vehiculo.usuarioSatelital" formControlName="usuarioSatelital"
-                    class="input-registro">
+                  <input type="text" [ngModel]="vehiculo.usuarioSatelital" formControlName="usuarioSatelital" class="input-registro">
                 </ion-col>
               </ion-row>
 
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Clave Gps</label>
-                  <input type="text" [ngModel]="vehiculo.claveSatelital" formControlName="claveSatelital"
-                    class="input-registro">
+                  <input type="text" [ngModel]="vehiculo.claveSatelital" formControlName="claveSatelital" class="input-registro">
                 </ion-col>
               </ion-row>
-
 
               <ng-template #itemTemplate let-item>
                 <a [innerHTML]="item.name"></a>
@@ -354,39 +458,36 @@
                 <div [innerHTML]="notFound"></div>
               </ng-template>
 
-
               <div *ngIf="checkVehicle" class="mt-5 p-2 d-flex justify-content-center">
-                <ion-text color="primary"
-                  (click)="openDocumentController(vehiculo.placa, 'vehiculo', vehiculo.articulado, documents_vehiculo)">
-                  <h3> Verficar Fotos </h3>
+                <ion-text color="primary" (click)="openDocumentController(vehiculo.placa, 'vehiculo', vehiculo.articulado, documents_vehiculo)">
+                  <h3 class="cursor-pointer font-bold">Verificar Fotos</h3>
                 </ion-text>
               </div>
 
               <div class="mt-1 p-2 d-flex justify-content-center">
-                <button class="btn btn-primary btn-submit" type="submit">
-                  Guardar
+                <button class="btn-registro-submit" type="submit">
+                  Guardar Vehículo
                 </button>
               </div>
 
-              <!-- </ion-row> -->
             </ion-grid>
           </ion-list>
-
         </form>
-
 
       </ion-content>
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 2: DATOS CONDUCTOR
+       =================================================================== -->
   <ion-modal #modal2 [isOpen]="isModalOpen2">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Datos Conductor</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Datos Conductor</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="onSubmitNewDriver()">Guardar</ion-button>
+            <ion-button (click)="onSubmitNewDriver()" class="btn-modal-save">Guardar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -394,10 +495,7 @@
 
         <ion-list class="p-2" [inset]="true">
           <form [formGroup]="formNewDriver" (ngSubmit)="onSubmitNewDriver()" method="post">
-
             <ion-grid>
-
-
 
               <ion-col>
                 <div class="col-md-12 d-flex mt-4 mb-4 justify-content-center text-center title-form">
@@ -421,12 +519,10 @@
                 </ion-col>
               </ion-row>
 
-
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="conductor.correo" formControlName="correo" class="input-registro">
-
                 </ion-col>
               </ion-row>
 
@@ -437,7 +533,6 @@
                 </ion-col>
               </ion-row>
 
-
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Direccion</label>
@@ -447,7 +542,7 @@
 
               <ion-row class="mb-4">
                 <ion-col>
-                  <label for="">Fecha nacimeinto</label>
+                  <label for="">Fecha nacimiento</label>
                   <input type="date" (input)="validateBirthDate($event)" [ngModel]="conductor.fechaNacimiento"
                     id="fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
@@ -464,42 +559,36 @@
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Nombre contacto</label>
-                  <input type="text" [ngModel]="conductor.nombreContacto" formControlName="nombreContacto"
-                    class="input-registro">
+                  <input type="text" [ngModel]="conductor.nombreContacto" formControlName="nombreContacto" class="input-registro">
                 </ion-col>
               </ion-row>
+
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Celular contacto</label>
-                  <input type="number" [ngModel]="conductor.celularContacto" formControlName="celularContacto"
-                    class="input-registro">
+                  <input type="number" [ngModel]="conductor.celularContacto" formControlName="celularContacto" class="input-registro">
                 </ion-col>
               </ion-row>
 
               <ion-row>
                 <ion-col>
                   <label for="">Parentesco</label>
-                  <ion-select (ionChange)='onChangeParente($event)' [ngModel]="conductor.parentesco"
-                    formControlName="parentesco" class="input-registro" interface="action-sheet" label="Fixed label"
+                  <ion-select
+                    (ionChange)='onChangeParente($event)'
+                    [ngModel]="conductor.parentesco"
+                    formControlName="parentesco"
+                    class="input-registro"
+                    interface="action-sheet"
+                    label="Fixed label"
                     label-placement="fixed"
-                    [placeholder]="conductor.parentesco ? conductor.parentesco : 'Seleccionar parentesco'">
+                    [placeholder]="conductor.parentesco ? conductor.parentesco : 'Seleccionar parentesco'"
+                  >
                     <ion-select-option *ngFor="let a of dataParentes" [value]="a.id">
                       {{a.name}}
                     </ion-select-option>
                   </ion-select>
-
                 </ion-col>
               </ion-row>
-
-
-              <!-- <ng-template #itemTemplate let-item>
-                <a [innerHTML]="item.name"></a>
-              </ng-template>
-
-              <ng-template #notFoundTemplate let-notFound>
-                <div [innerHTML]="notFound"></div>
-              </ng-template> -->
-
 
               <div formGroupName="terms">
                 <ion-list>
@@ -510,55 +599,44 @@
                         <ion-label>Sí</ion-label>
                         <ion-radio slot="end" value="true"></ion-radio>
                       </ion-item>
-
                       <ion-item lines="none">
                         <ion-label>No</ion-label>
                         <ion-radio slot="end" value="false"></ion-radio>
                       </ion-item>
-
                     </ion-radio-group>
                   </ion-item>
                 </ion-list>
               </div>
 
-
-
-
               <div *ngIf="checkTercero" class="mt-5 p-2 d-flex justify-content-center">
-                <ion-text color="primary"
-                  (click)="openDocumentController(conductor.cedula, 'conductor', true, documents_conductor)">
-                  <h3> Verficar Fotos </h3>
+                <ion-text color="primary" (click)="openDocumentController(conductor.cedula, 'conductor', true, documents_conductor)">
+                  <h3 class="cursor-pointer font-bold">Verificar Fotos</h3>
                 </ion-text>
               </div>
 
-
               <div class="mt-1 p-2 d-flex justify-content-center">
-                <button class="btn btn-primary btn-submit" type="submit">
-                  Guardar
+                <button class="btn-registro-submit" type="submit">
+                  Guardar Conductor
                 </button>
               </div>
 
-
-
-
-
             </ion-grid>
-
-
           </form>
         </ion-list>
       </ion-content>
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 3: DATOS PROPIETARIO
+       =================================================================== -->
   <ion-modal #modal3 [isOpen]="isModalOpen3">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Datos Propietario</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Datos Propietario</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="setOpenPro(false)">Cerrar</ion-button>
+            <ion-button (click)="setOpenPro(false)" class="btn-modal-save">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -580,17 +658,13 @@
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="propietario.nombres" formControlName="nombres" class="input-registro">
-
                 </ion-col>
               </ion-row>
-
 
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Apellidos</label>
-                  <input type="text" [ngModel]="propietario.apellidos" formControlName="apellidos"
-                    class="input-registro">
-
+                  <input type="text" [ngModel]="propietario.apellidos" formControlName="apellidos" class="input-registro">
                 </ion-col>
               </ion-row>
 
@@ -598,7 +672,6 @@
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="propietario.correo" formControlName="correo" class="input-registro">
-
                 </ion-col>
               </ion-row>
 
@@ -612,104 +685,98 @@
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Direccion</label>
-                  <input type="text" [ngModel]="propietario.direccion" formControlName="direccion"
-                    class="input-registro">
+                  <input type="text" [ngModel]="propietario.direccion" formControlName="direccion" class="input-registro">
                 </ion-col>
               </ion-row>
 
               <ion-row class="mb-4">
                 <ion-col>
-                  <label for="">Fecha nacimeinto</label>
-                  <input type="date" [ngModel]="propietario.fechaNacimiento" formControlName="fechaNacimiento"
-                    class="input-registro">
+                  <label for="">Fecha nacimiento</label>
+                  <input type="date" [ngModel]="propietario.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
               </ion-row>
 
               <ion-item>
                 <ion-label text-wrap>¿Pertenece usted a gremios o asociaciones reconocidas?</ion-label>
-                <ion-checkbox formControlName="gre_rec_pub" [ngModel]="propietario.gre_rec_pub"
-                  slot="end"></ion-checkbox>
+                <ion-checkbox formControlName="gre_rec_pub" [ngModel]="propietario.gre_rec_pub" slot="end"></ion-checkbox>
               </ion-item>
 
-              <ion-accordion-group>
-                <ion-accordion value="first3">
-                  <ion-item slot="header" color="light">
-                    <ion-label>Cedula de Ciudadania</ion-label>
-                  </ion-item>
-                  <div class="ion-padding" slot="content">
+              <div class="registro-docs-accordion">
+                <div class="docs-accordion-header">
+                  <ion-icon name="card-outline" class="mr-2"></ion-icon>
+                  <span>Cédula de Ciudadanía Propietario</span>
+                </div>
 
-
-                    <ion-row>
-                      <ion-col>
-
-                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-                          <strong>
-                            <h1>Cedula Cara Frontal</h1>
-                          </strong>
-                        </div>
-                        <ion-item>
-                          <div (click)="addToCamera('cedula_pro1', true)" class="container-upload mb-3">
-                            <ion-img *ngIf="hubImag.cedula_pro1.webviewPath"
-                              [src]="hubImag.cedula_pro1.webviewPath"></ion-img>
-                            <div *ngIf="!hubImag.cedula_pro1.webviewPath" class="camera"></div>
-                          </div>
-                        </ion-item>
-
-                      </ion-col>
-                    </ion-row>
-
-
-                    <ion-row>
-                      <ion-col>
-
-                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-                          <strong>
-                            <h1>Cedula Cara Posterior</h1>
-                          </strong>
-                        </div>
-                        <ion-item>
-                          <div (click)="addToCamera('cedula_pro2', true)" class="container-upload mb-3">
-                            <ion-img *ngIf="hubImag.cedula_pro2.webviewPath"
-                              [src]="hubImag.cedula_pro2.webviewPath"></ion-img>
-                            <div *ngIf="!hubImag.cedula_pro2.webviewPath" class="camera"></div>
-                          </div>
-                        </ion-item>
-
-                      </ion-col>
-                    </ion-row>
-
-
-
-
+                <!-- Cara Frontal -->
+                <div class="card-doc-registro" (click)="addToCamera('cedula_pro1', true)">
+                  <div class="doc-left-wrap">
+                    <div class="doc-icon-box" [class.doc-icon-done]="hubImag.cedula_pro1.webviewPath">
+                      <ion-icon [name]="hubImag.cedula_pro1.webviewPath ? 'checkmark-circle' : 'camera-outline'"></ion-icon>
+                    </div>
+                    <div class="doc-info-body">
+                      <b class="doc-title">Cédula Cara Frontal</b>
+                      <span class="doc-sub">Frente legible y sin reflejos</span>
+                    </div>
                   </div>
-                </ion-accordion>
+                  <div class="doc-action-zone">
+                    <div *ngIf="hubImag.cedula_pro1.webviewPath" class="doc-preview-thumb-wrap">
+                      <img [src]="hubImag.cedula_pro1.webviewPath" alt="Frontal" class="doc-preview-thumb" />
+                      <span class="doc-badge-pill-done">Cambiar</span>
+                    </div>
+                    <button *ngIf="!hubImag.cedula_pro1.webviewPath" type="button" class="btn-doc-action">
+                      <ion-icon name="camera-outline"></ion-icon>
+                      <span>Tomar Foto</span>
+                    </button>
+                  </div>
+                </div>
 
-              </ion-accordion-group>
-
+                <!-- Cara Posterior -->
+                <div class="card-doc-registro" (click)="addToCamera('cedula_pro2', true)">
+                  <div class="doc-left-wrap">
+                    <div class="doc-icon-box" [class.doc-icon-done]="hubImag.cedula_pro2.webviewPath">
+                      <ion-icon [name]="hubImag.cedula_pro2.webviewPath ? 'checkmark-circle' : 'camera-outline'"></ion-icon>
+                    </div>
+                    <div class="doc-info-body">
+                      <b class="doc-title">Cédula Cara Posterior</b>
+                      <span class="doc-sub">Reverso con código de barras</span>
+                    </div>
+                  </div>
+                  <div class="doc-action-zone">
+                    <div *ngIf="hubImag.cedula_pro2.webviewPath" class="doc-preview-thumb-wrap">
+                      <img [src]="hubImag.cedula_pro2.webviewPath" alt="Posterior" class="doc-preview-thumb" />
+                      <span class="doc-badge-pill-done">Cambiar</span>
+                    </div>
+                    <button *ngIf="!hubImag.cedula_pro2.webviewPath" type="button" class="btn-doc-action">
+                      <ion-icon name="camera-outline"></ion-icon>
+                      <span>Tomar Foto</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div class="mt-1 p-2 d-flex justify-content-center">
-                <button class="btn btn-primary btn-submit" type="submit">
-                  Guardar
+                <button class="btn-registro-submit" type="submit">
+                  Guardar Propietario
                 </button>
               </div>
 
             </ion-grid>
           </form>
         </ion-list>
-
       </ion-content>
-
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 4: DATOS TENEDOR
+       =================================================================== -->
   <ion-modal #modal4 [isOpen]="isModalOpen4">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Datos Tenedor</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Datos Tenedor</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="setOpenTen(false)">Cerrar</ion-button>
+            <ion-button (click)="setOpenTen(false)" class="btn-modal-save">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -727,21 +794,17 @@
                 </div>
               </ion-col>
 
-
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Nombres</label>
                   <input type="text" [ngModel]="tenedor.nombres" formControlName="nombres" class="input-registro">
-
                 </ion-col>
               </ion-row>
-
 
               <ion-row class="mb-4">
                 <ion-col>
                   <label for="">Apellidos</label>
                   <input type="text" [ngModel]="tenedor.apellidos" formControlName="apellidos" class="input-registro">
-
                 </ion-col>
               </ion-row>
 
@@ -749,7 +812,6 @@
                 <ion-col>
                   <label for="">Correo</label>
                   <input type="text" [ngModel]="tenedor.correo" formControlName="correo" class="input-registro">
-
                 </ion-col>
               </ion-row>
 
@@ -769,9 +831,8 @@
 
               <ion-row class="mb-4">
                 <ion-col>
-                  <label for="">Fecha nacimeinto</label>
-                  <input type="date" [ngModel]="tenedor.fechaNacimiento" formControlName="fechaNacimiento"
-                    class="input-registro">
+                  <label for="">Fecha nacimiento</label>
+                  <input type="date" [ngModel]="tenedor.fechaNacimiento" formControlName="fechaNacimiento" class="input-registro">
                 </ion-col>
               </ion-row>
 
@@ -780,83 +841,82 @@
                 <ion-checkbox formControlName="gre_rec_pub" [ngModel]="tenedor.gre_rec_pub" slot="end"></ion-checkbox>
               </ion-item>
 
+              <div class="registro-docs-accordion">
+                <div class="docs-accordion-header">
+                  <ion-icon name="card-outline" class="mr-2"></ion-icon>
+                  <span>Cédula de Ciudadanía Tenedor</span>
+                </div>
 
-              <ion-accordion-group>
-                <ion-accordion value="first4">
-                  <ion-item slot="header" color="light">
-                    <ion-label>Cedula de Ciudadania</ion-label>
-                  </ion-item>
-                  <div class="ion-padding" slot="content">
-
-
-                    <ion-row>
-                      <ion-col>
-
-                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-                          <strong>
-                            <h1>Cedula Cara Frontal</h1>
-                          </strong>
-                        </div>
-                        <ion-item>
-                          <div (click)="addToCamera('cedula_ten1', true)" class="container-upload mb-3">
-                            <ion-img *ngIf="hubImag.cedula_ten1.webviewPath"
-                              [src]="hubImag.cedula_ten1.webviewPath"></ion-img>
-                            <div *ngIf="!hubImag.cedula_ten1.webviewPath" class="camera"></div>
-                          </div>
-                        </ion-item>
-
-                      </ion-col>
-                    </ion-row>
-
-
-                    <ion-row>
-                      <ion-col>
-
-                        <div class="col-md-12 d-flex mt-4 mb-1 justify-content-center text-center title-form">
-                          <strong>
-                            <h1>Cedula Cara Posterior</h1>
-                          </strong>
-                        </div>
-                        <ion-item>
-                          <div (click)="addToCamera('cedula_ten2', true)" class="container-upload mb-3">
-                            <ion-img *ngIf="hubImag.cedula_ten2.webviewPath"
-                              [src]="hubImag.cedula_ten2.webviewPath"></ion-img>
-                            <div *ngIf="!hubImag.cedula_ten2.webviewPath" class="camera"></div>
-                          </div>
-                        </ion-item>
-
-                      </ion-col>
-                    </ion-row>
-
-
-
+                <!-- Cara Frontal -->
+                <div class="card-doc-registro" (click)="addToCamera('cedula_ten1', true)">
+                  <div class="doc-left-wrap">
+                    <div class="doc-icon-box" [class.doc-icon-done]="hubImag.cedula_ten1.webviewPath">
+                      <ion-icon [name]="hubImag.cedula_ten1.webviewPath ? 'checkmark-circle' : 'camera-outline'"></ion-icon>
+                    </div>
+                    <div class="doc-info-body">
+                      <b class="doc-title">Cédula Cara Frontal</b>
+                      <span class="doc-sub">Frente legible y sin reflejos</span>
+                    </div>
                   </div>
-                </ion-accordion>
-              </ion-accordion-group>
+                  <div class="doc-action-zone">
+                    <div *ngIf="hubImag.cedula_ten1.webviewPath" class="doc-preview-thumb-wrap">
+                      <img [src]="hubImag.cedula_ten1.webviewPath" alt="Frontal" class="doc-preview-thumb" />
+                      <span class="doc-badge-pill-done">Cambiar</span>
+                    </div>
+                    <button *ngIf="!hubImag.cedula_ten1.webviewPath" type="button" class="btn-doc-action">
+                      <ion-icon name="camera-outline"></ion-icon>
+                      <span>Tomar Foto</span>
+                    </button>
+                  </div>
+                </div>
 
+                <!-- Cara Posterior -->
+                <div class="card-doc-registro" (click)="addToCamera('cedula_ten2', true)">
+                  <div class="doc-left-wrap">
+                    <div class="doc-icon-box" [class.doc-icon-done]="hubImag.cedula_ten2.webviewPath">
+                      <ion-icon [name]="hubImag.cedula_ten2.webviewPath ? 'checkmark-circle' : 'camera-outline'"></ion-icon>
+                    </div>
+                    <div class="doc-info-body">
+                      <b class="doc-title">Cédula Cara Posterior</b>
+                      <span class="doc-sub">Reverso con código de barras</span>
+                    </div>
+                  </div>
+                  <div class="doc-action-zone">
+                    <div *ngIf="hubImag.cedula_ten2.webviewPath" class="doc-preview-thumb-wrap">
+                      <img [src]="hubImag.cedula_ten2.webviewPath" alt="Posterior" class="doc-preview-thumb" />
+                      <span class="doc-badge-pill-done">Cambiar</span>
+                    </div>
+                    <button *ngIf="!hubImag.cedula_ten2.webviewPath" type="button" class="btn-doc-action">
+                      <ion-icon name="camera-outline"></ion-icon>
+                      <span>Tomar Foto</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div class="mt-1 p-2">
-                <button class="btn btn-primary btn-submit" type="submit">
-                  Guardar
+                <button class="btn-registro-submit" type="submit">
+                  Guardar Tenedor
                 </button>
               </div>
 
             </ion-grid>
           </form>
         </ion-list>
-
       </ion-content>
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 5: POLÍTICA DE PRIVACIDAD / TRATAMIENTO DE DATOS
+       =================================================================== -->
   <ion-modal [isOpen]="isModalOpen5">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Terminos y condiciones</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Términos y Condiciones</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="setOpenTermsData(false)">Cerrar</ion-button>
+            <ion-button (click)="setOpenTermsData(false)" class="btn-modal-save">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -865,52 +925,55 @@
         <ion-grid class="ion-text-center">
           <ion-row>
             <ion-col>
-              <img class="mb-4" src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png" alt=""
-                height="150" />
+              <div class="d-flex justify-content-center mt-3">
+                <div class="aldia-header-pattern px-4 py-2 rounded-16 shadow-sm d-flex align-items-center justify-content-center">
+                  <img src="assets/icon/logo-aldia-white.png" alt="Aldia Logística" height="38" style="height: 38px; object-fit: contain;" />
+                </div>
+              </div>
             </ion-col>
           </ion-row>
-          <ion-row class="term-contain">
+          <ion-row class="mt-2">
             <ion-col>
-              <h2>Viaja con aldia requiere autorizacion de su Politica de privacidad</h2>
+              <h2 class="font-bold text-dark text-18">Autorización Tratamiento de Datos Personales</h2>
             </ion-col>
           </ion-row>
-          <ion-row class="term-contain mt-3">
+          <ion-row class="mt-1">
             <ion-col>
-              <span>La aceptacion de los terminos incluye los siguientes puntos.</span>
+              <span class="text-muted text-13">La aceptación de términos es requerida para operar en la plataforma.</span>
             </ion-col>
           </ion-row>
-          <ion-row id="term-scroll" class="term-contain ion-text-justify scroll mt-3">
+          <ion-row class="mt-2">
             <ion-col>
-              <p>
-                AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES.
-                (GRUPO TRIANGULO S.A.S y sus empresas filiales) ALDIA LOGISTICA., en adelante SERCARGA SAS, AGIL CARGO
-                S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, comunica a sus grupos de interés la Política de
-                Tratamiento de Datos Personales y que los datos consignados, serán incorporados adoptando el
-                cumplimiento del régimen legal vigente contenido en la Ley Estatutaria 1581 de 2012, 1266 de 2008 y
-                Decreto 1377 de 2013 en lo pertinente atendiendo a las finalidades especialmente para: 1.Registro del
-                vehículo y conductores. 2. Registro propietario, tenedor 2. Realizar el proceso de enturnamiento de los
-                vehículos 3. Capitaciones y actividades de promoción y prevención.
-                Los datos personales en custodia de SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S
-                y SERVIN, en su condición de responsables y/o encargado según el caso, serán tratados cumpliendo los
-                principios y regulaciones previstas en las leyes colombianas y las buenas prácticas aplicables al
-                régimen de protección de datos personales. Para el ejercicio del Habeas Data, el titular del dato
-                personal o quien demuestre un legítimo interés, conforme a lo señalado en la normatividad vigente, podrá
-                hacerlo a través del siguiente correo electrónico: protecciondedatos@aldialogistica.com, o dirigiendo
-                una comunicación a la siguiente dirección física: Calle 17ª No. 69 46 en la ciudad de Bogotá D.C., Quien
-                ejerza el habeas data deberá suministrar con precisión los datos de contacto solicitados, para efecto de
-                tramitar, atender y responder su solicitud. Recibida la solicitud de ejercicio de Habeas Data, SERCARGA
-                SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, dará respuesta en los términos de
-                ley.
-              </p>
+              <div id="term-scroll" class="terms-scroll-card">
+                <p>
+                  AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES.
+                  (GRUPO TRIANGULO S.A.S y sus empresas filiales) ALDIA LOGISTICA., en adelante SERCARGA SAS, AGIL CARGO
+                  S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, comunica a sus grupos de interés la Política de
+                  Tratamiento de Datos Personales y que los datos consignados, serán incorporados adoptando el
+                  cumplimiento del régimen legal vigente contenido en la Ley Estatutaria 1581 de 2012, 1266 de 2008 y
+                  Decreto 1377 de 2013 en lo pertinente atendiendo a las finalidades especialmente para: 1.Registro del
+                  vehículo y conductores. 2. Registro propietario, tenedor 2. Realizar el proceso de enturnamiento de los
+                  vehículos 3. Capitaciones y actividades de promoción y prevención.
+                  Los datos personales en custodia de SERCARGA SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S
+                  y SERVIN, en su condición de responsables y/o encargado según el caso, serán tratados cumpliendo los
+                  principios y regulaciones previstas en las leyes colombianas y las buenas prácticas aplicables al
+                  régimen de protección de datos personales. Para el ejercicio del Habeas Data, el titular del dato
+                  personal o quien demuestre un legítimo interés, conforme a lo señalado en la normatividad vigente, podrá
+                  hacerlo a través del siguiente correo electrónico: protecciondedatos&#64;aldialogistica.com, o dirigiendo
+                  una comunicación a la siguiente dirección física: Calle 17ª No. 69 46 en la ciudad de Bogotá D.C., Quien
+                  ejerza el habeas data deberá suministrar con precisión los datos de contacto solicitados, para efecto de
+                  tramitar, atender y responder su solicitud. Recibida la solicitud de ejercicio de Habeas Data, SERCARGA
+                  SAS, AGIL CARGO S.A.S, TRAVESA S.A.S, GRUPO TRIANGULO S.A.S y SERVIN, dará respuesta en los términos de
+                  ley.
+                </p>
+              </div>
             </ion-col>
           </ion-row>
           <ion-row>
-            <ion-col class="mt-4">
-
-              <button class="btn btn-success success-btn" type="submit" (click)="acept()">
-                Aceptar
+            <ion-col class="mt-3">
+              <button class="btn-terms-accept" type="submit" (click)="acept()">
+                Aceptar y Continuar
               </button>
-
             </ion-col>
           </ion-row>
         </ion-grid>
@@ -919,14 +982,16 @@
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 6: CONDICIONES GENERALES / SAGRILAFT / SGI
+       =================================================================== -->
   <ion-modal [isOpen]="isModalOpen6">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-          <ion-title class="ml-2">Terminos y condiciones</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Condiciones Generales</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="setOpenTerms(false)">Cerrar</ion-button>
+            <ion-button (click)="setOpenTerms(false)" class="btn-modal-save">Cerrar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -935,214 +1000,129 @@
         <ion-grid class="ion-text-center">
           <ion-row>
             <ion-col>
-              <img class="mb-4" src="https://aldialogistica.com/wp-content/uploads/2023/01/logo_aldia3.png" alt=""
-                height="150" />
+              <div class="d-flex justify-content-center mt-3">
+                <div class="aldia-header-pattern px-4 py-2 rounded-16 shadow-sm d-flex align-items-center justify-content-center">
+                  <img src="assets/icon/logo-aldia-white.png" alt="Aldia Logística" height="38" style="height: 38px; object-fit: contain;" />
+                </div>
+              </div>
             </ion-col>
           </ion-row>
-          <ion-row class="term-contain">
+          <ion-row class="mt-2">
             <ion-col>
-              <h2>Viaja con aldia requiere aceptgacion de condiciones generales</h2>
+              <h2 class="font-bold text-dark text-18">Aceptación de Condiciones Generales y Ética</h2>
             </ion-col>
           </ion-row>
-          <ion-row class="term-contain mt-3">
+          <ion-row class="mt-1">
             <ion-col>
-              <span>La aceptacion de los terminos incluye los siguientes puntos.</span>
+              <span class="text-muted text-13">Cumplimiento del SGI, SAGRILAFT y Seguridad Vial.</span>
             </ion-col>
           </ion-row>
-          <ion-row class="term-contain ion-text-justify scroll mt-3">
+          <ion-row class="mt-2">
             <ion-col id="dataTerms">
-              <h5> 1. DECLARACIÓN SOBRE ORIGEN DE FONDOS/ SISTEMA INTEGRAL PARA LA PREVENCION DEL LAVADO DE ACTIVOS Y LA
-                FINANCIACION DEL TERRORISMO Y PROLIFERACION DE ARMAS DE DESTRUCCION MASIVA </h5>
-              <p>Conozco, entiendo y acepto de manera voluntaria e inequívoca el cumplimiento de la regulación vigente y
-                de acuerdo a lo establecido en la circular 0170 de 2002 de la Dirección de Impuestos y Aduanas
-                Nacionales (DIAN), Resolución 74854/2016, Decreto 1165 /2019 y demás normas que lo modifiquen o
-                adicionen, bajo gravedad de juramento que los recursos que entrego, no provienen de ninguna actividad
-                ilícita de las contempladas en el código penal colombiano y no admitiré que terceros efectúen depósitos
-                a mis productos con recursos provenientes de actividades ilícitas ni efectuare transacciones destinadas
-                a tales actividades ni a favor de personas relacionadas con las mismas, declaro expresamente lo
-                siguiente:</p>
-              <p>1.La información suministrada en el presente documento es veraz y verificable y la persona natural o
-                jurídica se compromete a actualizarla anualmente. <br> 2. Los recursos que se deriven de la actividad,
-                profesión u oficio de la persona natural o jurídica, no se destinarán a la financiación del terrorismo,
-                grupos terroristas o actividades terroristas y a la proliferación de armas de destrucción masiva. <br>
-                3. Los recursos que posee la persona natural o jurídica provienen de su actividad, profesión u oficio
-                y/o objeto social. <br> 4.Todos los pagos que realizo (realizamos) son directos, con recursos propios,
-                no a través de terceros, ni con recursos de terceros. <br> 5. De manera irrevocable autorizo
-                (autorizamos) a la compañía para solicitar, consultar, procesar, suministrar, reportar o divulgar a
-                cualquier entidad válidamente autorizada para manejar o administrar bases de datos, incluidas las
-                entidades gubernamentales, información contenida en este formulario y demás. </p>
-              <h5>2. AUTORIZACION DE CONSULTA Y REPORTE ACENTRALES DE RIESGO</h5>
-              <p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes,
-                durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta
-                confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar,
-                trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona
-                jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá
-                mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no
-                autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información
-                confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible
-                o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la
-                requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio,
-                debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el
-                incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y
-                solicitar la indemnización de perjuicios correspondiente.</p>
-              <h5>3. CONFIDENCIALIDAD</h5>
-              <p>Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes,
-                durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta
-                confidencialidad. Por lo tanto las partes se obligan a no revelar, divulgar, exhibir, mostrar,
-                trasmitir, modificar, ceder, copiar y/o comunicar la Información que reciba de la otra parte, a persona
-                jurídica o natural alguna, ni a utilizarla en su favor o en el de terceros, y en consecuencia deberá
-                mantenerla de manera confidencial y privada y a proteger dicha información para evitar su divulgación no
-                autorizada, ejerciendo sobre ésta el mismo grado de diligencia que utiliza para proteger información
-                confidencial de su propiedad. La información podrá estar contenida en cualquier medio o forma, tangible
-                o intangible. La parte receptora correspondiente solo podrá revelar la información al personal que la
-                requiera para el cumplimiento de las actividades propias del negocio y para la prestación del servicio,
-                debiendo garantizar la debida reserva y confidencialidad. En caso de verificarse y demostrarse el
-                incumplimiento de este pacto, la parte afectada podrá iniciar las acciones legales a que haya lugar y
-                solicitar la indemnización de perjuicios correspondiente.</p>
-              <h5>4. DECLARACION CONOCIMIENTO DEL PROGRMA DE ETICA Y TRASNPARENCIA EMPRESARIAL</h5>
-              <p>Como asociado de negocios declaro conocer el Programa de ética y transparencia empresarial el cual se
-                encuentra publicado en la página web. www.aldialogistiica.com el cual tiene como premisas y objetivos:
-                <br> 1. Cumplir las reglas de la compañía y procedimientos <br> 2. Cumplir la legislación aplicable a la
-                organización <br> 3. Nunca ofrecer o tomar un soborno <br> 4. Evitar cualquier conflicto de interés <br>
-                5. Mostrar respeto por los demás. <br> 6. Evitar todo hecho, tentativa u omisión deliberada para obtener
-                un beneficio para sí o para terceros en detrimento de los principios organizacionales. <br> 7. Cumplir
-                con las normas de salud, la seguridad y el medio ambiente.
-              </p>
-              <h5>5. ACEPTACIÓN ROLES Y RESPONSABILIDADES SGI / MANIFESTACION SUSCRITA</h5>
-              <p>- Suministrar los documentos necesarios dentro del proceso de registro para ser avalado como conductor
-                tercero. <br> - Informar al área de registro de vehículos y tráfico el usuario y clave de su GPS
-                (satelital) y activar el botón de pánico no solo en casos de emergencia sino cuando sea detenido por un
-                retén policial o del ejército. <br> - Cumplir las recomendaciones dadas por las áreas de gestión
-                integral y trafico respetando las normas de seguridad establecidas por la organización. <br> - Salir a
-                ruta en la fecha y hora informada. Se PROHIBE llevar acompañantes dentro de los vehículos. <br> - Velar
-                por el cuidado y seguridad de la mercancía transportada e informar al área de tráfico cualquier novedad
-                como (faltantes, sobrantes, averías, entre otros). <br> - No debe lavar, ni realizar arreglos al
-                vehículo durante el tránsito, ni hacer diligencias personales o realizar detenciones o desvíos de ruta
-                no autorizados. Pernoctar únicamente en los lugares autorizados. <br> - El asociado de negocio debe
-                verificar que su vehículo sea precintado por el cliente o la empresa transportadora, los números de los
-                precintos y/o sellos deben coincidir con los relacionados en los documentos. Durante el transito debe
-                revisar que los precintos o sellos no sean vulnerados para que la mercancía no sea afectada, en caso de
-                observar alguna novedad debe informar al área de tráfico. Si por alguna razón las autoridades de
-                carretera le rompen o cambian el precinto o sello, solicite que le pongan la nota en la REMESA TERRESTRE
-                DE CARGA e informe al área de tráfico. <br> - Entregar la mercancía únicamente en la dirección
-                relacionada en la remesa, elaborada por el auxiliar de operaciones. Debe reportar e informar al área de
-                tráfico Bogotá la entrega de la mercancía al cliente y cualquier novedad (faltantes, averías, sobrantes
-                etc.) que se presente en la entrega. <br> - Para retirar un contenedor del patio, presentar la orden de
-                cargue expedida por el auxiliar de operaciones (Si aplica). <br> - Conocer los riesgos de Seguridad y
-                Salud en el Trabajo y los viales de acuerdo al rol de actor vial que aplique en sus actividades <br> -
-                Cumplir con la legislación de tránsito y transporte, así como de los lineamientos de seguridad vial
-                internos de la organización. <br> - Dar cumplimiento a las instrucciones y normas para el transporte de
-                mercancías peligrosas, portar siempre el kit para atención de emergencias, identificar el vehículo con
-                rótulos y la placa UN (Naciones Unidas), exigir y portar la Tarjeta de Emergencias y Hojas de Seguridad.
-                (Si aplica). <br> - Disponer los residuos generados en las canecas destinadas para ello. <br> -
-                Garantizar el buen estado del vehículo asignado, reportando oportunamente al área de mantenimiento
-                cualquier tipo de daño o mejora que requiera el equipo automotor. <br> - Hacer el Preoperacional para
-                garantizar su seguridad, la de todos los usuarios de la vía y el buen estado del vehículo asignado. <br>
-                - Hacer un buen uso de los equipos y herramientas entregadas por la empresa (Herramienta, extintor,
-                botiquín, si transporta mercancías peligrosas el Kit para atención de emergencias) Cuando aplique. <br>
-                - Informar oportunamente a la empresa acerca de los peligros y riesgos latentes en su sitio de trabajo.
-                <br> - La mercancía debe ser entregada únicamente en la dirección relacionada en la remesa, elaborada
-                por el auxiliar de operaciones. <br> - Mantener en buenas condiciones de Orden y Aseo el vehículo
-                asignado. <br> - Mantener hábitos de vida saludables, consumir frutas y verduras, realizar actividad
-                física. <br> - No aceptar o cargar mercancía adicional durante el tránsito en la vía o sitios no
-                autorizados o programados <br> - No ingerir alcohol y sustancias psicoactivas que afecten el desempeño
-                de sus funciones. <br> - No lavar, ni realizar arreglos al vehículo durante el tránsito, ni hacer
-                diligencias personales o realizar detenciones.
-                <br> - No participar en el proceso de cargue y descargue de mercancías peligrosas salvo si está
-                capacitado y autorizado. <br> - Notificar cualquier novedad durante los desplazamientos laborales en
-                carretera al área de Trafico (siniestros viales, actividades sospechosas, hurto, saqueo, derrame de
-                producto, derrumbe, volcamiento, varada, colisión, inspección de mercancía, desvíos de ruta no
-                autorizados, aprensión de mercancía, inmovilización del vehículo, trancones en la vía, entre otros) <br>
-                - Participar en el cumplimiento de los planes y programas del SGI <br> - Participar en las actividades
-                de prevención y promoción para prevenir los ATEL y los siniestros viales <br> - Portar prendas de
-                dotación y elementos de protección personal según sea el caso.
-              </p>
+              <div class="terms-scroll-card">
+                <h5 class="font-bold text-aldia-primary text-14 mb-2">1. DECLARACIÓN SOBRE ORIGEN DE FONDOS / SAGRILAFT</h5>
+                <p class="mb-3">Conozco, entiendo y acepto de manera voluntaria e inequívoca el cumplimiento de la regulación vigente y
+                  de acuerdo a lo establecido en la circular 0170 de 2002 de la Dirección de Impuestos y Aduanas
+                  Nacionales (DIAN), Resolución 74854/2016, Decreto 1165 /2019 y demás normas que lo modifiquen o
+                  adicionen, bajo gravedad de juramento que los recursos que entrego, no provienen de ninguna actividad
+                  ilícita de las contempladas en el código penal colombiano y no admitiré que terceros efectúen depósitos
+                  a mis productos con recursos provenientes de actividades ilícitas ni efectuare transacciones destinadas
+                  a tales actividades ni a favor de personas relacionadas con las mismas.</p>
+                <h5 class="font-bold text-aldia-primary text-14 mb-2">2. AUTORIZACIÓN CONSULTA Y REPORTE CENTRALES</h5>
+                <p class="mb-3">Las partes acuerdan que cualquier información intercambiada, facilitada o creada entre las partes,
+                  durante el desarrollo de sus negocios y/o los que se llegaren a ejecutar, será mantenida en estricta
+                  confidencialidad.</p>
+                <h5 class="font-bold text-aldia-primary text-14 mb-2">3. CONFIDENCIALIDAD</h5>
+                <p class="mb-3">Se mantendrá estricta confidencialidad sobre rutas, clientes y valores de mercancías transportadas.</p>
+                <h5 class="font-bold text-aldia-primary text-14 mb-2">4. PROGRAMA DE ÉTICA Y TRANSPARENCIA EMPRESARIAL</h5>
+                <p class="mb-3">Como asociado de negocios declaro conocer el Programa de ética y transparencia empresarial publicado en www.aldialogistica.com.</p>
+                <h5 class="font-bold text-aldia-primary text-14 mb-2">5. ROLES Y RESPONSABILIDADES SGI</h5>
+                <p>- Suministrar documentos vigentes. <br>- Cumplir normas de seguridad vial. <br>- Salir a ruta en fecha y hora programada. Se PROHÍBE llevar acompañantes. <br>- Portar kit de emergencias y equipo de carretera completo.</p>
+              </div>
             </ion-col>
           </ion-row>
           <ion-row>
-            <ion-col class="mt-4">
-
-              <button class="btn btn-success success-btn" type="submit" (click)="acept2()">
-                Aceptar
+            <ion-col class="mt-3">
+              <button class="btn-terms-accept" type="submit" (click)="acept2()">
+                Aceptar y Continuar
               </button>
-
             </ion-col>
           </ion-row>
         </ion-grid>
-
-
-
 
       </ion-content>
     </ng-template>
   </ion-modal>
 
-
+  <!-- ===================================================================
+       MODAL 7 (CODE): VERIFICACIÓN DE IDENTIDAD POR SMS
+       =================================================================== -->
   <ion-modal #modalcode [isOpen]="modalCodeOpen">
     <ng-template>
       <ion-header>
-        <ion-toolbar>
-
-
-          <ion-title class="ml-4">Valide su identidad</ion-title>
+        <ion-toolbar class="aldia-modal-toolbar">
+          <ion-title class="aldia-modal-title">Validación de Identidad</ion-title>
           <ion-buttons slot="start">
-            <ion-button color="medium" (click)="setOpenCode(false)">Cancelar</ion-button>
+            <ion-button (click)="setOpenCode(false)" class="btn-modal-save">Cancelar</ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content>
-        <div class="container">
+      <ion-content color="light" class="ion-padding">
+        <div class="registro-main-container">
 
-          <div class="mt-5 d-flex justify-content-center">
-            <img class="mb-2" src="../../assets/img/verification.png" alt="" height="250" />
-          </div>
-          <div class="mt-2">
-            <div class="col-12 title align-center">
-              <h1> Verificacion de identidad </h1>
+          <div class="code-verify-card">
+            <div class="otp-icon-shield mx-auto mb-3">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
             </div>
 
-            <div class="mt-3 mb-5 col-12 align-center">
-              <p>
-                Se enviara un mesnaje de texto al {{ vehiculo.celularPropietariox3 }} ****** {{
-                vehiculo.celularPropietarioLast }}
-              </p>
+            <h2 class="font-bold text-dark text-18 mb-2">Verificación de Seguridad</h2>
 
-            </div>
+            <p class="text-muted text-13 mb-4">
+              Se enviará un mensaje de texto al número registrado: <br>
+              <strong class="text-aldia-primary font-plate">{{ vehiculo.celularPropietariox3 }} ****** {{ vehiculo.celularPropietarioLast }}</strong>
+            </p>
 
-            <div *ngIf="!codeValidation" class="mt-4 col-12 d-flex justify-content-center">
-
-              <button type="submit" (click)="sendCodeValidation()" class="btn btn-primary"> Enviar </button>
-
+            <div *ngIf="!codeValidation" class="mt-4">
+              <button type="button" (click)="sendCodeValidation()" class="btn-registro-submit">
+                Enviar Código SMS
+              </button>
             </div>
 
             <form [formGroup]="formSendCode" (ngSubmit)="approveCode()" method="post">
-
-              <div *ngIf="codeValidation" class="mt-5 col-12 d-flex justify-content-center">
-                <div class="form-group">
-                  <input type="number" formControlName="codigo" class="input-code" placeholder="* * *  * * *"
-                    maxlength="6">
+              <div *ngIf="codeValidation" class="mt-4">
+                <label class="registro-field-label text-center mb-2">Ingresa el código de 6 dígitos</label>
+                <div class="form-group mb-4">
+                  <input
+                    type="number"
+                    formControlName="codigo"
+                    class="input-code"
+                    placeholder="000000"
+                    maxlength="6"
+                  />
                 </div>
-              </div>
 
-              <div *ngIf="codeValidation" class="mt-4 col-12 d-flex justify-content-center">
-                <button type="submit" class="btn btn-primary"> Confirmar </button>
+                <button type="submit" class="btn-registro-submit">
+                  Confirmar e Ingresar
+                </button>
               </div>
-
             </form>
-
           </div>
+
         </div>
       </ion-content>
     </ng-template>
   </ion-modal>
 
-
-
-
 </ion-content>
 
-
-<app-documentos appTipoDocumento="dataTercero" [dataTercero]="dataTercero" *ngIf="openDocs" (save)="saveDocs($event)"
-  (cancel)="cancelDocs()">
-
+<!-- Componente Documentos para Carga de Soportes -->
+<app-documentos
+  appTipoDocumento="dataTercero"
+  [dataTercero]="dataTercero"
+  *ngIf="openDocs"
+  (save)="saveDocs($event)"
+  (cancel)="cancelDocs()"
+>
 </app-documentos>

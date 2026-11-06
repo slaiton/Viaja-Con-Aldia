@@ -1,9 +1,8 @@
 import { NgModule } from '@angular/core';
-import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { NoPreloading, RouterModule, Routes } from '@angular/router';
 import { LoginGuard } from './guard/login.guard';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { VehiculoComponent } from './features/vehiculo/vehiculo.component';
-
 
 const routes: Routes = [
   {
@@ -36,7 +35,8 @@ const routes: Routes = [
   },
   {
     path: 'preform',
-    loadChildren: () => import('./features/preform/preform.module').then( m => m.PreformPageModule)
+    loadChildren: () => import('./features/preform/preform.module').then( m => m.PreformPageModule),
+    canActivate: [LoginGuard]
   },
   {
     path: 'pruebas',
@@ -48,12 +48,11 @@ const routes: Routes = [
     component: VehiculoComponent,
     canActivate: [LoginGuard]
   }
-
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
+    RouterModule.forRoot(routes, { preloadingStrategy: NoPreloading })
   ],
   exports: [RouterModule]
 })

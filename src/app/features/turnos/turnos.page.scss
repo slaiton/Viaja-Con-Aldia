@@ -1,10 +1,15 @@
+$blue: #0083CB;
+$white: #FFFFFF;
+
 ion-toolbar {
-  --background: #3C8CCD;
-  --color: white;
+  --background: #{$blue};
+  --color: #{$white};
 }
 
 ion-title {
   --margin-start: 15px;
+  color: $white;
+  font-weight: 700;
 }
 
 .custom-title {
@@ -13,8 +18,15 @@ ion-title {
 }
 
 ion-menu-button {
-  color: var(white);
+  color: $white;
 }
 
+.content-enturnamiento {
+  --background: #F4F7FA;
+}
 
-
+.enturnamiento-form-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 30px;
+}

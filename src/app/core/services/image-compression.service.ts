@@ -155,9 +155,9 @@ export class ImageCompressionService {
     return 'image/webp';
   }
 
-  /** Garantiza que la cadena sea un DataURL válido (agrega prefijo si es base64 puro). */
+  /** Garantiza que la cadena sea un DataURL válido o Blob URL (agrega prefijo si es base64 puro). */
   private ensureDataUrl(source: string): string {
-    if (source.startsWith('data:')) {
+    if (source.startsWith('data:') || source.startsWith('blob:')) {
       return source;
     }
     // Base64 puro sin prefijo MIME -> asumimos JPEG (lo más común de @capacitor/camera)

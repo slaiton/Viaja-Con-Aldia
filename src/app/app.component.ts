@@ -1,6 +1,6 @@
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { tap, takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
@@ -11,6 +11,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { UserService } from './core/services/user.service';
 import { Platform, ActionSheetController } from '@ionic/angular';
 import { PhotoService } from './core/services/photo.service';
+import { DocumentosFacade } from './features/datos/documentos.facade';
 
 
 
@@ -22,6 +23,8 @@ import { PhotoService } from './core/services/photo.service';
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  public readonly tieneAlertasDocumentos$: Observable<boolean>;
+  public readonly totalAlertasDocumentos$: Observable<number>;
   private componentDestroyed = new Subject();
   usserLogged: any;
 
@@ -50,8 +53,11 @@ export class AppComponent implements OnInit, OnDestroy {
     private photo: PhotoService,
     private ngZone: NgZone,
     private platform: Platform,
-    private actionSheetCtrl: ActionSheetController
+    private actionSheetCtrl: ActionSheetController,
+    private docFacade: DocumentosFacade
   ) {
+    this.tieneAlertasDocumentos$ = this.docFacade.tieneAlertasVencimiento$;
+    this.totalAlertasDocumentos$ = this.docFacade.totalAlertas$;
     defineCustomElements(window);
     this.isMobile = this.platform.is('mobile');
     this.initialize();
@@ -108,6 +114,9 @@ export class AppComponent implements OnInit, OnDestroy {
     console.log(this.router.url);
 
       await this.getData();
+    if (this.statusLogin()) {
+      this.docFacade.verificarAlertasVencimiento().catch(() => {});
+    }
 
     LocalNotifications.addListener('localNotificationActionPerformed', (res) => {
       console.log(res);
@@ -245,6 +254,13 @@ export class AppComponent implements OnInit, OnDestroy {
           icon: 'document-text-outline',
           handler: () => {
             this.router.navigate(['/datos']);
+          }
+        },
+        {
+          text: 'Mis Vehículos',
+          icon: 'car-sport-outline',
+          handler: () => {
+            this.router.navigate(['/vehiculos']);
           }
         },
         {

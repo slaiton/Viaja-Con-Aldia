@@ -2,12 +2,15 @@
 // http://ionicframework.com/docs/theming/
 
 :root {
-  // Tokens Oficiales Mockup v4
+  // Tokens Oficiales Mockup v4 (#0094DA)
+  --aldia-primary: #0094DA;
+  --aldia-dark: #0077B3;
+  --aldia-navy: #0D2A44;
+  --aldia-soft: #E5F4FC;
+  --surface-bg: #F3F6F9;
   --ink-main: #0D2236;
   --ink-muted: #5B6B7B;
   --border-line: #DCE3EA;
-  --surface-bg: #F3F6F9;
-  --aldia-navy: #0D2A44;
   --aldia-blue: #0094DA;
   --aldia-plate-yellow: #FFD100;
 
@@ -16,6 +19,12 @@
   --status-success-bg: #E5F4EA;
   --status-danger: #D3302F;
   --status-danger-bg: #FDE9E8;
+  --state-ok: #1A7F37;
+  --state-ok-bg: #E5F4EA;
+  --state-warn: #9A5B00;
+  --state-warn-bg: #FFF2D6;
+  --state-crit: #D3302F;
+  --state-crit-bg: #FDE9E8;
 
   --ion-font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
   --ion-background-color: var(--surface-bg);

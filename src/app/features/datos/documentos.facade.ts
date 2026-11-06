@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { VehiculoApi } from '@domain/vehiculo.api';
 import { ConductorApi } from '@domain/conductor.api';
 import { UserService } from '@core/services/user.service';
@@ -7,6 +7,7 @@ import { RegistroService } from '@core/services/registro.service';
 import { StorageService } from '@core/services/storage.service';
 import { ImageCompressionService, CompressResult } from '@core/services/image-compression.service';
 import { AldiaDatabase } from '@core/offline/database';
+import { PhotoService } from '@core/services/photo.service';
 
 export type EstadoDocumento = 'VIGENTE' | 'POR_VENCER' | 'VENCIDO';
 
@@ -26,6 +27,8 @@ export interface DocumentoUI {
   estado: EstadoDocumento;
   tagFecha?: string;
   subdocumentos: SubDocumentoItem[];
+  previewUrl?: string | null;
+  tieneFoto?: boolean;
 }
 
 export interface SemaforoConteo {
@@ -38,6 +41,12 @@ export interface SemaforoConteo {
 @Injectable({ providedIn: 'root' })
 export class DocumentosFacade {
 
+  private _tieneAlertas$ = new BehaviorSubject<boolean>(false);
+  public readonly tieneAlertasVencimiento$ = this._tieneAlertas$.asObservable();
+
+  private _totalAlertas$ = new BehaviorSubject<number>(0);
+  public readonly totalAlertas$ = this._totalAlertas$.asObservable();
+
   constructor(
     private vehiculoApi: VehiculoApi,
     private conductorApi: ConductorApi,
@@ -45,6 +54,7 @@ export class DocumentosFacade {
     private reg: RegistroService,
     private storage: StorageService,
     private imageCompressor: ImageCompressionService,
+    private photoService: PhotoService,
     private db: AldiaDatabase
   ) {}
 
@@ -91,10 +101,52 @@ export class DocumentosFacade {
       }
     }
 
+    // Catálogos base de conductor y vehículo
+    const docsConductorBase = this.user.documents_conductor || [];
+    const docsVehiculoBase = this.user.documents_vehiculo || [];
+
+    // Recolectar códigos de fotos para consultar en lote ante la API
+    const tiposConductor: string[] = [];
+    for (const cat of docsConductorBase) {
+      if (cat.hidden) continue;
+      for (const s of (cat.docs || [])) {
+        if (s.codigo) tiposConductor.push(s.codigo);
+      }
+    }
+
+    const tiposVehiculo: string[] = [];
+    for (const cat of docsVehiculoBase) {
+      if (cat.hidden) continue;
+      for (const s of (cat.docs || [])) {
+        if (s.codigo) tiposVehiculo.push(s.codigo);
+      }
+    }
+
+    // Consultar fotos actuales registradas en el backend en paralelo
+    const [fotosCondResp, fotosVehResp] = await Promise.all([
+      (tiposConductor.length && cedula)
+        ? firstValueFrom(this.photoService.getFotosTercero(cedula, tiposConductor.join(','), 'conductor')).catch(() => null)
+        : null,
+      (tiposVehiculo.length && placa)
+        ? firstValueFrom(this.photoService.getFotosTercero(placa, tiposVehiculo.join(','), 'vehiculo')).catch(() => null)
+        : null
+    ]);
+
+    const mapaFotos: Record<string, string> = {};
+    if (fotosCondResp?.data && typeof fotosCondResp.data === 'object') {
+      for (const [k, v] of Object.entries(fotosCondResp.data)) {
+        if (v && typeof v === 'string') mapaFotos[k] = v;
+      }
+    }
+    if (fotosVehResp?.data && typeof fotosVehResp.data === 'object') {
+      for (const [k, v] of Object.entries(fotosVehResp.data)) {
+        if (v && typeof v === 'string') mapaFotos[k] = v;
+      }
+    }
+
     const listaDocs: DocumentoUI[] = [];
 
     // Catálogo base de conductor
-    const docsConductorBase = this.user.documents_conductor || [];
     for (const cat of docsConductorBase) {
       if (cat.hidden) continue;
 
@@ -104,6 +156,13 @@ export class DocumentosFacade {
       }
 
       const clasificacion = this.clasificarVigencia(cat.nombre, fechaStr, docsVencidosSet);
+      const subdocumentos: SubDocumentoItem[] = (cat.docs || []).map((sub: any) => ({
+        nombre: sub.nombre,
+        codigo: sub.codigo,
+        previewUrl: mapaFotos[sub.codigo] || null
+      }));
+
+      const previewUrl = subdocumentos.map(s => s.previewUrl).find(url => !!url) || null;
 
       listaDocs.push({
         id: cat.tag || cat.nombre,
@@ -114,15 +173,13 @@ export class DocumentosFacade {
         diasRestantes: clasificacion.diasRestantes,
         estado: clasificacion.estado,
         tagFecha: cat.fechaTag,
-        subdocumentos: (cat.docs || []).map((sub: any) => ({
-          nombre: sub.nombre,
-          codigo: sub.codigo
-        }))
+        subdocumentos,
+        previewUrl,
+        tieneFoto: !!previewUrl
       });
     }
 
     // Catálogo base de vehículo
-    const docsVehiculoBase = this.user.documents_vehiculo || [];
     for (const cat of docsVehiculoBase) {
       if (cat.hidden) continue;
 
@@ -132,6 +189,13 @@ export class DocumentosFacade {
       }
 
       const clasificacion = this.clasificarVigencia(cat.nombre, fechaStr, docsVencidosSet);
+      const subdocumentos: SubDocumentoItem[] = (cat.docs || []).map((sub: any) => ({
+        nombre: sub.nombre,
+        codigo: sub.codigo,
+        previewUrl: mapaFotos[sub.codigo] || null
+      }));
+
+      const previewUrl = subdocumentos.map(s => s.previewUrl).find(url => !!url) || null;
 
       listaDocs.push({
         id: cat.tag || cat.nombre,
@@ -142,10 +206,9 @@ export class DocumentosFacade {
         diasRestantes: clasificacion.diasRestantes,
         estado: clasificacion.estado,
         tagFecha: cat.fechaTag,
-        subdocumentos: (cat.docs || []).map((sub: any) => ({
-          nombre: sub.nombre,
-          codigo: sub.codigo
-        }))
+        subdocumentos,
+        previewUrl,
+        tieneFoto: !!previewUrl
       });
     }
 
@@ -167,12 +230,25 @@ export class DocumentosFacade {
       total: listaDocs.length
     };
 
+    const totalAlertas = vencidos + porVencer;
+    this._tieneAlertas$.next(totalAlertas > 0);
+    this._totalAlertas$.next(totalAlertas);
+
     return { documentos: listaDocs, semaforo };
   }
 
   /**
    * Comprime una foto usando Canvas nativo (WebP o fallback JPEG < 100 KB).
    */
+  async verificarAlertasVencimiento(): Promise<boolean> {
+    try {
+      const res = await this.getDocumentosYVigencias();
+      return (res.semaforo.vencidos > 0 || res.semaforo.porVencer > 0);
+    } catch {
+      return false;
+    }
+  }
+
   async comprimirFoto(source: string): Promise<CompressResult> {
     return this.imageCompressor.compressImage(source, {
       maxDimension: 1280,

@@ -32,6 +32,39 @@ export class DatosPage implements OnInit {
   tamanoKb = 0;
   formatoImg = '';
 
+  // ─── Visor Zoom de Fotografía ─────────────────────────────────────────
+  isZoomModalOpen = false;
+  zoomFotoUrl: string | null = null;
+  zoomFotoTitulo = '';
+
+  tabSeleccionada: 'conductor' | 'vehiculo' = 'conductor';
+
+  seleccionarTab(tab: 'conductor' | 'vehiculo'): void {
+    this.tabSeleccionada = tab;
+  }
+
+  get documentosFiltrados(): DocumentoUI[] {
+    return this.documentos.filter(d =>
+      this.tabSeleccionada === 'conductor'
+        ? d.tipoRegistro === 'conductor'
+        : d.tipoRegistro === 'vehiculo'
+    );
+  }
+
+  get alertasConductor(): number {
+    return this.documentos.filter(d =>
+      d.tipoRegistro === 'conductor' &&
+      (d.estado === 'VENCIDO' || d.estado === 'POR_VENCER')
+    ).length;
+  }
+
+  get alertasVehiculo(): number {
+    return this.documentos.filter(d =>
+      d.tipoRegistro === 'vehiculo' &&
+      (d.estado === 'VENCIDO' || d.estado === 'POR_VENCER')
+    ).length;
+  }
+
   constructor(
     private facade: DocumentosFacade,
     private router: Router,
@@ -89,6 +122,26 @@ export class DatosPage implements OnInit {
     this.subDocSeleccionado = subDoc;
     this.previewComprimido = null;
     this.tamanoKb = 0;
+  }
+
+  seleccionarSubDocPorCodigo(codigo: string): void {
+    const found = this.docSeleccionado?.subdocumentos.find(s => s.codigo === codigo);
+    if (found) {
+      this.seleccionarSubDoc(found);
+    }
+  }
+
+  verFotoCompleta(url?: string | null, titulo: string = 'Documento'): void {
+    if (!url) return;
+    this.zoomFotoUrl = url;
+    this.zoomFotoTitulo = titulo;
+    this.isZoomModalOpen = true;
+  }
+
+  cerrarZoomFoto(): void {
+    this.isZoomModalOpen = false;
+    this.zoomFotoUrl = null;
+    this.zoomFotoTitulo = '';
   }
 
   // ─── Captura con Compresión WebP Obligatoria ──────────────────────────
@@ -182,6 +235,18 @@ export class DatosPage implements OnInit {
         this.docSeleccionado.tagFecha,
         this.nuevaFechaVigencia
       );
+
+      if (this.subDocSeleccionado && this.previewComprimido) {
+        this.subDocSeleccionado.previewUrl = this.previewComprimido;
+      }
+      if (this.docSeleccionado && this.previewComprimido) {
+        this.docSeleccionado.previewUrl = this.previewComprimido;
+        this.docSeleccionado.tieneFoto = true;
+        if (this.nuevaFechaVigencia) {
+          this.docSeleccionado.fechaVigencia = this.nuevaFechaVigencia;
+          this.docSeleccionado.fechaFormateada = this.nuevaFechaVigencia;
+        }
+      }
 
       this.cerrarModal();
       await this.cargarDocumentos();

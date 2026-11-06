@@ -4,12 +4,24 @@
   "compilerOptions": {
     "baseUrl": "src",
     "paths": {
-      "@core/*": ["app/core/*"],
-      "@shared/*": ["app/shared/*"],
-      "@features/*": ["app/features/*"],
-      "@models/*": ["app/core/models/*"],
-      "@domain/*": ["app/domain/*"],
-      "@env/*": ["environments/*"]
+      "@core/*": [
+        "app/core/*"
+      ],
+      "@shared/*": [
+        "app/shared/*"
+      ],
+      "@features/*": [
+        "app/features/*"
+      ],
+      "@models/*": [
+        "app/core/models/*"
+      ],
+      "@domain/*": [
+        "app/domain/*"
+      ],
+      "@env/*": [
+        "environments/*"
+      ]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
@@ -24,10 +36,10 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2015",
-    "module": "es2020",
+    "target": "ES2022",
+    "module": "ES2022",
     "lib": [
-      "es2018", 
+      "ES2022",
       "dom"
     ],
     "useDefineForClassFields": false

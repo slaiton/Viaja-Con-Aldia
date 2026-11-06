@@ -5,7 +5,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { HomePageRoutingModule } from './home-routing.module';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { HomePage } from './pages/home.page';
 import { RouterModule } from '@angular/router';
@@ -13,7 +12,6 @@ import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   imports: [
-    NgbModule,
     CommonModule,
     FormsModule,
     IonicModule,

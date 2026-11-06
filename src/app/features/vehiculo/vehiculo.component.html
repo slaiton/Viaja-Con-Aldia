@@ -1,7 +1,12 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="header-aldia">
-    <ion-title class="header-title">Mis vehículos</ion-title>
-  </ion-toolbar>
+  <div class="aldia-header-pattern vehiculos-header">
+    <div class="vehiculos-header-inner">
+      <button type="button" class="btn-back-header" (click)="onDismissChange(false)">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+      <h2 class="vehiculos-header-title">Mis vehículos</h2>
+    </div>
+  </div>
 </ion-header>
 
 <ion-content class="vehiculos-content">
@@ -10,100 +15,61 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- ─── Estado vacío ─────────────────────────────────────────────────── -->
-  <div *ngIf="!cargando && dataVehiculos.length === 0" class="empty-state">
-    <img src="/assets/img/truck-empty.svg" alt="Sin vehículos" class="empty-img" />
-    <p class="empty-text">No tienes vehículos vinculados.</p>
-    <p class="empty-sub">Usa el botón inferior para agregar tu cabezote.</p>
-  </div>
+  <div class="vehiculos-wrapper">
+    <!-- ─── Estado vacío ─────────────────────────────────────────────────── -->
+    <div *ngIf="!cargando && dataVehiculos.length === 0" class="empty-state">
+      <img src="/assets/img/truck-empty.svg" alt="Sin vehículos" class="empty-img" />
+      <p class="empty-text">No tienes vehículos vinculados.</p>
+      <p class="empty-sub">Usa el botón inferior para agregar tu cabezote.</p>
+    </div>
 
-  <!-- ─── Lista de vehículos ───────────────────────────────────────────── -->
-  <div class="lista-vehiculos" *ngIf="dataVehiculos.length > 0">
+    <!-- ─── Lista de vehículos (Mockup v4 Pantalla 11) ────────────────────── -->
+    <div class="vehiculos-list" *ngIf="dataVehiculos.length > 0">
 
-    <div *ngFor="let v of dataVehiculos; let i = index" class="vehiculo-card-wrapper">
-
-      <!-- ── TARJETA ACTIVA ─────────────────────────────────────────── -->
-      <div *ngIf="v.esActivo" class="vehiculo-card card-activa">
-
-        <!-- Insignia ACTIVO -->
-        <span class="badge-activo">ACTIVO</span>
-
-        <!-- Foto del vehículo -->
-        <div class="card-foto-wrap">
-          <ion-img
-            [src]="v.foto ?? 'assets/img/truck-placeholder.png'"
-            alt="Foto vehículo"
-            class="card-foto">
-          </ion-img>
+      <div *ngFor="let v of dataVehiculos; let i = index">
+        <!-- ── VEHÍCULO EN USO (Activo: Borde #0094DA + Anillo #E5F4FC) ── -->
+        <div *ngIf="v.esActivo" class="card-vehiculo-activo">
+          <div class="vehiculo-top-row">
+            <app-plate-badge [placa]="v.placa" size="lg"></app-plate-badge>
+            <span class="pill-en-uso">En uso</span>
+          </div>
+          <b class="vehiculo-clase-title">{{ v.clase }} <span *ngIf="v.modelo">· {{ v.modelo }}</span></b>
+          <span class="vehiculo-sub-info">Vehículo activo asignado en Aldía</span>
         </div>
 
-        <!-- Placa + estado -->
-        <div class="card-body">
-          <app-plate-badge [placa]="v.placa" size="lg"></app-plate-badge>
-
-          <div class="card-meta">
-            <span class="meta-clase">{{ v.clase }}</span>
-            <span *ngIf="v.modelo" class="meta-modelo">Modelo {{ v.modelo }}</span>
+        <!-- ── VEHÍCULO ALTERNO (Inactivo: Borde sutil + Botón Usar) ──── -->
+        <div *ngIf="!v.esActivo" class="card-vehiculo-inactivo">
+          <div class="vehiculo-top-row">
+            <app-plate-badge [placa]="v.placa" size="md"></app-plate-badge>
+            <ion-icon name="ellipsis-horizontal" class="icon-vehiculo-more"></ion-icon>
           </div>
-
-          <div class="chips-row">
-            <ion-chip class="chip-en-uso">
-              <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <ion-label>En uso</ion-label>
-            </ion-chip>
-            <ion-chip *ngIf="v.enUso" class="chip-hoja-viva">
-              <ion-label>Hoja de vida activa</ion-label>
-            </ion-chip>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── TARJETA INACTIVA ───────────────────────────────────────── -->
-      <div *ngIf="!v.esActivo" class="vehiculo-card card-inactiva">
-
-        <!-- Foto del vehículo -->
-        <div class="card-foto-wrap">
-          <ion-img
-            [src]="v.foto ?? 'assets/img/truck-placeholder.png'"
-            alt="Foto vehículo"
-            class="card-foto foto-inactiva">
-          </ion-img>
-        </div>
-
-        <div class="card-body">
-          <app-plate-badge [placa]="v.placa" size="md" style="opacity:0.9"></app-plate-badge>
-
-          <div class="card-meta">
-            <span class="meta-clase">{{ v.clase }}</span>
-            <span *ngIf="v.modelo" class="meta-modelo">Modelo {{ v.modelo }}</span>
-          </div>
-
-          <ion-button
-            expand="block"
-            fill="outline"
-            class="btn-usar"
-            (click)="changeVehicleDriver(v.placa, v.cedulaVinculada ?? '')">
-            <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
+          <b class="vehiculo-clase-title">{{ v.clase }} <span *ngIf="v.modelo">· {{ v.modelo }}</span></b>
+          <span class="vehiculo-sub-info mb-2">Vehículo alterno</span>
+          <button
+            type="button"
+            class="btn-usar-vehiculo"
+            (click)="changeVehicleDriver(v.placa, v.cedulaVinculada ?? '')"
+          >
             Usar este vehículo
-          </ion-button>
+          </button>
         </div>
       </div>
 
-    </div><!-- /ngFor -->
-
-    <!-- Espacio para que el botón fijo no tape el último ítem -->
-    <div class="bottom-spacer"></div>
+      <!-- Espacio para no tapar con el botón fijo -->
+      <div class="bottom-spacer"></div>
+    </div>
   </div>
 
-  <!-- ─── Botón fijo inferior: Agregar vehículo ────────────────────────── -->
-  <div class="fab-add-wrap">
-    <ion-button
-      expand="block"
-      class="btn-agregar"
-      (click)="newVehicle()">
-      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
-      Agregar vehículo
-    </ion-button>
+  <!-- ─── Botón fijo inferior: Agregar vehículo (Mockup v4 Pantalla 11) ──── -->
+  <div class="fixed-bottom-bar">
+    <button
+      type="button"
+      class="btn-agregar-vehiculo"
+      (click)="newVehicle()"
+    >
+      <ion-icon name="add-outline" class="btn-icon-add"></ion-icon>
+      <span>Agregar vehículo</span>
+    </button>
   </div>
 
 

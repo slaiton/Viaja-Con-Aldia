@@ -6,22 +6,33 @@
   <!-- Barra de Navegación Inferior (Mockup v4) -->
   <nav class="aldia-bottom-bar" *ngIf="statusLogin()" role="navigation" aria-label="Navegación principal">
     <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="bottom-tab-item">
-      <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+      <div class="icon-wrap">
+        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+      </div>
       <span class="tab-label">Inicio</span>
     </a>
 
     <a routerLink="/preform" routerLinkActive="active" class="bottom-tab-item">
-      <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
-      <span class="tab-label">Preoperacional</span>
+      <div class="icon-wrap">
+        <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
+      </div>
+      <span class="tab-label">Preoperac.</span>
     </a>
 
-    <a routerLink="/datos" routerLinkActive="active" class="bottom-tab-item">
-      <ion-icon name="document-text-outline" class="tab-icon"></ion-icon>
+    <a routerLink="/datos" routerLinkActive="active" class="bottom-tab-item tab-documentos">
+      <div class="icon-wrap">
+        <ion-icon name="document-text-outline" class="tab-icon"></ion-icon>
+        <span *ngIf="((totalAlertasDocumentos$ | async) ?? 0) > 0" class="nav-alert-badge">
+          {{ totalAlertasDocumentos$ | async }}
+        </span>
+      </div>
       <span class="tab-label">Documentos</span>
     </a>
 
     <button type="button" class="bottom-tab-item btn-tab-perfil" (click)="openPerfilMenu()">
-      <ion-icon name="person-circle-outline" class="tab-icon"></ion-icon>
+      <div class="icon-wrap">
+        <ion-icon name="person-circle-outline" class="tab-icon"></ion-icon>
+      </div>
       <span class="tab-label">Perfil</span>
     </button>
   </nav>

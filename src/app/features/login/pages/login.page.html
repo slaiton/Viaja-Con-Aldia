@@ -1,58 +1,165 @@
-<ion-header [translucent]="true">
-  <!-- <ion-toolbar>
-    <ion-title class="ml-3">Inicio de Sesion</ion-title>
-  </ion-toolbar> -->
-</ion-header>
+<ion-content [fullscreen]="true" class="login-ion-content">
+  <!-- Contenedor responsive estilo marco móvil 480px -->
+  <div class="login-page-container">
 
-<ion-content class="container-fluid p-3">
-  <div class="sing-in text-center">
-    <main class="form-signin w-100 m-auto p-2">
-      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-        <img
-          class="mb-4"
-          src="../../assets/icon/favicon.png"
-          alt=""
-          height="150"
-        />
-        <div class="form-floating">
-          <input
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            autocomplete="username"
-            formControlName="username"
-            name="username"
-            matInput
-            class="form-control"
-            id="username"
-            placeholder="Cédula de ciudadanía"
-            required
-          />
-          <label for="username">Cédula de ciudadanía</label>
+    <!-- ===================================================================
+         PANTALLA 1: LOGIN - IDENTIFICACIÓN CÉDULA + PLACA
+         =================================================================== -->
+    <ng-container *ngIf="!mostrarPasoOtp; else otpStep">
+      <!-- Cabecera Corporativa Curva #0094DA -->
+      <div class="login-header aldia-header-pattern">
+        <div class="login-logo-container">
+          <img src="assets/icon/logo-aldia-white.png" alt="Aldia Logística" class="login-brand-logo" />
+          <span class="login-badge-app">Viaja con Aldia</span>
         </div>
-        <div class="form-floating">
-          <input
-            type="text"
-            formControlName="password"
-            name="password"
-            maxlength="7"
-            autocomplete="off"
-            style="text-transform: uppercase;"
-            matInput
-            class="form-control"
-            id="password"
-            placeholder="Placa del vehículo"
-            required
-          />
-          <label for="password">Placa del vehículo</label>
+      </div>
+
+      <!-- Cuerpo del Formulario en Tarjeta Flotante -->
+      <div class="login-content-body">
+        <div class="login-form-card">
+          <form [formGroup]="loginForm" (ngSubmit)="onLogin()" id="loginForm">
+
+            <!-- Campo Cédula -->
+            <div class="login-field-group">
+              <div class="login-field-header">
+                <label for="username" class="login-field-label">Cédula</label>
+                <span class="login-badge-numeric">Numérico</span>
+              </div>
+              <div class="login-input-wrapper">
+                <ion-icon name="card-outline" class="login-input-icon"></ion-icon>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  autocomplete="username"
+                  formControlName="username"
+                  name="username"
+                  class="login-input-control"
+                  id="username"
+                  placeholder="Número de cédula"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Campo Placa del Vehículo -->
+            <div class="login-field-group">
+              <div class="login-field-header">
+                <label for="password" class="login-field-label">Placa</label>
+                <span class="login-field-hint">Formato AAA 000</span>
+              </div>
+              <div class="login-input-wrapper">
+                <ion-icon name="car-sport-outline" class="login-input-icon"></ion-icon>
+                <input
+                  type="text"
+                  formControlName="password"
+                  name="password"
+                  maxlength="7"
+                  autocomplete="off"
+                  class="login-input-control login-input-plate"
+                  id="password"
+                  placeholder="SXT 482"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Botón Iniciar Sesión integrado en la tarjeta -->
+            <button
+              class="btn-login-submit"
+              type="submit"
+              [disabled]="submitClick || loginForm.invalid"
+            >
+              <ion-spinner *ngIf="submitClick" name="crescent" color="light"></ion-spinner>
+              <span>{{ submitClick ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+            </button>
+          </form>
         </div>
 
-        <button class="btn btn-primary" type="submit" [disabled]="submitClick"> {{ submitClick ? 'Cargando...' : 'Iniciar Sesion' }}</button>
-        <div class="registro mt-2">
-          <a href="/registro" class="link">Registrarse</a>
+        <!-- Botonera secundaria y pie sin hueco vacío -->
+        <div class="login-bottom-section">
+          <div class="login-divider-row">
+            <span class="login-divider-line"></span>
+            <span class="login-divider-label">o</span>
+            <span class="login-divider-line"></span>
+          </div>
+
+          <button type="button" class="btn-login-register" (click)="irARegistro()">
+            Soy nuevo, quiero registrarme
+          </button>
+
+          <p class="login-footer-copy">Versión {{ version }} · &copy; {{ fechaActual }} Aldia Logística</p>
         </div>
-        <p class="mt-5 mb-3 text-muted">Viaja Con Aldia V.{{version}} &copy;{{ fechaActual }}</p>
-      </form>
-    </main>
+      </div>
+    </ng-container>
+
+    <!-- ===================================================================
+         PANTALLA 2: LOGIN - PASO 2 (VERIFICACIÓN 2FA WHATSAPP OTP)
+         =================================================================== -->
+    <ng-template #otpStep>
+      <!-- Cabecera Paso 2 -->
+      <div class="login-header login-header-otp aldia-header-pattern">
+        <div class="login-otp-header-row">
+          <button type="button" class="btn-otp-back" (click)="volverAPaso1()" aria-label="Volver">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <div>
+            <span class="login-brand-sub">Paso 2 de 2 · Seguridad</span>
+            <h2 class="login-brand-title text-20">Código de Verificación</h2>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido OTP -->
+      <div class="login-content-body">
+        <div class="login-form-card otp-card-center">
+          <div class="otp-icon-shield">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 3 4.5 6v6c0 4.6 3.2 7.7 7.5 9 4.3-1.3 7.5-4.4 7.5-9V6z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"></path>
+            </svg>
+          </div>
+
+          <h3 class="otp-card-title">Ingresa el código de 6 dígitos</h3>
+          <p class="otp-card-sub">
+            Enviamos un código a tu celular registrado terminado en <span class="otp-badge-phone">{{ celularMask }}</span>
+          </p>
+
+          <!-- 6 Casillas OTP visuales -->
+          <div class="otp-grid">
+            <div class="otp-box otp-box-filled">8</div>
+            <div class="otp-box otp-box-filled">4</div>
+            <div class="otp-box otp-box-filled">9</div>
+            <div class="otp-box otp-box-active">2</div>
+            <div class="otp-box otp-box-empty"></div>
+            <div class="otp-box otp-box-empty"></div>
+          </div>
+
+          <div class="otp-resend-pill">
+            <svg class="w-4 h-4 text-aldia-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+            <span>Reenviar código en <strong class="text-aldia-primary">00:45</strong></span>
+          </div>
+        </div>
+
+        <!-- Botonera OTP -->
+        <div class="login-bottom-section">
+          <button class="btn-login-submit" type="button" (click)="onLogin()">
+            Confirmar e Ingresar
+          </button>
+
+          <button type="button" class="btn-otp-support">
+            ¿Cambiaste de celular? Habla con Tráfico
+          </button>
+        </div>
+      </div>
+    </ng-template>
+
   </div>
 </ion-content>

@@ -1,6 +1,10 @@
 <div class="offline-banner" *ngIf="!(isOnline$ | async) || shouldShow" role="status" aria-live="polite">
-  <div class="banner-content">
+  <div class="banner-inner">
     <ion-icon name="cloud-offline-outline" class="banner-icon"></ion-icon>
-    <span class="banner-text">{{ message }}</span>
+    <div class="banner-info">
+      <b class="title-offline">Sin conexión</b>
+      <span class="sub-offline">Mostrando datos guardados en caché</span>
+    </div>
+    <span class="btn-reintentar" (click)="reintentar()">Reintentar</span>
   </div>
 </div>

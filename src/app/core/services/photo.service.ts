@@ -230,14 +230,19 @@ export class PhotoService {
         }
 
 
-        canvas.toBlob((blob: any) => {
-          if (!blob) {
-            reject('Error al convertir el lienzo a Blob');
-            return;
-          }
-          const blobUrl = URL.createObjectURL(blob);
-          resolve(blobUrl);
-        }, 'image/jpeg');
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          resolve(dataUrl);
+        } catch (_) {
+          canvas.toBlob((blob: any) => {
+            if (!blob) {
+              reject('Error al convertir el lienzo a Blob');
+              return;
+            }
+            const blobUrl = URL.createObjectURL(blob);
+            resolve(blobUrl);
+          }, 'image/jpeg');
+        }
       };
 
       img.onerror = () => {

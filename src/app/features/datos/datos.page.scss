@@ -1,60 +1,10 @@
-$blue: #0094DA;
-$border: #E2E8F0;
-$text: #1A1A2E;
-$muted: #64748B;
-$white: #FFFFFF;
-
-.header-aldia { --background: #{$blue}; --color: #{$white}; }
-.header-title { color: $white; font-weight: 700; }
-.header-badge-wrap { margin-right: 12px; }
-.docs-content { --background: #F4F6F9; }
-.docs-wrapper { padding: 16px 16px 90px; }
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px;
-  color: $muted;
-  gap: 12px;
+// Contenedores locales de Documentos (estilos maestros en global.scss)
+.docs-content {
+  --background: #F3F6F9;
 }
 
-.docs-list { display: flex; flex-direction: column; gap: 12px; }
-
-.doc-title { font-size: 0.95rem; font-weight: 700; color: $text; margin: 0; }
-.doc-tipo { font-size: 0.75rem; color: $muted; }
-
-.doc-fecha-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  color: $muted;
-  margin-bottom: 10px;
-  strong { color: $text; }
+.docs-wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 14px 16px 90px;
 }
-
-.doc-btn-wrap ion-button { margin: 0; font-weight: 600; font-size: 0.88rem; }
-.btn-warning-outline { --border-color: #{$blue}; --color: #{$blue}; --border-radius: 8px; }
-.btn-danger-solid { --background: #{$blue}; --color: #{$white}; --border-radius: 8px; }
-.btn-clear-actualizar { --color: #{$blue}; }
-
-.subdocs-selector { margin-bottom: 14px; }
-.selector-lbl { font-size: 0.82rem; font-weight: 600; color: $muted; margin-bottom: 4px; }
-
-.fecha-input-wrap {
-  margin-bottom: 14px;
-  .input-lbl { font-size: 0.82rem; font-weight: 600; color: $muted; display: block; margin-bottom: 4px; }
-  .date-field { width: 100%; padding: 8px 12px; border: 1px solid $border; border-radius: 8px; }
-}
-
-.capture-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-  .btn-camara { --background: #{$blue}; --color: #{$white}; --border-radius: 10px; font-weight: 700; }
-  .btn-galeria { --border-color: #{$blue}; --color: #{$blue}; --border-radius: 10px; font-weight: 600; }
-}
-
-.btn-confirmar-subida { --background: #{$blue}; --color: #{$white}; --border-radius: 12px; font-weight: 700; height: 48px; }

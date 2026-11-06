@@ -27,4 +27,8 @@ export class OfflineBannerComponent {
     }
     return !this.outboxSync.isConnected;
   }
+
+  reintentar(): void {
+    window.location.reload();
+  }
 }

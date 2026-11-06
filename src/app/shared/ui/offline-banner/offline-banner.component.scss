@@ -1,44 +1,52 @@
 .offline-banner {
   width: 100%;
-  background-color: #fff1d6;
-  border-bottom: 1px solid #ffe2a6;
-  color: #8a5300;
-  padding: 8px 16px;
+  background: #0D2A44;
+  color: #FFFFFF;
+  padding: 10px 16px;
   box-sizing: border-box;
   font-family: var(--ion-font-family, 'Atkinson Hyperlegible', sans-serif);
-  font-size: 13px;
-  font-weight: 600;
   position: relative;
   z-index: 1000;
-  animation: slideDown 250ms ease-out forwards;
 
-  .banner-content {
+  .banner-inner {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-align: center;
+    gap: 12px;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .banner-icon {
-    font-size: 16px;
-    color: #8a5300;
+    font-size: 20px;
+    color: #FFFFFF;
     flex-shrink: 0;
   }
 
-  .banner-text {
-    line-height: 1.3;
-    letter-spacing: 0.2px;
-  }
-}
+  .banner-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
+    .title-offline {
+      font-size: 13px;
+      line-height: 1.2;
+      color: #FFFFFF;
+    }
+
+    .sub-offline {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.2;
+    }
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  .btn-reintentar {
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: underline;
+    color: #FFFFFF;
+    cursor: pointer;
+    flex-shrink: 0;
   }
 }

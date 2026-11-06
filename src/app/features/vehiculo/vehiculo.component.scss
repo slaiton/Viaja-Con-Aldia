@@ -1,82 +1,15 @@
-$blue: #0094DA;
-$gray-border: #DCE3EA;
-$text-dark: #1A1A2E;
-$text-muted: #6B7A8D;
-$white: #FFFFFF;
-
-.header-aldia { --background: #{$blue}; --color: #{$white}; }
-.header-title { color: $white; font-weight: 700; }
-.vehiculos-content { --background: #F4F6F9; }
-.lista-vehiculos { padding: 16px 16px 100px; }
-.vehiculo-card-wrapper { margin-bottom: 16px; }
-
-.vehiculo-card {
-  position: relative;
-  background: $white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  .card-foto-wrap {
-    width: 100%;
-    height: 150px;
-    background: #EEF2F7;
-    overflow: hidden;
-    .card-foto { width: 100%; height: 100%; object-fit: cover; }
-    .foto-inactiva { opacity: 0.75; filter: grayscale(30%); }
-  }
-
-  .card-body {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    .meta-clase { font-size: 0.85rem; font-weight: 600; color: $text-dark; text-transform: uppercase; }
-    .meta-modelo { font-size: 0.78rem; color: $text-muted; }
-  }
+// Contenedores locales de Mis Vehículos (estilos maestros en global.scss)
+.vehiculos-content {
+  --background: #F3F6F9;
 }
 
-.card-activa {
-  border: 2px solid $blue;
-  box-shadow: 0 0 0 3px rgba(0, 148, 218, 0.15);
-
-  .badge-activo {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: $blue;
-    color: $white;
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 20px;
-  }
-
-  .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip-en-uso { --background: #{$blue}; --color: #{$white}; font-size: 0.78rem; font-weight: 600; }
-  .chip-hoja-viva { --background: #E8F5E9; --color: #1A7F37; font-size: 0.78rem; }
+.vehiculos-wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 90px;
 }
 
-.card-inactiva {
-  border: 1.5px solid $gray-border;
-  .btn-usar { --color: #{$blue}; --border-color: #{$blue}; --border-radius: 8px; font-weight: 600; }
+.containerPhoto, .centerObject {
+  display: flex;
+  justify-content: center;
 }
-
-.fab-add-wrap {
-  position: fixed;
-  bottom: calc(68px + env(safe-area-inset-bottom));
-  left: 0;
-  right: 0;
-  padding: 0 16px;
-  z-index: 100;
-  .btn-agregar { --background: #{$blue}; --color: #{$white}; --border-radius: 12px; font-weight: 700; height: 52px; }
-}
-
-.bottom-spacer { height: 80px; }
-.containerPhoto, .centerObject { display: flex; justify-content: center; }

@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class PlateBadgeComponent {
   @Input() placa: string = '';
-  @Input() municipio: string = 'SERVICIO PÚBLICO';
+  @Input() municipio: string = 'COLOMBIA';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
 
   /**
@@ -26,6 +26,6 @@ export class PlateBadgeComponent {
   }
 
   get municipioUpper(): string {
-    return (this.municipio || 'SERVICIO PÚBLICO').toUpperCase().trim();
+    return (this.municipio || 'COLOMBIA').toUpperCase().trim();
   }
 }
