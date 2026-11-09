@@ -13,6 +13,7 @@ import * as e from 'cors';
 import { AuthService } from '@core/services/auth.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { ImageCompressionService } from '@core/services/image-compression.service';
+import { RegistroHelperService } from './services/registro-helper.service';
 
 
 @Component({
@@ -172,8 +173,18 @@ export class RegistroPage implements OnInit {
   completeData: any = false;
   aceptTerms: any = false;
   dataTerms: any;
-  aceptaTerminos: boolean = false;
-  aceptaHabeasData: boolean = false;
+  get aceptaTerminos(): boolean {
+    return this.registroHelper.aceptaTerminos;
+  }
+  set aceptaTerminos(val: boolean) {
+    this.registroHelper.toggleTerminos(val);
+  }
+  get aceptaHabeasData(): boolean {
+    return this.registroHelper.aceptaHabeasData;
+  }
+  set aceptaHabeasData(val: boolean) {
+    this.registroHelper.toggleHabeasData(val);
+  }
 
   hubImag: any = {
     licencia1: { webviewPath: false },
@@ -289,7 +300,8 @@ export class RegistroPage implements OnInit {
     private reg: RegistroService,
     private auth: AuthService,
     private menu: MenuController,
-    private imageCompressor: ImageCompressionService) {
+    private imageCompressor: ImageCompressionService,
+    private registroHelper: RegistroHelperService) {
     this.initializeApp();
 
     this.documents_vehiculo = this.user.documents_vehiculo
@@ -856,7 +868,7 @@ export class RegistroPage implements OnInit {
 
 
   async onSubmit() {
-    if (!this.aceptaTerminos || !this.aceptaHabeasData) {
+    if (!this.registroHelper.validarConsentimientos()) {
       this.presentAlert(
         "Consentimiento requerido",
         "",
@@ -866,18 +878,9 @@ export class RegistroPage implements OnInit {
       return;
     }
 
-    try {
-      if (!this.aceptTermData) {
-        await this.user.firmaContrato(1, this.conductor.cedula, '', this.token);
-        this.aceptTermData = true;
-      }
-      if (!this.aceptTerms) {
-        await this.user.firmaContrato(2, this.conductor.cedula, this.vehiculo.placa, this.token);
-        this.aceptTerms = true;
-      }
-    } catch (e) {
-      console.log('Error registrando firma digital preliminar:', e);
-    }
+    await this.registroHelper.procesarFirmasContrato(this.conductor.cedula, this.vehiculo.placa, this.token);
+    this.aceptTermData = true;
+    this.aceptTerms = true;
 
     if (this.completeData) {
       this.saveDocument();
@@ -1045,9 +1048,9 @@ export class RegistroPage implements OnInit {
         this.loadingData.dismiss();
         if (data && data.access_token) {
           this.user.setToken(data.access_token);
-          localStorage.setItem('token', data.access_token);
-          localStorage.setItem('conductor', this.conductor.cedula);
-          localStorage.setItem('placa', this.vehiculo.placa);
+          this.user.setItem('token', data.access_token);
+          this.user.setItem('conductor', this.conductor.cedula);
+          this.user.setItem('placa', this.vehiculo.placa);
 
           this.user.onLoginChange.next(data.access_token);
           this.presentAlertButtons("Éxito", "Usuario Creado", "Bienvenido a Viaja con ALDÍA. Presiona continuar para ingresar.", "Cerrar", buttons);
@@ -2171,15 +2174,17 @@ export class RegistroPage implements OnInit {
   }
 
   toggleTerminos(event: any): void {
-    this.aceptaTerminos = !!event?.detail?.checked;
-    if (this.aceptaTerminos) {
+    const checked = !!event?.detail?.checked;
+    this.registroHelper.toggleTerminos(checked);
+    if (checked) {
       this.aceptTerms = true;
     }
   }
 
   toggleHabeasData(event: any): void {
-    this.aceptaHabeasData = !!event?.detail?.checked;
-    if (this.aceptaHabeasData) {
+    const checked = !!event?.detail?.checked;
+    this.registroHelper.toggleHabeasData(checked);
+    if (checked) {
       this.aceptTermData = true;
     }
   }
@@ -2625,21 +2630,38 @@ export class RegistroPage implements OnInit {
     //   this.presentAlert("Error", "", "Todos los campos son requeridos", "Cerrar");
     // }
 
-    var text = "<ul>";
+    const etiquetasVehiculo: Record<string, string> = {
+      claseVehiculo: 'Clase de vehículo',
+      carroceria: 'Tipo de carrocería',
+      linea: 'Línea del vehículo',
+      color: 'Color',
+      fechaSoat: 'Fecha de vigencia SOAT',
+      fechaTecno: 'Fecha de revisión técnico-mecánica',
+      marca: 'Marca',
+      modelo: 'Modelo (año)',
+      remolque: 'Placa del remolque',
+      empresaSatelital: 'Empresa satelital (GPS)',
+      usuarioSatelital: 'Usuario satelital (GPS)',
+      claveSatelital: 'Clave satelital (GPS)',
+      cuentaSatelital: 'Cuenta satelital'
+    };
+
+    var text = "";
 
     for (const campo in this.formNewVehicle.controls) {
 
       if (this.formNewVehicle.controls[campo].invalid) {
         validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        const etiqueta = etiquetasVehiculo[campo] || (campo.charAt(0).toUpperCase() + campo.slice(1));
+        text += `\n• ${etiqueta}`;
       } else {
         if ((campo == 'fechaSoat' && this.vehiculo[campo]) || (campo == 'fechaTecno' && this.vehiculo[campo])) {
           var fecha = new Date(this.formNewVehicle.value[campo]);
           this.vehiculo[campo] = fecha.toISOString().split('T')[0];
           jsonApi[campo] = fecha.toISOString().split('T')[0];
         } else {
-          this.vehiculo[campo] = this.formNewVehicle.value[campo]
-          jsonApi[campo] = this.formNewVehicle.value[campo]
+          this.vehiculo[campo] = this.formNewVehicle.value[campo];
+          jsonApi[campo] = this.formNewVehicle.value[campo];
         }
       }
 
@@ -2650,8 +2672,8 @@ export class RegistroPage implements OnInit {
 
       if (!this.formNewVehicle.value.remolque) {
 
-        validate = false
-        text += "Placa Remolque"
+        validate = false;
+        text += "\n• Placa del remolque";
 
       } else {
         this.vehiculo.remolque = this.formNewVehicle.value.remolque
@@ -2669,7 +2691,6 @@ export class RegistroPage implements OnInit {
       }
     }
 
-    text += "</ul>";
     this.dataTercero['docs'] = this.documents_vehiculo;
 
 
@@ -2906,11 +2927,26 @@ export class RegistroPage implements OnInit {
     var validateDocs = true;
     var jsonApi: any = {};
 
-    var text = "<ul>";
+    const etiquetasConductor: Record<string, string> = {
+      nombres: 'Nombres',
+      apellidos: 'Apellidos',
+      correo: 'Correo electrónico',
+      celular: 'Número de celular',
+      direccion: 'Dirección de residencia',
+      fechaNacimiento: 'Fecha de nacimiento',
+      nombreContacto: 'Nombre de contacto de emergencia',
+      celularContacto: 'Teléfono de contacto de emergencia',
+      parentesco: 'Parentesco con el contacto de emergencia',
+      fechaSeguridad: 'Fecha de seguridad social',
+      fechaLicencia: 'Fecha de vencimiento de licencia'
+    };
+
+    var text = "";
     for (const campo in this.formNewDriver.controls) {
       if (this.formNewDriver.controls[campo].invalid) {
         validate = false;
-        text += "<li>" + campo.charAt(0).toUpperCase() + campo.slice(1) + "</li>";
+        const etiqueta = etiquetasConductor[campo] || (campo.charAt(0).toUpperCase() + campo.slice(1));
+        text += `\n• ${etiqueta}`;
       } else {
         if (this.formNewDriver.value[campo]) {
           this.conductor[campo] = this.formNewDriver.value[campo]
@@ -2940,8 +2976,6 @@ export class RegistroPage implements OnInit {
     //   this.documents_conductor[1].status = false;
     //   console.log('ERROR => Fecha Licencia');
     // }
-
-    text += "</ul>";
 
     this.dataTercero['docs'] = this.documents_conductor;
 
@@ -3290,13 +3324,12 @@ export class RegistroPage implements OnInit {
 
   async addToGalery(name: any, rotate: any) {
     try {
-      this.loadingData = await this.loading.create({
-        message: 'Guardando Foto...'
-      });
-      await this.loadingData.present();
-
       const da = await this.photo.addNewToGallery(name);
       if (da) {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Foto...'
+        });
+        await this.loadingData.present();
         await this.processImage(da, name, rotate);
       }
     } catch (error) {
@@ -3310,13 +3343,12 @@ export class RegistroPage implements OnInit {
 
   async addToCamera(name: any, rotate: any) {
     try {
-      this.loadingData = await this.loading.create({
-        message: 'Guardando Foto...'
-      });
-      await this.loadingData.present();
-
       const da = await this.photo.addNewToCamera(name);
       if (da) {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Foto...'
+        });
+        await this.loadingData.present();
         await this.processImage(da, name, rotate);
       }
     } catch (error) {
@@ -3363,22 +3395,19 @@ export class RegistroPage implements OnInit {
 
   async acept() {
     this.aceptTermData = true;
-    this.aceptaHabeasData = true;
+    this.registroHelper.toggleHabeasData(true);
     this.setOpenTermsData(false);
     // Firma APP
     const firma = await this.user.firmaContrato(1, this.conductor.cedula, '', this.token);
-    console.log(firma);
-    // this.searchConductor(this.conductor.cedula, true);
     this.getDriverApi3sL(this.conductor.cedula, false);
   }
 
   async acept2() {
     this.aceptTerms = true;
-    this.aceptaTerminos = true;
+    this.registroHelper.toggleTerminos(true);
 
     try {
       const data = await this.user.firmaContrato(2, this.conductor.cedula, this.vehiculo.placa, this.token);
-      console.log(data);
       this.setOpenTerms(false);
       if (this.aceptaHabeasData && this.completeData) {
         this.onSubmit();
@@ -3390,13 +3419,12 @@ export class RegistroPage implements OnInit {
 
   async getFoto() {
     try {
-      this.loadingData = await this.loading.create({
-        message: 'Guardando Datos...'
-      });
-      await this.loadingData.present();
-
       const da = await this.photo.addNewToCameraProfile('fotoperfil');
       if (da) {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Datos...'
+        });
+        await this.loadingData.present();
         await this.processImage(da, 'fotoperfil', false);
         this.checkImagen = true;
         this.completeData = true;
@@ -3526,10 +3554,16 @@ export class RegistroPage implements OnInit {
 
 
   async presentAlert(title: String, subheader: String, desc: String, botton: String) {
+    const cleanDesc = String(desc || '')
+      .replace(/<\/?ul>/gi, '')
+      .replace(/<li>/gi, '\n• ')
+      .replace(/<\/li>/gi, '')
+      .trim();
+
     const alert = await this.alertController.create({
       header: '' + title,
       subHeader: '' + subheader,
-      message: '' + desc,
+      message: cleanDesc,
       buttons: ['' + botton],
     });
 
@@ -3537,10 +3571,16 @@ export class RegistroPage implements OnInit {
   }
 
   async presentAlertButtons(title: String, subheader: String, desc: String, p0: string, buttons: { text: string; handler: () => void; }[]) {
+    const cleanDesc = String(desc || '')
+      .replace(/<\/?ul>/gi, '')
+      .replace(/<li>/gi, '\n• ')
+      .replace(/<\/li>/gi, '')
+      .trim();
+
     const alert = await this.alertController.create({
       header: '' + title,
       subHeader: '' + subheader,
-      message: '' + desc,
+      message: cleanDesc,
       buttons: buttons,
     });
 

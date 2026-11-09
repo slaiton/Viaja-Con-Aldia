@@ -28,7 +28,7 @@ export class OfflineBannerComponent {
     return !this.outboxSync.isConnected;
   }
 
-  reintentar(): void {
-    window.location.reload();
+  async reintentar(): Promise<void> {
+    await this.outboxSync.syncPendingQueue();
   }
 }

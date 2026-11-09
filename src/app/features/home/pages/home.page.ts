@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { UserService } from '../../../core/services/user.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActionSheetController } from '@ionic/angular';
-import { CameraSource } from '@capacitor/camera';
+import { CameraSource } from '@core/platform/camera-platform.service';
 import { ViajeFacade } from '../viaje.facade';
 import { TurnoFacade } from '../../turnos/turno.facade';
 import { RegionalListItem } from '@core/models/turno.model';
@@ -15,7 +15,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { PhotoService } from '../../../core/services/photo.service';
 import { AuthService } from '@core/services/auth.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { Browser } from '@capacitor/browser';
+import { PlatformBrowserService } from '@core/platform/browser-platform.service';
 import { environment } from '@env/environment';
 import { NotificationService } from '../../../api/notificaciones.service';
 import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
@@ -62,6 +62,7 @@ export class HomePage implements OnInit {
   tieneCapacitacionesPendientes: boolean = false;
   verificandoCapacitaciones: boolean = false;
   cantidadCapacitaciones: number = 0;
+  private initialCapCheckDone: boolean = false;
   event: any; //variable para cuenta regresiva
   marca: any;
   carroceria: any;
@@ -190,7 +191,8 @@ export class HomePage implements OnInit {
     private alertController: AlertController,
     public viajeFacade: ViajeFacade,
     public turnoFacade: TurnoFacade,
-    private actionSheetCtrl: ActionSheetController
+    private actionSheetCtrl: ActionSheetController,
+    private readonly browserPlatform: PlatformBrowserService
   ) {
     this.secretsAldia = {
       'X-Client-Id': environment.aldia.client_id,
@@ -215,8 +217,19 @@ export class HomePage implements OnInit {
   }
 
 
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.initialCapCheckDone) {
+      this.initialCapCheckDone = true;
+      return;
+    }
+    const token = this.token || this.userService.getToken();
+    if (token) {
+      await this.verificarCapacitaciones();
+    }
+  }
+
   async ngOnInit() {    
-    this.fotoUser = localStorage.getItem('fotoUser') || null;
+    this.fotoUser = this.storage.get<string>('fotoUser') || null;
     this.initializeApp()
 
     if (!this.token || this.userService.getToken() == null) {
@@ -259,6 +272,7 @@ export class HomePage implements OnInit {
       }
 
       await this.verificarCapacitaciones();
+      this.initialCapCheckDone = true;
 
       this.loadingData.dismiss();
 
@@ -368,7 +382,7 @@ export class HomePage implements OnInit {
       (doc: any) => {
         if (doc && doc['code'] !== '204' && doc.data && doc.data.fotoperfil) {
           this.fotoUser = doc.data.fotoperfil;
-          localStorage.setItem('fotoUser', doc.data.fotoperfil);
+          this.storage.set('fotoUser', doc.data.fotoperfil);
         }
       }
     );
@@ -559,7 +573,7 @@ export class HomePage implements OnInit {
         .replace(/ +/g, '-')
         .toLowerCase();
 
-      const placa = (localStorage.getItem('placa') || '').toUpperCase();
+      const placa = (this.storage.get<string>('placa') || '').toUpperCase();
 
       const turno: Turno = {
         placa: placa,
@@ -690,13 +704,7 @@ export class HomePage implements OnInit {
   }
 
   async abrirPlataformaCapacitacion(): Promise<void> {
-    const token = this.token || this.userService.getToken() || '';
-    const url = `https://www.3slogistica.com/tr_panel/process/capacitaciones/?token=${token}`;
-    try {
-      await Browser.open({ url });
-    } catch {
-      window.open(url, '_system');
-    }
+    await this.browserPlatform.abrirCapacitaciones();
   }
 
   async revalidarCapacitaciones(): Promise<void> {

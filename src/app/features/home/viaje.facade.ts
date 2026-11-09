@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { PlatformCameraService, CameraResultType, CameraSource } from '@core/platform/camera-platform.service';
 import { ViajeApi } from '@domain/viaje.api';
 import { ImageCompressionService } from '@core/services/image-compression.service';
 import { OutboxSyncService } from '@core/offline/outbox-sync.service';
@@ -38,7 +38,8 @@ export class ViajeFacade {
   constructor(
     private viajeApi: ViajeApi,
     private compressionService: ImageCompressionService,
-    private outboxSync: OutboxSyncService
+    private outboxSync: OutboxSyncService,
+    private cameraPlatform: PlatformCameraService
   ) {}
 
   /**
@@ -57,8 +58,7 @@ export class ViajeFacade {
         this.desactivarViaje();
       }
       return viaje;
-    } catch (err) {
-      console.warn('[ViajeFacade] Error cargando viaje activo:', err);
+    } catch {
       this.desactivarViaje();
       return null;
     } finally {
@@ -140,12 +140,12 @@ export class ViajeFacade {
   }
 
   /**
-   * Captura la foto de la remesa firmada con Capacitor Camera
+   * Captura la foto de la remesa firmada mediante el wrapper PlatformCameraService
    * y la comprime a WebP (< 150 KB).
    */
   async capturarFotoPOD(source: CameraSource = CameraSource.Camera): Promise<void> {
     try {
-      const image = await Camera.getPhoto({
+      const image = await this.cameraPlatform.getPhoto({
         quality: 80,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
@@ -167,8 +167,8 @@ export class ViajeFacade {
         webviewPath: comprimida.dataUrl,
         sizeKb
       });
-    } catch (err) {
-      console.warn('[ViajeFacade] Captura de cumplido POD cancelada o rechazada:', err);
+    } catch {
+      // Cancelación de cámara manejada silenciosamente
     }
   }
 
@@ -221,4 +221,3 @@ export class ViajeFacade {
     }
   }
 }
-

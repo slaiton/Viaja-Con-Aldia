@@ -754,97 +754,99 @@
     </ng-template>
   </ion-modal>
 
-  <!-- ============================================================== -->
-  <!-- MODAL BLOQUEANTE: CAPACITACIONES OBLIGATORIAS PENDIENTES       -->
-  <!-- ============================================================== -->
-  <ion-modal
-    [isOpen]="tieneCapacitacionesPendientes"
-    [backdropDismiss]="false"
-    [canDismiss]="false"
-    class="modal-capacitaciones-bloqueo"
-  >
-    <ng-template>
-      <ion-header class="ion-no-border">
-        <div class="aldia-header-pattern px-5 py-4 text-white">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
-              <ion-icon name="school-outline" class="text-24"></ion-icon>
-            </div>
-            <div>
-              <span class="text-11 uppercase tracking-wider font-semibold opacity-80 block">Cumplimiento Normativo</span>
-              <h2 class="text-18 font-bold text-white m-0">Capacitaciones Pendientes</h2>
-            </div>
-          </div>
-        </div>
-      </ion-header>
-
-      <ion-content class="ion-padding bg-[#F4F6F9]">
-        <div class="max-w-[440px] mx-auto py-4 flex flex-col items-center text-center">
-          
-          <!-- Icono de Alerta / Certificado -->
-          <div class="w-20 h-20 rounded-2xl bg-[#E5F4FC] border-2 border-[#BCE1F5] flex items-center justify-center text-[#0094DA] mb-4 shadow-sm">
-            <ion-icon name="shield-checkmark" class="text-44 text-[#0094DA]"></ion-icon>
-          </div>
-
-          <!-- Título y Badge de pendientes -->
-          <h3 class="text-19 font-extrabold text-[#1F2937] mb-2 leading-tight">
-            Acceso a Cabina Restringido
-          </h3>
-
-          <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-12 font-bold mb-3">
-            <ion-icon name="alert-circle"></ion-icon>
-            <span>{{ cantidadCapacitaciones }} módulo(s) pendiente(s) por realizar</span>
-          </div>
-
-          <p class="text-13 text-[#4B5563] leading-relaxed mb-6 px-2">
-            Por regulaciones de seguridad vial y normatividad de <strong>ALDÍA Logística</strong>, es obligatorio completar y aprobar todas las capacitaciones asignadas antes de solicitar turnos o realizar viajes.
-          </p>
-
-          <!-- Tarjeta de Instrucción -->
-          <div class="w-full bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-xs text-left mb-6">
-            <div class="flex items-start space-x-3">
-              <ion-icon name="information-circle" class="text-20 text-[#0094DA] mt-0.5 shrink-0"></ion-icon>
-              <div class="text-12 text-[#374151] leading-snug">
-                Presiona <strong>"Realizar Capacitaciones"</strong> para ingresar al portal formativo. Una vez finalices tus lecturas, regresa y pulsa <strong>"Verificar Aprobación"</strong> para desbloquear la cabina.
-              </div>
-            </div>
-          </div>
-
-          <!-- Botón Principal: Abrir Capacitaciones -->
-          <button
-            type="button"
-            (click)="abrirPlataformaCapacitacion()"
-            class="w-full h-12 bg-[#0094DA] active:bg-[#007BB5] text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow-md transition-all mb-3 cursor-pointer"
-          >
-            <ion-icon name="open-outline" class="text-18"></ion-icon>
-            <span>Realizar Capacitaciones</span>
-          </button>
-
-          <!-- Botón Secundario: Revalidar en tiempo real -->
-          <button
-            type="button"
-            (click)="revalidarCapacitaciones()"
-            [disabled]="verificandoCapacitaciones"
-            class="w-full h-11 bg-white border border-[#0094DA] active:bg-[#E5F4FC] text-[#0094DA] font-semibold rounded-xl flex items-center justify-center space-x-2 transition-all mb-4 cursor-pointer disabled:opacity-50"
-          >
-            <ion-spinner *ngIf="verificandoCapacitaciones" name="crescent" color="primary"></ion-spinner>
-            <ion-icon *ngIf="!verificandoCapacitaciones" name="refresh-outline" class="text-18"></ion-icon>
-            <span>{{ verificandoCapacitaciones ? 'Comprobando aprobación...' : 'Verificar Aprobación' }}</span>
-          </button>
-
-          <!-- Opción de Cerrar Sesión -->
-          <button
-            type="button"
-            (click)="cerrarSesionCapacitacion()"
-            class="text-12 text-[#6B7280] hover:text-[#DC2626] flex items-center space-x-1 transition-colors py-2 cursor-pointer"
-          >
-            <ion-icon name="log-out-outline"></ion-icon>
-            <span>Cerrar sesión en este dispositivo</span>
-          </button>
-
-        </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
 </ion-content>
+
+<!-- ============================================================== -->
+<!-- MODAL BLOQUEANTE: CAPACITACIONES OBLIGATORIAS PENDIENTES       -->
+<!-- ============================================================== -->
+<ion-modal
+  [isOpen]="tieneCapacitacionesPendientes"
+  [backdropDismiss]="false"
+  [canDismiss]="false"
+  [keyboardClose]="false"
+  backdropBreakpoint="1"
+  class="modal-capacitaciones-bloqueo"
+>
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <div class="aldia-header-pattern px-5 py-4 text-white">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+            <ion-icon name="school-outline" class="text-24"></ion-icon>
+          </div>
+          <div>
+            <span class="text-11 uppercase tracking-wider font-semibold opacity-80 block">Cumplimiento Normativo</span>
+            <h2 class="text-18 font-bold text-white m-0">Capacitaciones Pendientes</h2>
+          </div>
+        </div>
+      </div>
+    </ion-header>
+
+    <ion-content class="ion-padding bg-[#F4F6F9]">
+      <div class="max-w-[440px] mx-auto py-4 flex flex-col items-center text-center">
+        
+        <!-- Icono de Alerta / Certificado -->
+        <div class="w-20 h-20 rounded-2xl bg-[#E5F4FC] border-2 border-[#BCE1F5] flex items-center justify-center text-[#0094DA] mb-4 shadow-sm">
+          <ion-icon name="shield-checkmark" class="text-44 text-[#0094DA]"></ion-icon>
+        </div>
+
+        <!-- Título y Badge de pendientes -->
+        <h3 class="text-19 font-extrabold text-[#1F2937] mb-2 leading-tight">
+          Acceso a Cabina Restringido
+        </h3>
+
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-12 font-bold mb-3">
+          <ion-icon name="alert-circle"></ion-icon>
+          <span>{{ cantidadCapacitaciones }} módulo(s) pendiente(s) por realizar</span>
+        </div>
+
+        <p class="text-13 text-[#4B5563] leading-relaxed mb-6 px-2">
+          Por regulaciones de seguridad vial y normatividad de <strong>ALDÍA Logística</strong>, es obligatorio completar y aprobar todas las capacitaciones asignadas antes de solicitar turnos o realizar viajes.
+        </p>
+
+        <!-- Tarjeta de Instrucción -->
+        <div class="w-full bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-xs text-left mb-6">
+          <div class="flex items-start space-x-3">
+            <ion-icon name="information-circle" class="text-20 text-[#0094DA] mt-0.5 shrink-0"></ion-icon>
+            <div class="text-12 text-[#374151] leading-snug">
+              Presiona <strong>"Realizar Capacitaciones"</strong> para ingresar al portal formativo. Una vez finalices tus lecturas, regresa y pulsa <strong>"Verificar Aprobación"</strong> para desbloquear la cabina.
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón Principal: Abrir Capacitaciones -->
+        <button
+          type="button"
+          (click)="abrirPlataformaCapacitacion()"
+          class="w-full h-12 bg-[#0094DA] active:bg-[#007BB5] text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow-md transition-all mb-3 cursor-pointer"
+        >
+          <ion-icon name="open-outline" class="text-18"></ion-icon>
+          <span>Realizar Capacitaciones</span>
+        </button>
+
+        <!-- Botón Secundario: Revalidar en tiempo real -->
+        <button
+          type="button"
+          (click)="revalidarCapacitaciones()"
+          [disabled]="verificandoCapacitaciones"
+          class="w-full h-11 bg-white border border-[#0094DA] active:bg-[#E5F4FC] text-[#0094DA] font-semibold rounded-xl flex items-center justify-center space-x-2 transition-all mb-4 cursor-pointer disabled:opacity-50"
+        >
+          <ion-spinner *ngIf="verificandoCapacitaciones" name="crescent" color="primary"></ion-spinner>
+          <ion-icon *ngIf="!verificandoCapacitaciones" name="refresh-outline" class="text-18"></ion-icon>
+          <span>{{ verificandoCapacitaciones ? 'Comprobando aprobación...' : 'Verificar Aprobación' }}</span>
+        </button>
+
+        <!-- Opción de Cerrar Sesión -->
+        <button
+          type="button"
+          (click)="cerrarSesionCapacitacion()"
+          class="text-12 text-[#6B7280] hover:text-[#DC2626] flex items-center space-x-1 transition-colors py-2 cursor-pointer"
+        >
+          <ion-icon name="log-out-outline"></ion-icon>
+          <span>Cerrar sesión en este dispositivo</span>
+        </button>
+
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -5681,5 +5681,31 @@ ion-toggle::part(track) {
   }
 }
 
+/* ============================================================== */
+/* BLINDAJE MODAL CAPACITACIONES: PRIORIDAD MÁXIMA SOBRE BOTTOM BAR */
+/* ============================================================== */
+.modal-capacitaciones-bloqueo {
+  --z-index: 25000 !important;
+  z-index: 25000 !important;
+
+  &::part(backdrop) {
+    z-index: 25000 !important;
+    pointer-events: auto !important;
+  }
+
+  &::part(content) {
+    z-index: 25001 !important;
+  }
+}
+
+/* ============================================================== */
+/* CAPTURA DE CÁMARA PWA: VISIBILIDAD PRIORITARIA SOBRE MODALES   */
+/* ============================================================== */
+pwa-camera-modal-instance,
+pwa-camera-modal {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
 
 

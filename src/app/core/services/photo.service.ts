@@ -54,12 +54,61 @@ export class PhotoService {
     return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
   }
 
+  private async getBestCameraDirection(preferred: CameraDirection): Promise<CameraDirection> {
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        // Si el equipo solo cuenta con 1 cámara de video (ej. webcam de laptop/PC),
+        // pedir Rear ('environment') lanza OverconstrainedError resultando en "No camera found".
+        if (videoDevices.length === 1) {
+          return CameraDirection.Front;
+        }
+      } catch (_) {}
+    }
+    return preferred;
+  }
+
   public async addNewToCamera(name: any) {
+    try {
+      const direction = await this.getBestCameraDirection(CameraDirection.Rear);
+
+      let capturedPhoto: Photo;
+      try {
+        capturedPhoto = await Camera.getPhoto({
+          resultType: CameraResultType.Uri,
+          source: CameraSource.Camera,
+          direction: direction,
+          quality: 100
+        });
+      } catch (cameraErr: any) {
+        if (direction === CameraDirection.Rear) {
+          capturedPhoto = await Camera.getPhoto({
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Front,
+            quality: 100
+          });
+        } else {
+          throw cameraErr;
+        }
+      }
+
+      const savedImageFile = await this.savePicture(capturedPhoto, name);
+      this.fotos.unshift(savedImageFile);
+
+      return savedImageFile;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  public async addNewToCameraProfile(name: any) {
     try {
       const capturedPhoto = await Camera.getPhoto({
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
-        direction: CameraDirection.Rear,
+        direction: CameraDirection.Front,
         quality: 100
       });
 
@@ -68,84 +117,69 @@ export class PhotoService {
 
       return savedImageFile;
     } catch (error) {
-
       return false;
-
     }
   }
 
-  public async addNewToCameraProfile(name: any) {
-    const capturedPhoto = await Camera.getPhoto({
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
-      direction: CameraDirection.Front,
-      quality: 100
-    });
+  public async addNewToAll(name: any) {
+    try {
+      const direction = await this.getBestCameraDirection(CameraDirection.Rear);
+      const capturedPhoto = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        direction: direction,
+        quality: 100
+      });
 
-    const savedImageFile = await this.savePicture(capturedPhoto, name);
-    this.fotos.unshift(savedImageFile);
+      const savedImageFile = await this.savePicture(capturedPhoto, name);
+      this.fotos.unshift(savedImageFile);
 
-    return savedImageFile;
+      return savedImageFile;
+    } catch (error) {
+      return false;
+    }
   }
-
-    public async addNewToAll(name: any) {
-    // Take a photo
-    const capturedPhoto = await Camera.getPhoto({
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
-      quality: 100
-    });
-
-
-    const savedImageFile = await this.savePicture(capturedPhoto, name);
-    this.fotos.unshift(savedImageFile);
-
-    return savedImageFile;
-  }
-
 
   public async addNewToGallery(name: any) {
-    // Take a photo
-    const capturedPhoto = await Camera.getPhoto({
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Photos,
-      quality: 100
-    });
+    try {
+      // Take a photo
+      const capturedPhoto = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+        quality: 100
+      });
 
+      const savedImageFile = await this.savePicture(capturedPhoto, name);
+      this.fotos.unshift(savedImageFile);
 
-    const savedImageFile = await this.savePicture(capturedPhoto, name);
-    this.fotos.unshift(savedImageFile);
-
-    return savedImageFile;
+      return savedImageFile;
+    } catch (error) {
+      return false;
+    }
   }
 
-
-
   private async savePicture(photo: Photo, name: any) {
-    // console.log(photo);
-
     // Convert photo to base64 format, required by Filesystem API to save
     const base64Data = await this.readAsBase64(photo);
 
     this.base64Image = base64Data;
 
-    // localStorage.setItem('imagen_casa', this.base64Image);
-    // console.log(this.base64Image);
-
-
-
     // Write the file to the data directory
     const fileName = new Date().getTime() + '.jpeg';
-    const savedFile = await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Data
-    });
+    try {
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Data
+      });
 
-    Preferences.set({
-      key: this.PHOTO_STORAGE,
-      value: JSON.stringify(this.fotos),
-    });
+      Preferences.set({
+        key: this.PHOTO_STORAGE,
+        value: JSON.stringify(this.fotos),
+      });
+    } catch (e) {
+      console.warn('No se pudo guardar la imagen en Filesystem local:', e);
+    }
 
     // Use webPath to display the new image instead of base64 since it's
     // already loaded into memory
@@ -153,16 +187,24 @@ export class PhotoService {
       filepath: fileName,
       name: name,
       base64: base64Data,
-      webviewPath: photo.webPath
+      webviewPath: photo.webPath || base64Data
     };
   }
 
   async readAsBase64(photo: Photo) {
-    // Fetch the photo, read as a blob, then convert to base64 format
-    const response = await fetch(photo.webPath!);
-    const blob = await response.blob();
-
-    return await this.convertBlobToBase64(blob) as string;
+    if (photo.dataUrl) {
+      return photo.dataUrl;
+    }
+    if (photo.base64String) {
+      return `data:image/${photo.format || 'jpeg'};base64,${photo.base64String}`;
+    }
+    if (photo.webPath) {
+      // Fetch the photo, read as a blob, then convert to base64 format
+      const response = await fetch(photo.webPath);
+      const blob = await response.blob();
+      return await this.convertBlobToBase64(blob) as string;
+    }
+    return '';
   }
 
   private convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {

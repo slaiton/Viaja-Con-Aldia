@@ -166,13 +166,12 @@ export class DocumentosComponent implements OnInit {
 
   async addToGalery(name: any, rotate: any) {
     try {
-      this.loadingData = await this.loading.create({
-        message: 'Guardando Foto...'
-      });
-      await this.loadingData.present();
-
       const da = await this.photo.addNewToGallery(name);
       if (da) {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Foto...'
+        });
+        await this.loadingData.present();
         await this.processImage(da, name, rotate);
       }
     } catch (error) {
@@ -186,13 +185,12 @@ export class DocumentosComponent implements OnInit {
 
   async addToCamera(name: any, rotate: any) {
     try {
-      this.loadingData = await this.loading.create({
-        message: 'Guardando Foto...'
-      });
-      await this.loadingData.present();
-
       const da = await this.photo.addNewToCamera(name);
       if (da) {
+        this.loadingData = await this.loading.create({
+          message: 'Guardando Foto...'
+        });
+        await this.loadingData.present();
         await this.processImage(da, name, rotate);
       }
     } catch (error) {
