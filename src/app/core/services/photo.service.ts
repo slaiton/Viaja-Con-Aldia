@@ -68,10 +68,11 @@ export class PhotoService {
     const isWeb = Capacitor.getPlatform() === 'web';
     try {
       const capturedPhoto = await this.cameraPlatform.getPhoto({
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        direction: isWeb ? CameraDirection.Front : CameraDirection.Rear,
-        quality: 100
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: isWeb ? CameraSource.Photos : CameraSource.Camera,
+        direction: CameraDirection.Rear
       });
 
       const savedImageFile = await this.savePicture(capturedPhoto, name);
@@ -84,12 +85,14 @@ export class PhotoService {
   }
 
   public async addNewToCameraProfile(name: string) {
+    const isWeb = Capacitor.getPlatform() === 'web';
     try {
       const capturedPhoto = await this.cameraPlatform.getPhoto({
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        direction: CameraDirection.Front,
-        quality: 100
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: isWeb ? CameraSource.Photos : CameraSource.Camera,
+        direction: CameraDirection.Front
       });
 
       const savedImageFile = await this.savePicture(capturedPhoto, name);
@@ -105,10 +108,11 @@ export class PhotoService {
     const isWeb = Capacitor.getPlatform() === 'web';
     try {
       const capturedPhoto = await this.cameraPlatform.getPhoto({
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        direction: isWeb ? CameraDirection.Front : CameraDirection.Rear,
-        quality: 100
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: isWeb ? CameraSource.Photos : CameraSource.Camera,
+        direction: CameraDirection.Rear
       });
 
       const savedImageFile = await this.savePicture(capturedPhoto, name);
@@ -123,9 +127,11 @@ export class PhotoService {
   public async addNewToGallery(name: string) {
     try {
       const capturedPhoto = await this.cameraPlatform.getPhoto({
-        resultType: CameraResultType.Uri,
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
         source: CameraSource.Photos,
-        quality: 100
+        direction: CameraDirection.Rear
       });
 
       const savedImageFile = await this.savePicture(capturedPhoto, name);

@@ -13,6 +13,7 @@ import {
   PermissionStatus as LocalPermissionStatus,
   ScheduleOptions
 } from '@capacitor/local-notifications';
+import { CoreLoggerService } from '../services/core-logger.service';
 
 export interface PushNotificationEventMap {
   registration: Token;
@@ -36,6 +37,8 @@ export {
   providedIn: 'root'
 })
 export class NotificationPlatformService {
+  constructor(private readonly coreLogger: CoreLoggerService) {}
+
   // Push Notifications API
   async checkPushPermissions(): Promise<PushPermissionStatus> {
     try {
@@ -73,11 +76,11 @@ export class NotificationPlatformService {
         const result = listenerFunc(data);
         if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
           Promise.resolve(result).catch(() => {
-            // Atrapa silenciosamente para evitar unhandled promise rejection
+            this.coreLogger.logSafeError('Error genérico en callback de notificaciones');
           });
         }
       } catch {
-        // Atrapa errores síncronos
+        this.coreLogger.logSafeError('Error genérico en callback de notificaciones');
       }
     };
   }
