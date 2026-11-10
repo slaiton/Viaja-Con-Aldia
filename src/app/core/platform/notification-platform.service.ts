@@ -61,6 +61,27 @@ export class NotificationPlatformService {
     }
   }
 
+  /**
+   * Envuelve listeners para asegurar captura tanto de excepciones síncronas
+   * como de rechazos de promesas en callbacks asíncronos (evita unhandled rejection).
+   */
+  private createSafeListener<T>(
+    listenerFunc: (data: T) => void | Promise<void>
+  ): (data: T) => void {
+    return (data: T): void => {
+      try {
+        const result = listenerFunc(data);
+        if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
+          Promise.resolve(result).catch(() => {
+            // Atrapa silenciosamente para evitar unhandled promise rejection
+          });
+        }
+      } catch {
+        // Atrapa errores síncronos
+      }
+    };
+  }
+
   async addPushListener(
     eventName: 'registration',
     listenerFunc: (token: Token) => void | Promise<void>
@@ -83,28 +104,28 @@ export class NotificationPlatformService {
   ): Promise<PluginListenerHandle> {
     try {
       if (eventName === 'registration') {
-        return await PushNotifications.addListener(
-          'registration',
-          listenerFunc as (token: Token) => void
+        const safeListener = this.createSafeListener(
+          listenerFunc as (token: Token) => void | Promise<void>
         );
+        return await PushNotifications.addListener('registration', safeListener);
       }
       if (eventName === 'registrationError') {
-        return await PushNotifications.addListener(
-          'registrationError',
-          listenerFunc as (error: RegistrationError) => void
+        const safeListener = this.createSafeListener(
+          listenerFunc as (error: RegistrationError) => void | Promise<void>
         );
+        return await PushNotifications.addListener('registrationError', safeListener);
       }
       if (eventName === 'pushNotificationReceived') {
-        return await PushNotifications.addListener(
-          'pushNotificationReceived',
-          listenerFunc as (notification: PushNotificationSchema) => void
+        const safeListener = this.createSafeListener(
+          listenerFunc as (notification: PushNotificationSchema) => void | Promise<void>
         );
+        return await PushNotifications.addListener('pushNotificationReceived', safeListener);
       }
       if (eventName === 'pushNotificationActionPerformed') {
-        return await PushNotifications.addListener(
-          'pushNotificationActionPerformed',
-          listenerFunc as (action: ActionPerformed) => void
+        const safeListener = this.createSafeListener(
+          listenerFunc as (action: ActionPerformed) => void | Promise<void>
         );
+        return await PushNotifications.addListener('pushNotificationActionPerformed', safeListener);
       }
       return {
         remove: async () => {}
