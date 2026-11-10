@@ -38,24 +38,24 @@
 // Modal Bloqueante de Capacitaciones
 .modal-capacitaciones-bloqueo {
   --backdrop-opacity: 0.90;
-  --z-index: 25000 !important;
-  z-index: 25000 !important;
+  --border-radius: 20px 20px 0 0;
+  --box-shadow: 0 -10px 30px rgba(var(--ion-color-dark-rgb, 15, 23, 42), 0.35);
 
   &::part(backdrop) {
-    background: rgba(15, 23, 42, 0.90);
+    background: var(--ion-color-dark, #0f172a);
     backdrop-filter: blur(6px);
-    z-index: 25000 !important;
-    pointer-events: auto !important;
+    pointer-events: auto;
   }
 
   &::part(content) {
     border-radius: 20px 20px 0 0;
     max-height: 90vh;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
-    z-index: 25001 !important;
+    box-shadow: 0 -10px 30px rgba(var(--ion-color-dark-rgb, 15, 23, 42), 0.35);
   }
 
   @media (min-width: 640px) {
+    --border-radius: 20px;
+
     &::part(content) {
       border-radius: 20px;
       max-width: 480px;

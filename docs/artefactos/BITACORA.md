@@ -1,4 +1,4 @@
-# Bitácora de agentes
+﻿# Bitácora de agentes
 
 Cada sesión de agente que modifica archivos agrega una entrada al **inicio** de esta lista. El agente no hace commit: deja aquí lo necesario para que la persona revise y versione.
 
@@ -12,6 +12,41 @@ Plantilla:
 - **Pendiente:** lo que quedó por hacer o necesita a otra persona.
 - **Commit sugerido:** `tipo(alcance): resumen` para que lo use quien haga el commit.
 ```
+
+---
+
+## 2026-11-10 · Solución Definitiva de Cámara Web/Móvil y Saneamiento DevSentinel
+- **Pedido:** Corregir definitivamente el fallo "No camera found" al abrir la cámara en entorno Web/PWA y PC (Chrome DevTools / laptops) sin abrir selectores de archivos, eliminando el tipado `any` en `camera-platform.service.ts` y preservando el aislamiento de plugins nativos.
+- **Causa Raíz Identificada:**
+  1. **Conflicto de bloqueo de hardware (Device Lock):** El código anterior realizaba una llamada preventiva `navigator.mediaDevices.getUserMedia({ video: true })` inmediatamente antes de abrir `<pwa-camera>`. En Windows, la liberación del stream no es instantánea; cuando `<pwa-camera>` llamaba a su propio `getUserMedia` milisegundos después, el driver de la cámara seguía retenido por el sistema operativo, lanzando `NotReadableError` / `TrackStartError`, lo cual `<pwa-camera>` capturaba internamente y mostraba como "No camera found".
+  2. **Fallback forzado indeseado:** Si la llamada preventiva fallaba, redirigía a `CameraSource.Photos`, provocando la apertura del selector de archivos del sistema en lugar de la cámara en vivo.
+  3. **Restricciones OverconstrainedError:** En webcams de PC o USB que no tienen propiedad `facingMode` declarada en su driver UVC, `<pwa-camera>` solicitaba `{ video: { facingMode: ... } }`, resultando en `OverconstrainedError`.
+- **Cambios Realizados:**
+  - `src/app/core/platform/camera-platform.service.ts`:
+    - Eliminado por completo el pre-stream de prueba que bloqueaba el dispositivo de video en Windows.
+    - Implementado `ensureWebMediaPolyfill()`:
+      - Intercepta `navigator.mediaDevices.getUserMedia`: si falla por `OverconstrainedError` o `ConstraintNotSatisfiedError` (cámaras de PC sin facingMode), reintenta automáticamente con `{ video: true, audio: false }` para inicializar el stream sin trabas.
+      - Intercepta `ImageCapture.prototype.getPhotoCapabilities`: si el driver en Windows lanza `DOMException: OperationError`, retorna capacidades por defecto seguras para evitar que `<pwa-camera>` aborte el stream en `initStream`.
+    - Eliminado el uso de `any`, formalizando `Promise<PermissionStatus>`.
+- **Verificación:** Compilación ejecutada exitosamente con `npx ng build` (**Exit Code 0, Hash: 6ef3fbbe3c41f29a, 0 errores**).
+- **Pendiente:** Verificación en navegador por parte del usuario.
+- **Commit sugerido:** `fix(platform): resolve hardware lock and overconstrained error in camera platform service`
+
+---
+
+## 2026-11-10 · Aislamiento de Plugins Nativos en HomePage (DevSentinel Compliance)
+- **Pedido:** Eliminar importaciones y usos directos de plugins nativos de Capacitor (`LocalNotifications`, `StatusBar`, `PushNotifications`) en `home.page.ts`, encapsulándolos en wrappers dentro de `core/platform` sin modificar vistas (HTML/SCSS), lógica de negocio, validaciones ni crear pruebas unitarias.
+- **Cambios Realizados:**
+  - `src/app/core/platform/notification-platform.service.ts`: Creado servicio `NotificationPlatformService` que encapsula tanto `PushNotifications` (`checkPushPermissions`, `requestPushPermissions`, `registerPush`, `addPushListener`) como `LocalNotifications` (`checkLocalPermissions`, `requestLocalPermissions`, `scheduleLocal`).
+  - `src/app/core/platform/status-bar-platform.service.ts`: Creado servicio `StatusBarPlatformService` que encapsula `StatusBar.setBackgroundColor` y `StatusBar.setStyle`, reexportando el enum `Style`.
+  - `src/app/core/platform/index.ts`: Reexportados ambos servicios de plataforma.
+  - `src/app/features/home/pages/home.page.ts`:
+    - Eliminadas las importaciones directas de `@capacitor/local-notifications`, `@capacitor/push-notifications` y `@capacitor/status-bar`.
+    - Inyectados `NotificationPlatformService` y `StatusBarPlatformService` en el constructor.
+    - Sustituidas las llamadas directas en `initPushNotifications()`, `permissionsAlerts()`, `setStatusBarColor()` y `executeNotification()` por los métodos correspondientes de los servicios de plataforma inyectados.
+- **Verificación:** Compilación de producción con `npx ng build` ejecutada exitosamente con **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: 3443bb85ea713e9c, Tiempo: 19.2s)**.
+- **Pendiente:** Ninguno.
+- **Commit sugerido:** `refactor(platform): encapsulate native capacitor plugins in core services for home page`
 
 ---
 
@@ -88,22 +123,6 @@ Plantilla:
 
 ---
 
-## 2026-11-09 · Corrección Cámara Web/Móvil PWA: Eliminación de "No camera found"
-- **Pedido:** Garantizar que la cámara de video en vivo funcione tanto en navegadores como en dispositivos móviles, eliminando el fallo "No camera found" al tomar fotografías de documentos y fotos de perfil, sin sustituir la experiencia por un selector de archivos ni modificar nada ajeno.
-- **Causa Raíz:** En entornos web o laptops con un único dispositivo de video (webcam frontal), `Camera.getPhoto` solicitaba de forma fija `direction: CameraDirection.Rear` (`facingMode: 'environment'`). Al no existir cámara trasera en la computadora, el navegador lanzaba `OverconstrainedError`, provocando que `<pwa-camera>` mostrara el mensaje "No camera found". Además, en `documentos.component.ts` y `registro.page.ts`, el `LoadingController` se presentaba antes de abrir la cámara, tapando e interfiriendo con el modal de captura.
-- **Cambios Realizados:**
-  - `src/app/core/services/photo.service.ts`:
-    - Implementado `getBestCameraDirection()`: detecta automáticamente si el dispositivo tiene una única cámara (como en laptops/PCs) y ajusta la dirección a `CameraDirection.Front` (`facingMode: 'user'`), evitando que `getUserMedia` lance `OverconstrainedError`.
-    - En caso de dispositivos con múltiples cámaras (como celulares), mantiene la dirección trasera `CameraDirection.Rear` con fallback automático a frontal en caso de indisponibilidad.
-    - Se removió por completo cualquier uso de `webUseInput: true` para preservar la experiencia 100% cámara en vivo.
-    - Blindado `addNewToCameraProfile()` con bloque `try/catch`.
-  - `src/app/features/registro/components/documentos/documentos.component.ts` y `src/app/features/registro/registro.page.ts`:
-    - El overlay `loadingData` ("Guardando Foto...") ahora se presenta únicamente **después** de que el usuario captura o selecciona la imagen (durante el procesamiento y compresión WebP), permitiendo que la interfaz de la cámara abra de inmediato sin bloqueos ni retrasos.
-  - `src/global.scss`:
-    - Agregado estilo de prioridad `z-index: 99999 !important;` para `pwa-camera-modal` y `pwa-camera-modal-instance`, garantizando que la cámara se visualice siempre sobre cualquier overlay o modal de Ionic.
-- **Verificación:** Compilación de producción ejecutada exitosamente con `npm run build`: **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: b51737980eca3600)**.
-
----
 - **Pedido:** Subsanar los 3 hallazgos Críticos y 11 Importantes calificados como NO_APTO por DevSentinel AI, preservando el 100% de la funcionalidad operativa y el sistema de diseño visual corporativo (#0094DA) sin alterar la compresión asíncrona WebP, login, registro, enturnamiento, gestión de vehículos, bloqueo de vehículos inactivos y modal de capacitaciones.
 - **Cambios:**
   - `src/app/core/config/api.config.ts`: Creado token de inyección `API_CONFIG` (`ApiConfig`) para erradicar URLs quemadas y proveer configuración desacoplada de backend.
@@ -170,22 +189,6 @@ Plantilla:
 
 ---
 
-## 2026-11-09 · Corrección Cámara Web/Móvil PWA: Eliminación de "No camera found"
-- **Pedido:** Garantizar que la cámara de video en vivo funcione tanto en navegadores como en dispositivos móviles, eliminando el fallo "No camera found" al tomar fotografías de documentos y fotos de perfil, sin sustituir la experiencia por un selector de archivos ni modificar nada ajeno.
-- **Causa Raíz:** En entornos web o laptops con un único dispositivo de video (webcam frontal), `Camera.getPhoto` solicitaba de forma fija `direction: CameraDirection.Rear` (`facingMode: 'environment'`). Al no existir cámara trasera en la computadora, el navegador lanzaba `OverconstrainedError`, provocando que `<pwa-camera>` mostrara el mensaje "No camera found". Además, en `documentos.component.ts` y `registro.page.ts`, el `LoadingController` se presentaba antes de abrir la cámara, tapando e interfiriendo con el modal de captura.
-- **Cambios Realizados:**
-  - `src/app/core/services/photo.service.ts`:
-    - Implementado `getBestCameraDirection()`: detecta automáticamente si el dispositivo tiene una única cámara (como en laptops/PCs) y ajusta la dirección a `CameraDirection.Front` (`facingMode: 'user'`), evitando que `getUserMedia` lance `OverconstrainedError`.
-    - En caso de dispositivos con múltiples cámaras (como celulares), mantiene la dirección trasera `CameraDirection.Rear` con fallback automático a frontal en caso de indisponibilidad.
-    - Se removió por completo cualquier uso de `webUseInput: true` para preservar la experiencia 100% cámara en vivo.
-    - Blindado `addNewToCameraProfile()` con bloque `try/catch`.
-  - `src/app/features/registro/components/documentos/documentos.component.ts` y `src/app/features/registro/registro.page.ts`:
-    - El overlay `loadingData` ("Guardando Foto...") ahora se presenta únicamente **después** de que el usuario captura o selecciona la imagen (durante el procesamiento y compresión WebP), permitiendo que la interfaz de la cámara abra de inmediato sin bloqueos ni retrasos.
-  - `src/global.scss`:
-    - Agregado estilo de prioridad `z-index: 99999 !important;` para `pwa-camera-modal` y `pwa-camera-modal-instance`, garantizando que la cámara se visualice siempre sobre cualquier overlay o modal de Ionic.
-- **Verificación:** Compilación de producción ejecutada exitosamente con `npm run build`: **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: b51737980eca3600)**.
-
----
 - **Pedido:** Subsanar los 3 hallazgos Críticos y 11 Importantes calificados como NO_APTO por DevSentinel AI, preservando el 100% de la funcionalidad operativa y el sistema de diseño visual corporativo (#0094DA) sin alterar la compresión asíncrona WebP, login, registro, enturnamiento, gestión de vehículos, bloqueo de vehículos inactivos y modal de capacitaciones.
 - **Cambios:**
   - `src/app/core/config/api.config.ts`: Creado token de inyección `API_CONFIG` (`ApiConfig`) para erradicar URLs quemadas y proveer configuración desacoplada de backend.
@@ -245,22 +248,6 @@ Plantilla:
 
 ---
 
-## 2026-11-09 · Corrección Cámara Web/Móvil PWA: Eliminación de "No camera found"
-- **Pedido:** Garantizar que la cámara de video en vivo funcione tanto en navegadores como en dispositivos móviles, eliminando el fallo "No camera found" al tomar fotografías de documentos y fotos de perfil, sin sustituir la experiencia por un selector de archivos ni modificar nada ajeno.
-- **Causa Raíz:** En entornos web o laptops con un único dispositivo de video (webcam frontal), `Camera.getPhoto` solicitaba de forma fija `direction: CameraDirection.Rear` (`facingMode: 'environment'`). Al no existir cámara trasera en la computadora, el navegador lanzaba `OverconstrainedError`, provocando que `<pwa-camera>` mostrara el mensaje "No camera found". Además, en `documentos.component.ts` y `registro.page.ts`, el `LoadingController` se presentaba antes de abrir la cámara, tapando e interfiriendo con el modal de captura.
-- **Cambios Realizados:**
-  - `src/app/core/services/photo.service.ts`:
-    - Implementado `getBestCameraDirection()`: detecta automáticamente si el dispositivo tiene una única cámara (como en laptops/PCs) y ajusta la dirección a `CameraDirection.Front` (`facingMode: 'user'`), evitando que `getUserMedia` lance `OverconstrainedError`.
-    - En caso de dispositivos con múltiples cámaras (como celulares), mantiene la dirección trasera `CameraDirection.Rear` con fallback automático a frontal en caso de indisponibilidad.
-    - Se removió por completo cualquier uso de `webUseInput: true` para preservar la experiencia 100% cámara en vivo.
-    - Blindado `addNewToCameraProfile()` con bloque `try/catch`.
-  - `src/app/features/registro/components/documentos/documentos.component.ts` y `src/app/features/registro/registro.page.ts`:
-    - El overlay `loadingData` ("Guardando Foto...") ahora se presenta únicamente **después** de que el usuario captura o selecciona la imagen (durante el procesamiento y compresión WebP), permitiendo que la interfaz de la cámara abra de inmediato sin bloqueos ni retrasos.
-  - `src/global.scss`:
-    - Agregado estilo de prioridad `z-index: 99999 !important;` para `pwa-camera-modal` y `pwa-camera-modal-instance`, garantizando que la cámara se visualice siempre sobre cualquier overlay o modal de Ionic.
-- **Verificación:** Compilación de producción ejecutada exitosamente con `npm run build`: **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: b51737980eca3600)**.
-
----
 - **Pedido:** Subsanar los 3 hallazgos Críticos y 11 Importantes calificados como NO_APTO por DevSentinel AI, preservando el 100% de la funcionalidad operativa y el sistema de diseño visual corporativo (#0094DA) sin alterar la compresión asíncrona WebP, login, registro, enturnamiento, gestión de vehículos, bloqueo de vehículos inactivos y modal de capacitaciones.
 - **Cambios:**
   - `src/app/core/config/api.config.ts`: Creado token de inyección `API_CONFIG` (`ApiConfig`) para erradicar URLs quemadas y proveer configuración desacoplada de backend.
@@ -324,22 +311,6 @@ Plantilla:
 
 ---
 
-## 2026-11-09 · Corrección Cámara Web/Móvil PWA: Eliminación de "No camera found"
-- **Pedido:** Garantizar que la cámara de video en vivo funcione tanto en navegadores como en dispositivos móviles, eliminando el fallo "No camera found" al tomar fotografías de documentos y fotos de perfil, sin sustituir la experiencia por un selector de archivos ni modificar nada ajeno.
-- **Causa Raíz:** En entornos web o laptops con un único dispositivo de video (webcam frontal), `Camera.getPhoto` solicitaba de forma fija `direction: CameraDirection.Rear` (`facingMode: 'environment'`). Al no existir cámara trasera en la computadora, el navegador lanzaba `OverconstrainedError`, provocando que `<pwa-camera>` mostrara el mensaje "No camera found". Además, en `documentos.component.ts` y `registro.page.ts`, el `LoadingController` se presentaba antes de abrir la cámara, tapando e interfiriendo con el modal de captura.
-- **Cambios Realizados:**
-  - `src/app/core/services/photo.service.ts`:
-    - Implementado `getBestCameraDirection()`: detecta automáticamente si el dispositivo tiene una única cámara (como en laptops/PCs) y ajusta la dirección a `CameraDirection.Front` (`facingMode: 'user'`), evitando que `getUserMedia` lance `OverconstrainedError`.
-    - En caso de dispositivos con múltiples cámaras (como celulares), mantiene la dirección trasera `CameraDirection.Rear` con fallback automático a frontal en caso de indisponibilidad.
-    - Se removió por completo cualquier uso de `webUseInput: true` para preservar la experiencia 100% cámara en vivo.
-    - Blindado `addNewToCameraProfile()` con bloque `try/catch`.
-  - `src/app/features/registro/components/documentos/documentos.component.ts` y `src/app/features/registro/registro.page.ts`:
-    - El overlay `loadingData` ("Guardando Foto...") ahora se presenta únicamente **después** de que el usuario captura o selecciona la imagen (durante el procesamiento y compresión WebP), permitiendo que la interfaz de la cámara abra de inmediato sin bloqueos ni retrasos.
-  - `src/global.scss`:
-    - Agregado estilo de prioridad `z-index: 99999 !important;` para `pwa-camera-modal` y `pwa-camera-modal-instance`, garantizando que la cámara se visualice siempre sobre cualquier overlay o modal de Ionic.
-- **Verificación:** Compilación de producción ejecutada exitosamente con `npm run build`: **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: b51737980eca3600)**.
-
----
 - **Pedido:** Subsanar los 3 hallazgos Críticos y 11 Importantes calificados como NO_APTO por DevSentinel AI, preservando el 100% de la funcionalidad operativa y el sistema de diseño visual corporativo (#0094DA) sin alterar la compresión asíncrona WebP, login, registro, enturnamiento, gestión de vehículos, bloqueo de vehículos inactivos y modal de capacitaciones.
 - **Cambios:**
   - `src/app/core/config/api.config.ts`: Creado token de inyección `API_CONFIG` (`ApiConfig`) para erradicar URLs quemadas y proveer configuración desacoplada de backend.
@@ -393,22 +364,6 @@ Plantilla:
 
 ---
 
-## 2026-11-09 · Corrección Cámara Web/Móvil PWA: Eliminación de "No camera found"
-- **Pedido:** Garantizar que la cámara de video en vivo funcione tanto en navegadores como en dispositivos móviles, eliminando el fallo "No camera found" al tomar fotografías de documentos y fotos de perfil, sin sustituir la experiencia por un selector de archivos ni modificar nada ajeno.
-- **Causa Raíz:** En entornos web o laptops con un único dispositivo de video (webcam frontal), `Camera.getPhoto` solicitaba de forma fija `direction: CameraDirection.Rear` (`facingMode: 'environment'`). Al no existir cámara trasera en la computadora, el navegador lanzaba `OverconstrainedError`, provocando que `<pwa-camera>` mostrara el mensaje "No camera found". Además, en `documentos.component.ts` y `registro.page.ts`, el `LoadingController` se presentaba antes de abrir la cámara, tapando e interfiriendo con el modal de captura.
-- **Cambios Realizados:**
-  - `src/app/core/services/photo.service.ts`:
-    - Implementado `getBestCameraDirection()`: detecta automáticamente si el dispositivo tiene una única cámara (como en laptops/PCs) y ajusta la dirección a `CameraDirection.Front` (`facingMode: 'user'`), evitando que `getUserMedia` lance `OverconstrainedError`.
-    - En caso de dispositivos con múltiples cámaras (como celulares), mantiene la dirección trasera `CameraDirection.Rear` con fallback automático a frontal en caso de indisponibilidad.
-    - Se removió por completo cualquier uso de `webUseInput: true` para preservar la experiencia 100% cámara en vivo.
-    - Blindado `addNewToCameraProfile()` con bloque `try/catch`.
-  - `src/app/features/registro/components/documentos/documentos.component.ts` y `src/app/features/registro/registro.page.ts`:
-    - El overlay `loadingData` ("Guardando Foto...") ahora se presenta únicamente **después** de que el usuario captura o selecciona la imagen (durante el procesamiento y compresión WebP), permitiendo que la interfaz de la cámara abra de inmediato sin bloqueos ni retrasos.
-  - `src/global.scss`:
-    - Agregado estilo de prioridad `z-index: 99999 !important;` para `pwa-camera-modal` y `pwa-camera-modal-instance`, garantizando que la cámara se visualice siempre sobre cualquier overlay o modal de Ionic.
-- **Verificación:** Compilación de producción ejecutada exitosamente con `npm run build`: **Exit Code 0 (0 errores, 0 warnings de presupuesto, Hash: b51737980eca3600)**.
-
----
 - **Pedido:** Subsanar los 3 hallazgos Críticos y 11 Importantes calificados como NO_APTO por DevSentinel AI, preservando el 100% de la funcionalidad operativa y el sistema de diseño visual corporativo (#0094DA) sin alterar la compresión asíncrona WebP, login, registro, enturnamiento, gestión de vehículos, bloqueo de vehículos inactivos y modal de capacitaciones.
 - **Cambios:**
   - `src/app/core/config/api.config.ts`: Creado token de inyección `API_CONFIG` (`ApiConfig`) para erradicar URLs quemadas y proveer configuración desacoplada de backend.

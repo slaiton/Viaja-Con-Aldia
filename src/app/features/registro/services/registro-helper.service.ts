@@ -19,12 +19,8 @@ export class RegistroHelperService {
   }
 
   async procesarFirmasContrato(cedula: string, placa: string, token: string): Promise<void> {
-    try {
-      await this.user.firmaContrato(1, cedula, '', token);
-      await this.user.firmaContrato(2, cedula, placa, token);
-    } catch {
-      // Error silencioso en firma preliminar
-    }
+    await this.user.firmaContrato(1, cedula, '', token);
+    await this.user.firmaContrato(2, cedula, placa, token);
   }
 
   validarConsentimientos(): boolean {

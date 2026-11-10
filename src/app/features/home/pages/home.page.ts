@@ -11,14 +11,17 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertController, IonModal, LoadingController, ModalController, Platform } from '@ionic/angular';
 import { GeodataService } from '../../../api/geodata.service';
 import { AppComponent } from '../../../app.component';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { PhotoService } from '../../../core/services/photo.service';
 import { AuthService } from '@core/services/auth.service';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { PlatformBrowserService } from '@core/platform/browser-platform.service';
+import {
+  PlatformBrowserService,
+  NotificationPlatformService,
+  StatusBarPlatformService,
+  Style,
+  PushPermissionStatus
+} from '@core/platform';
 import { environment } from '@env/environment';
 import { NotificationService } from '../../../api/notificaciones.service';
-import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
 import { LocalNotificationService } from '../../../core/services/local-notification.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { TurnosService } from '../../../api/turnos.service';
@@ -192,7 +195,9 @@ export class HomePage implements OnInit {
     public viajeFacade: ViajeFacade,
     public turnoFacade: TurnoFacade,
     private actionSheetCtrl: ActionSheetController,
-    private readonly browserPlatform: PlatformBrowserService
+    private readonly browserPlatform: PlatformBrowserService,
+    private readonly notificationPlatform: NotificationPlatformService,
+    private readonly statusBarPlatform: StatusBarPlatformService
   ) {
     this.secretsAldia = {
       'X-Client-Id': environment.aldia.client_id,
@@ -440,10 +445,10 @@ export class HomePage implements OnInit {
   async initPushNotifications() {
     try {
       // Verificar permisos
-      const permissionStatus: PermissionStatus = await PushNotifications.checkPermissions();
+      const permissionStatus: PushPermissionStatus = await this.notificationPlatform.checkPushPermissions();
 
       if (permissionStatus.receive !== 'granted') {
-        const requestPermission = await PushNotifications.requestPermissions();
+        const requestPermission = await this.notificationPlatform.requestPushPermissions();
         if (requestPermission.receive !== 'granted') {
           console.warn('Permisos de notificaciones no concedidos');
           return;
@@ -451,24 +456,24 @@ export class HomePage implements OnInit {
       }
 
       // Registrar notificaciones
-      await PushNotifications.register();
+      await this.notificationPlatform.registerPush();
 
-      PushNotifications.addListener('registration', async (token) => {
+      this.notificationPlatform.addPushListener('registration', async (token) => {
         // console.log('Token FCM obtenido:', token.value);
         const json = { email: this.cedula, token_mobile: token.value }
         await this.userService.laodTokenMobile(json, this.token);
       });
 
-      PushNotifications.addListener('registrationError', (error) => {
+      this.notificationPlatform.addPushListener('registrationError', (error) => {
         console.error('Error al registrar FCM:', error);
       });
 
       // Listener para recibir notificaciones
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      this.notificationPlatform.addPushListener('pushNotificationReceived', (notification) => {
         console.log('Notificación recibida en foreground:', notification);
       });
 
-      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      this.notificationPlatform.addPushListener('pushNotificationActionPerformed', (action) => {
         console.log('Acción realizada con la notificación:', action);
       });
 
@@ -479,11 +484,11 @@ export class HomePage implements OnInit {
 
 
   async permissionsAlerts(permissionAttempts: any) {
-    const permissions = await LocalNotifications.checkPermissions();
+    const permissions = await this.notificationPlatform.checkLocalPermissions();
 
     if (permissions.display !== 'granted') {
       if (permissionAttempts < 2) {
-        const newPermissions = await LocalNotifications.requestPermissions();
+        const newPermissions = await this.notificationPlatform.requestLocalPermissions();
         console.log('requestPermissions result:', newPermissions);
 
         if (newPermissions.display === 'denied') {
@@ -533,15 +538,15 @@ export class HomePage implements OnInit {
 
   setStatusBarColor() {
     if (this.platform.is('android')) {
-      StatusBar.setBackgroundColor({ color: '#3c8ccd' });
+      this.statusBarPlatform.setBackgroundColor({ color: '#3c8ccd' });
     } else if (this.platform.is('ios')) {
-      StatusBar.setStyle({ style: Style.Dark });
+      this.statusBarPlatform.setStyle({ style: Style.Dark });
     }
   }
 
   async executeNotification(id: any, title: any, body: any) {
 
-    await LocalNotifications.schedule({
+    await this.notificationPlatform.scheduleLocal({
       notifications: [
         {
           id: id,

@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Camera, CameraDirection, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import {
+  PlatformCameraService,
+  CameraDirection,
+  CameraResultType,
+  CameraSource,
+  Photo
+} from '../platform/camera-platform.service';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import { Foto } from '../models/photo.interface'
@@ -17,7 +24,10 @@ export class PhotoService {
   public fotos: Foto[] = [];
   public base64Image: any;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private readonly cameraPlatform: PlatformCameraService
+  ) { }
 
   public getFotoTercero(doc: any, tipo: any, tiporegistro: any): Observable<any> {
     const params = new HttpParams({
@@ -54,58 +64,28 @@ export class PhotoService {
     return this.http.get("https://api.aldialogistica.com/api/documento", requestOptions)
   }
 
-  private async getBestCameraDirection(preferred: CameraDirection): Promise<CameraDirection> {
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        // Si el equipo solo cuenta con 1 cámara de video (ej. webcam de laptop/PC),
-        // pedir Rear ('environment') lanza OverconstrainedError resultando en "No camera found".
-        if (videoDevices.length === 1) {
-          return CameraDirection.Front;
-        }
-      } catch (_) {}
-    }
-    return preferred;
-  }
-
-  public async addNewToCamera(name: any) {
+  public async addNewToCamera(name: string) {
+    const isWeb = Capacitor.getPlatform() === 'web';
     try {
-      const direction = await this.getBestCameraDirection(CameraDirection.Rear);
-
-      let capturedPhoto: Photo;
-      try {
-        capturedPhoto = await Camera.getPhoto({
-          resultType: CameraResultType.Uri,
-          source: CameraSource.Camera,
-          direction: direction,
-          quality: 100
-        });
-      } catch (cameraErr: any) {
-        if (direction === CameraDirection.Rear) {
-          capturedPhoto = await Camera.getPhoto({
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Camera,
-            direction: CameraDirection.Front,
-            quality: 100
-          });
-        } else {
-          throw cameraErr;
-        }
-      }
+      const capturedPhoto = await this.cameraPlatform.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        direction: isWeb ? CameraDirection.Front : CameraDirection.Rear,
+        quality: 100
+      });
 
       const savedImageFile = await this.savePicture(capturedPhoto, name);
       this.fotos.unshift(savedImageFile);
 
       return savedImageFile;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  public async addNewToCameraProfile(name: any) {
+  public async addNewToCameraProfile(name: string) {
     try {
-      const capturedPhoto = await Camera.getPhoto({
+      const capturedPhoto = await this.cameraPlatform.getPhoto({
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         direction: CameraDirection.Front,
@@ -116,18 +96,18 @@ export class PhotoService {
       this.fotos.unshift(savedImageFile);
 
       return savedImageFile;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  public async addNewToAll(name: any) {
+  public async addNewToAll(name: string) {
+    const isWeb = Capacitor.getPlatform() === 'web';
     try {
-      const direction = await this.getBestCameraDirection(CameraDirection.Rear);
-      const capturedPhoto = await Camera.getPhoto({
+      const capturedPhoto = await this.cameraPlatform.getPhoto({
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
-        direction: direction,
+        direction: isWeb ? CameraDirection.Front : CameraDirection.Rear,
         quality: 100
       });
 
@@ -135,15 +115,14 @@ export class PhotoService {
       this.fotos.unshift(savedImageFile);
 
       return savedImageFile;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  public async addNewToGallery(name: any) {
+  public async addNewToGallery(name: string) {
     try {
-      // Take a photo
-      const capturedPhoto = await Camera.getPhoto({
+      const capturedPhoto = await this.cameraPlatform.getPhoto({
         resultType: CameraResultType.Uri,
         source: CameraSource.Photos,
         quality: 100
@@ -153,7 +132,7 @@ export class PhotoService {
       this.fotos.unshift(savedImageFile);
 
       return savedImageFile;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

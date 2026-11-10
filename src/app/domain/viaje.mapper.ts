@@ -1,4 +1,4 @@
-import { ViajeActivo, ManifiestoMEC, RemesaPOD, EstadoRemesa } from '@core/models/viaje.model';
+import { ViajeActivo, ManifiestoMEC, RemesaPOD, EstadoRemesa, ESTADOS_CABINA, ESTADO_VIAJE_API } from '@core/models/viaje.model';
 
 export class ViajeMapper {
   /**
@@ -18,7 +18,7 @@ export class ViajeMapper {
       return null;
     }
 
-    if (data['estado'] !== 'ACTIVO') {
+    if (data['estado'] !== ESTADO_VIAJE_API.ACTIVO) {
       return null;
     }
 
@@ -87,7 +87,7 @@ export class ViajeMapper {
 
     return {
       idViaje,
-      estado: 'EN_VIAJE_RNDC',
+      estado: ESTADOS_CABINA.EN_VIAJE_RNDC,
       enRutaNacional: true,
       manifiesto,
       remesas,

@@ -878,7 +878,17 @@ export class RegistroPage implements OnInit {
       return;
     }
 
-    await this.registroHelper.procesarFirmasContrato(this.conductor.cedula, this.vehiculo.placa, this.token);
+    try {
+      await this.registroHelper.procesarFirmasContrato(this.conductor.cedula, this.vehiculo.placa, this.token);
+    } catch {
+      this.presentAlert(
+        'Error de Firma',
+        '',
+        'No fue posible registrar las firmas de los contratos. Por favor intente nuevamente.',
+        'Aceptar'
+      );
+      return;
+    }
     this.aceptTermData = true;
     this.aceptTerms = true;
 

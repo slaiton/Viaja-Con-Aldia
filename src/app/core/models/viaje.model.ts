@@ -1,5 +1,15 @@
 export type EstadoOperativoCabina = 'SIN_TURNO' | 'ENTURNADO' | 'EN_VIAJE_RNDC';
 
+export const ESTADOS_CABINA: Record<EstadoOperativoCabina, EstadoOperativoCabina> = {
+  SIN_TURNO: 'SIN_TURNO',
+  ENTURNADO: 'ENTURNADO',
+  EN_VIAJE_RNDC: 'EN_VIAJE_RNDC'
+} as const;
+
+export const ESTADO_VIAJE_API = {
+  ACTIVO: 'ACTIVO'
+} as const;
+
 export type EstadoRemesa = 'EN_RUTA' | 'EN_DESCARGUE' | 'ENTREGADO' | 'NOVEDAD';
 
 export interface ManifiestoMEC {

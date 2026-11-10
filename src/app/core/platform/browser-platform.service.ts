@@ -1,11 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Browser, OpenOptions } from '@capacitor/browser';
+import { API_CONFIG, ApiConfig } from '@core/config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PlatformBrowserService {
-  private readonly baseUrlCapacitaciones = 'https://www.3slogistica.com/tr_panel/process/capacitaciones/';
+
+  constructor(@Inject(API_CONFIG) private readonly apiConfig: ApiConfig) {}
 
   async open(options: OpenOptions): Promise<void> {
     try {
@@ -25,7 +27,7 @@ export class PlatformBrowserService {
 
   async abrirCapacitaciones(): Promise<void> {
     await this.open({
-      url: this.baseUrlCapacitaciones,
+      url: this.apiConfig.urlCapacitaciones,
       windowName: '_blank'
     });
   }

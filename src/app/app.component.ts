@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { tap, takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
-import { defineCustomElements } from '@ionic/pwa-elements/loader';
+
 import { Network } from '@capacitor/network';
 import { PluginListenerHandle } from '@capacitor/core';
 import { App,  URLOpenListenerEvent } from '@capacitor/app';
@@ -58,7 +58,6 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {
     this.tieneAlertasDocumentos$ = this.docFacade.tieneAlertasVencimiento$;
     this.totalAlertasDocumentos$ = this.docFacade.totalAlertas$;
-    defineCustomElements(window);
     this.isMobile = this.platform.is('mobile');
     this.initialize();
   }
