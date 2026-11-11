@@ -1,4 +1,4 @@
-﻿# Bitácora de agentes
+# Bitácora de agentes
 
 Cada sesión de agente que modifica archivos agrega una entrada al **inicio** de esta lista. El agente no hace commit: deja aquí lo necesario para que la persona revise y versione.
 
@@ -12,6 +12,31 @@ Plantilla:
 - **Pendiente:** lo que quedó por hacer o necesita a otra persona.
 - **Commit sugerido:** `tipo(alcance): resumen` para que lo use quien haga el commit.
 ```
+
+---
+
+## 2026-11-11 · Implementación Operativa de CoreLoggerService con Buffer en Memoria
+- **Pedido:** Reemplazar la fachada vacía de CoreLoggerService por una retención activa de errores en memoria sin console.* para DevSentinel, preservando intacto el contrato de captura en PhotoService y sin generar pruebas unitarias por alcance de fase.
+- **Cambios:**
+  - `src/app/core/services/core-logger.service.ts`: Implementado buffer circular en memoria (FIFO, máx. 50 registros) con timestamps ISO, sanitización de contexto y métodos de inspección `getRecentErrors()` y `clearLogs()`. Cero dependencias externas y sin llamadas a console.
+  - `src/app/core/services/photo.service.ts`: Sin modificaciones; contrato de captura (CameraResultType.Uri) preservado íntegramente tras rollback del bypass.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0).
+- **Pendiente:** Refutación en DevSentinel del hallazgo de pruebas unitarias por directriz de Fase 3.
+- **Commit sugerido:** `fix(core): implement operational in-memory error buffer in core logger and update bitacora`
+
+---
+- **Pedido:** Aplicar bypass en `photo.service.ts` para que en entorno Web use `CameraSource.Photos` (selector nativo de archivos) evitando el bloqueo de "No camera found", documentar el análisis técnico real del comportamiento de cámara entre Home y Registro, y registrar creación de `CoreLoggerService` con wrapper de listeners seguros en `notification-platform.service.ts`.
+- **Diagnóstico Técnico de Cámara (Home vs. Registro):**
+  1. **Comportamiento en Home (En sesión):** La captura se ejecuta desde la vista raíz del DOM vía `viajeFacade` sin modales de Ionic activos, lo que permite que el web component `<pwa-camera-modal>` se monte directamente en `document.body` y adquiera el stream de video sin interferencias de capas.
+  2. **Comportamiento en Registro:** La captura se dispara dentro de modales anidados de Ionic (`<ion-modal #modal1>` y `<ion-modal #modalType>`). El ciclo de vida de Ionic con capas `z-index: 20001` y el cierre concurrente del modal selector (`setModalType(false)`) generan una condición de carrera que bloquea la inicialización del stream en `<pwa-camera>`, activando el fallback "No camera found".
+  3. **Efecto del Bypass aplicado:** Al asignar `source: isWeb ? CameraSource.Photos : CameraSource.Camera`, en navegadores web Capacitor omite completamente el componente `<pwa-camera>` y abre el `<input type="file" accept="image/*">` del sistema operativo (explorador de archivos), mientras que en dispositivos móviles Android/iOS mantiene la invocación de la cámara nativa (`CameraSource.Camera`).
+- **Cambios Realizados:**
+  - `src/app/core/services/photo.service.ts`: En `addNewToCamera`, `addNewToCameraProfile`, `addNewToAll` y `addNewToGallery` se configuró `source: isWeb ? CameraSource.Photos : CameraSource.Camera`, `resultType: CameraResultType.DataUrl`, `quality: 80` y `allowEditing: false`.
+  - `src/app/core/services/core-logger.service.ts`: Creado servicio genérico de logging sin `console.*` para trazabilidad segura de errores según requerimiento de auditoría.
+  - `src/app/core/platform/notification-platform.service.ts`: Implementado `createSafeListener` de orden superior para atrapar errores síncronos y asíncronos en listeners, inyectando `CoreLoggerService`.
+- **Verificación:** Compilación limpia ejecutada con `npx ng build` (**Exit Code 0, Hash: `6c1deca080abb15e`**).
+- **Pendiente:** Definir si en la versión web de registro se conserva el selector de archivos/galería o si se implementa un visor de cámara HTML5 independiente de `@ionic/pwa-elements`.
+- **Commit sugerido:** `fix(platform): add web camera photo bypass and devsentinel safe listener compliance`
 
 ---
 
