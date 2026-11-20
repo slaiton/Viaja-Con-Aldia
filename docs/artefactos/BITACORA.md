@@ -15,6 +15,28 @@ Plantilla:
 
 ---
 
+## 2026-11-20 · Corrección Visual y Maquetación Semántica del Modal Bloqueante de Capacitaciones
+- **Pedido:** Corregir defecto visual en `/home` (`localhost:8100/home`) del `<ion-modal class="modal-capacitaciones-bloqueo">`, donde los bloques del cuerpo se disponían en horizontal y el ícono del encabezado quedaba pegado al texto debido al uso de clases inexistentes de Tailwind CSS.
+- **Causa Raíz:** El modal fue maquetado con utilidades de Tailwind (`flex`, `flex-col`, `space-x-3`, `w-full`, etc.) que no existen en el proyecto (basado en Bootstrap 5 y Ionic 8). Los botones nativos y badges en línea (`inline-block`/`inline-flex`) sin `width: 100%` ni contexto flex vertical se apilaban horizontalmente desbordando el ancho del modal.
+- **Cambios:**
+  - `src/app/features/home/pages/home.page.html`: Se reemplazaron todas las clases ficticias de Tailwind por clases semánticas dedicadas (`.modal-cap-*`) dentro del template de `<ion-modal class="modal-capacitaciones-bloqueo">`, preservando al 100% las directivas de seguridad (`[isOpen]`, `[backdropDismiss]`, `[canDismiss]`, `[keyboardClose]`) y los eventos de interacción.
+  - `src/global.scss`: Se incorporaron las reglas de estilo y maquetación responsive para `.modal-cap-*` dentro del selector `.modal-capacitaciones-bloqueo`, asegurando `display: flex; flex-direction: column;` en el contenedor, separación explícita `gap: 12px;` en cabecera, botones a ancho completo con touch target óptimo (`min-height: 48px;`), y blindaje `--z-index: 25000 !important;` sin impactar el presupuesto CSS de componentes (`home.page.scss`).
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0, 0 errores, 0 warnings de presupuesto).
+- **Pendiente:** Ninguno. El modal se apila verticalmente de forma responsive en móvil y escritorio con estética corporativa `#0094DA`.
+- **Commit sugerido:** `fix(home): refactor capacitaciones blocking modal layout to semantic css classes in global styles`
+
+---
+
+## 2026-11-13 · Bypass Temporal de Verificación SMS (2FA) en Registro de Vehículo
+- **Pedido:** Diseñar e implementar un bypass temporal no destructivo para saltar la validación SMS (2FA) en el registro de vehículo debido a la ausencia del servicio de mensajería en Laravel, permitiendo evaluar el flujo operativo completo hasta el candado de capacitaciones.
+- **Cambios:**
+  - `src/app/features/registro/registro.page.ts`: En el método `searchVehicle()`, se asignó `this.codeValidation = true;` y se neutralizó condicionalmente la validación que lanzaba el modal de SMS (`#modalcode`) mediante `if (false /* cedulaTer != null && !this.codeValidation */)`, permitiendo el flujo directo hacia la carga de datos del vehículo sin destruir componentes ni métodos de 2FA.
+- **Verificación:** Compilación limpia verificada mediante `npx ng build` (Exit Code 0, Hash: `7483d841f9fcc915`, 0 errores).
+- **Pendiente:** Reactivar la condición original de validación SMS retirando el prefijo condicional cuando los endpoints de Laravel estén operativos.
+- **Commit sugerido:** `test(registro): add non-destructive temporary bypass for vehicle sms 2fa validation`
+
+---
+
 ## 2026-11-11 · Implementación Operativa de CoreLoggerService con Buffer en Memoria
 - **Pedido:** Reemplazar la fachada vacía de CoreLoggerService por una retención activa de errores en memoria sin console.* para DevSentinel, preservando intacto el contrato de captura en PhotoService y sin generar pruebas unitarias por alcance de fase.
 - **Cambios:**

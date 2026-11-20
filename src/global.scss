@@ -5682,7 +5682,7 @@ ion-toggle::part(track) {
 }
 
 /* ============================================================== */
-/* BLINDAJE MODAL CAPACITACIONES: PRIORIDAD MÁXIMA SOBRE BOTTOM BAR */
+/* BLINDAJE Y MAQUETACIÓN MODAL CAPACITACIONES BLOQUEANTE         */
 /* ============================================================== */
 .modal-capacitaciones-bloqueo {
   --z-index: 25000 !important;
@@ -5695,6 +5695,241 @@ ion-toggle::part(track) {
 
   &::part(content) {
     z-index: 25001 !important;
+  }
+
+  // Encabezado Corporativo
+  .modal-cap-header {
+    padding: 16px 20px;
+    color: #ffffff;
+  }
+
+  .modal-cap-header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .modal-cap-header-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 24px;
+      color: #ffffff;
+    }
+  }
+
+  .modal-cap-header-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .modal-cap-header-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    opacity: 0.85;
+    line-height: 1.2;
+    display: block;
+  }
+
+  .modal-cap-header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 2px 0 0;
+    line-height: 1.2;
+  }
+
+  // Contenido y Contenedor Principal (Apilado Vertical Estricto)
+  .modal-cap-content {
+    --background: #F4F6F9;
+    background-color: #F4F6F9;
+  }
+
+  .modal-cap-container {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  // Icono Central de Alerta
+  .modal-cap-badge-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    background-color: #E5F4FC;
+    border: 2px solid #BCE1F5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(0, 148, 218, 0.12);
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 40px;
+      color: #0094DA;
+    }
+  }
+
+  .modal-cap-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: #1F2937;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+
+  // Badge de Módulos Pendientes
+  .modal-cap-badge-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background-color: #FEF3C7;
+    border: 1px solid #FDE68A;
+    color: #B45309;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 14px;
+
+    ion-icon {
+      font-size: 15px;
+    }
+  }
+
+  .modal-cap-description {
+    font-size: 13px;
+    color: #4B5563;
+    line-height: 1.5;
+    margin: 0 0 16px;
+    padding: 0 6px;
+
+    strong {
+      color: #1F2937;
+    }
+  }
+
+  // Tarjeta de Instrucción Normativa
+  .modal-cap-instruction-card {
+    width: 100%;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+  }
+
+  .modal-cap-instruction-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .modal-cap-instruction-icon {
+    font-size: 20px;
+    color: #0094DA;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .modal-cap-instruction-text {
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.45;
+  }
+
+  // Botones a Ancho Completo (Touch Target >= 48px)
+  .modal-cap-btn {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    outline: none;
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+
+  .modal-cap-btn-primary {
+    background-color: #0094DA;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0, 148, 218, 0.25);
+    margin-bottom: 10px;
+
+    &:active {
+      background-color: #007BB5;
+      transform: translateY(1px);
+    }
+  }
+
+  .modal-cap-btn-secondary {
+    background-color: #FFFFFF;
+    border: 1.5px solid #0094DA;
+    color: #0094DA;
+    margin-bottom: 10px;
+
+    &:active {
+      background-color: #E5F4FC;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  .modal-cap-btn-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: #6B7280;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+
+    ion-icon {
+      font-size: 15px;
+    }
+
+    &:hover,
+    &:active {
+      color: #DC2626;
+    }
   }
 }
 

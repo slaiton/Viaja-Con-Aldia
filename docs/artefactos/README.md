@@ -6,6 +6,7 @@ Carpeta que centraliza los documentos técnicos, planes de refactorización y la
 
 | Fecha | Archivo | Descripción |
 |---|---|---|
+| 2026-11-19 | [DOCUMENTACION_TECNICA_ARQUITECTURA_Y_REFACTORIZACION.md](../DOCUMENTACION_TECNICA_ARQUITECTURA_Y_REFACTORIZACION.md) | Documento maestro de arquitectura, estado actual, comparativa de refactorización y Technical Handover. |
 | 2026-10-27 | [2026-10-27-especificaciones-mockup-prototipo-figma.md](./2026-10-27-especificaciones-mockup-prototipo-figma.md) | Especificaciones de diseño, flujos y componentes para el prototipo interactivo en Figma. |
 | 2026-10-27 | [2026-10-27-auditoria-base-visual-design-system.md](./2026-10-27-auditoria-base-visual-design-system.md) | Auditoría visual de la app actual: tokens, paleta de colores, tipografía, híbrido Bootstrap y navegación. |
 | 2026-10-27 | [2026-10-27-auditoria-checkpoint-fase-0.md](./2026-10-27-auditoria-checkpoint-fase-0.md) | Auditoría de avance de la Fase 0 (Seguridad): estado por tarea (F0-01 a F0-07) en frontend y backend. |
