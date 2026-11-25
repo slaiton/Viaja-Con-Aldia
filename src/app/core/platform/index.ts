@@ -4,3 +4,4 @@ export * from './geolocation-platform.service';
 export * from './browser-platform.service';
 export * from './status-bar-platform.service';
 export * from './notification-platform.service';
+export * from './device-platform.service';

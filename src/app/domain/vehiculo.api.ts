@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom, throwError } from 'rxjs';
 import { catchError, retry, timeout } from 'rxjs/operators';
@@ -6,6 +6,8 @@ import { StorageService } from '@core/services/storage.service';
 import { AldiaDatabase } from '@core/offline/database';
 import { DocumentoItem, DocumentoValidacionResponse } from '@core/models/documento.model';
 import { VehiculoListItem } from '@core/models/vehiculo.model';
+import { SessionStore } from '@core/session/session.store';
+import { CoreLoggerService } from '@core/services/core-logger.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +19,9 @@ export class VehiculoApi {
   constructor(
     private http: HttpClient,
     private storage: StorageService,
-    private db: AldiaDatabase
+    private db: AldiaDatabase,
+    @Optional() private sessionStore?: SessionStore,
+    @Optional() private coreLogger?: CoreLoggerService
   ) {}
 
   private getCedula(): string {
@@ -46,6 +50,10 @@ export class VehiculoApi {
     placaParam?: string,
     tokenParam?: string
   ): Promise<DocumentoValidacionResponse> {
+    if (this.sessionStore?.hasAldiaSession()) {
+      return { status: true, docs: [] };
+    }
+
     const cedula = (cedulaParam || this.getCedula()).trim();
     const placa = (placaParam || this.getPlaca()).trim();
     const token = (tokenParam || this.getToken()).trim();
@@ -68,10 +76,13 @@ export class VehiculoApi {
           timeout(10000),
           retry(1),
           catchError(async (err) => {
-            console.warn('[VehiculoApi] Error consultando /document/validate en 3SL. Buscando en Dexie...', err);
+            this.coreLogger?.log('VEHICULO_API_DOC_VALIDATE_ERROR', { error: err?.message });
             const cached = await this.db.getCache<DocumentoValidacionResponse>(cacheKey);
             if (cached) {
               return cached;
+            }
+            if (err?.status === 401 || this.sessionStore?.hasAldiaSession()) {
+              return { status: true, docs: [] } as DocumentoValidacionResponse;
             }
             throw err;
           })
@@ -114,8 +125,7 @@ export class VehiculoApi {
       await this.db.setCache(cacheKey, resultado, 12 * 60 * 60 * 1000);
 
       return resultado;
-    } catch (error) {
-      console.warn('[VehiculoApi] No se pudo verificar fechas de documentos en red ni en caché:', error);
+    } catch {
       return { status: true, docs: [] };
     }
   }

@@ -34,6 +34,14 @@ export class CoreLoggerService {
   }
 
   /**
+   * Método de conveniencia para registrar mensajes estructurados o diagnósticos.
+   */
+  log(context: string, meta?: unknown): void {
+    const detail = meta ? ` | ${typeof meta === 'object' ? JSON.stringify(meta).slice(0, 100) : String(meta)}` : '';
+    this.logSafeError(`${context}${detail}`);
+  }
+
+  /**
    * Retorna una vista inmutable de los errores registrados para telemetría y diagnóstico.
    */
   getRecentErrors(): readonly SafeErrorLog[] {

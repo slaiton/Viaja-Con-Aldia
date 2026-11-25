@@ -17,7 +17,7 @@
       <!-- Cuerpo del Formulario en Tarjeta Flotante -->
       <div class="login-content-body">
         <div class="login-form-card">
-          <form [formGroup]="loginForm" (ngSubmit)="onLogin()" id="loginForm">
+          <form [formGroup]="loginForm" (ngSubmit)="solicitarCodigo()" id="loginForm">
 
             <!-- Campo Cédula -->
             <div class="login-field-group">
@@ -68,10 +68,10 @@
             <button
               class="btn-login-submit"
               type="submit"
-              [disabled]="submitClick || loginForm.invalid"
+              [disabled]="loadingPaso1 || loginForm.invalid"
             >
-              <ion-spinner *ngIf="submitClick" name="crescent" color="light"></ion-spinner>
-              <span>{{ submitClick ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+              <ion-spinner *ngIf="loadingPaso1" name="crescent" color="light"></ion-spinner>
+              <span>{{ loadingPaso1 ? 'Enviando código...' : 'Iniciar Sesión' }}</span>
             </button>
           </form>
         </div>
@@ -101,7 +101,7 @@
       <div class="login-header login-header-otp aldia-header-pattern">
         <div class="login-otp-header-row">
           <button type="button" class="btn-otp-back" (click)="volverAPaso1()" aria-label="Volver">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
@@ -116,7 +116,7 @@
       <div class="login-content-body">
         <div class="login-form-card otp-card-center">
           <div class="otp-icon-shield">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M12 3 4.5 6v6c0 4.6 3.2 7.7 7.5 9 4.3-1.3 7.5-4.4 7.5-9V6z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"></path>
@@ -125,37 +125,80 @@
 
           <h3 class="otp-card-title">Ingresa el código de 6 dígitos</h3>
           <p class="otp-card-sub">
-            Enviamos un código a tu celular registrado terminado en <span class="otp-badge-phone">{{ celularMask }}</span>
+            Enviamos un código por WhatsApp a tu celular registrado terminado en <span class="otp-badge-phone">{{ celularMask }}</span>
           </p>
 
-          <!-- 6 Casillas OTP visuales -->
-          <div class="otp-grid">
-            <div class="otp-box otp-box-filled">8</div>
-            <div class="otp-box otp-box-filled">4</div>
-            <div class="otp-box otp-box-filled">9</div>
-            <div class="otp-box otp-box-active">2</div>
-            <div class="otp-box otp-box-empty"></div>
-            <div class="otp-box otp-box-empty"></div>
+          <!-- 6 Casillas OTP interactivas y accesibles -->
+          <div style="position: relative; width: 100%; margin-bottom: 20px;" (click)="focusOtpInput()">
+            <div class="otp-grid" style="margin-bottom: 0;">
+              <div
+                *ngFor="let idx of [0, 1, 2, 3, 4, 5]"
+                class="otp-box"
+                [ngClass]="{
+                  'otp-box-filled': (codigoOtpControl.value || '')[idx],
+                  'otp-box-active': (codigoOtpControl.value || '').length === idx,
+                  'otp-box-empty': !(codigoOtpControl.value || '')[idx] && (codigoOtpControl.value || '').length !== idx
+                }"
+              >
+                {{ (codigoOtpControl.value || '')[idx] || '' }}
+              </div>
+            </div>
+            <input
+              #otpInput
+              type="tel"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="6"
+              autocomplete="one-time-code"
+              [formControl]="codigoOtpControl"
+              (input)="onOtpInput($event)"
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 24px; z-index: 2;"
+              aria-label="Código de verificación de 6 dígitos"
+            />
           </div>
 
-          <div class="otp-resend-pill">
-            <svg class="w-4 h-4 text-aldia-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          <!-- Mensaje de error si aplica -->
+          <div *ngIf="errorMensajeOtp" style="color: #E53E3E; font-size: 13px; font-weight: 600; margin-bottom: 14px; text-align: center;">
+            {{ errorMensajeOtp }}
+          </div>
+
+          <!-- Píldora de Reenvío de código -->
+          <div *ngIf="tiempoRestanteReenvio > 0" class="otp-resend-pill">
+            <svg width="16" height="16" class="text-aldia-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"
               stroke-width="2">
               <circle cx="12" cy="12" r="9"></circle>
               <path d="M12 7v5l3 2"></path>
             </svg>
-            <span>Reenviar código en <strong class="text-aldia-primary">00:45</strong></span>
+            <span>Reenviar código en <strong class="text-aldia-primary">{{ tiempoRestanteFormateado }}</strong></span>
           </div>
+
+          <button
+            *ngIf="tiempoRestanteReenvio === 0"
+            type="button"
+            class="otp-resend-pill"
+            style="border: 1px solid #0094DA; background: #E5F4FC; color: #0094DA; cursor: pointer;"
+            (click)="reenviarCodigo()"
+            [disabled]="loadingPaso1"
+          >
+            <ion-spinner *ngIf="loadingPaso1" name="crescent" color="primary" style="width: 16px; height: 16px;"></ion-spinner>
+            <span>Reenviar código por WhatsApp</span>
+          </button>
         </div>
 
         <!-- Botonera OTP -->
         <div class="login-bottom-section">
-          <button class="btn-login-submit" type="button" (click)="onLogin()">
-            Confirmar e Ingresar
+          <button
+            class="btn-login-submit"
+            type="button"
+            (click)="verificarCodigo()"
+            [disabled]="loadingPaso2 || codigoOtpControl.invalid"
+          >
+            <ion-spinner *ngIf="loadingPaso2" name="crescent" color="light"></ion-spinner>
+            <span>{{ loadingPaso2 ? 'Verificando...' : 'Confirmar e Ingresar' }}</span>
           </button>
 
-          <button type="button" class="btn-otp-support">
-            ¿Cambiaste de celular? Habla con Tráfico
+          <button type="button" class="btn-otp-support" (click)="volverAPaso1()">
+            ¿No es tu número o cambiaste de placa? Volver
           </button>
         </div>
       </div>

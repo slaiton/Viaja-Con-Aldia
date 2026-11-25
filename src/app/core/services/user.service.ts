@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Observable, catchError, retry, Subject, throwError, timeout } from 'rxjs';
@@ -6,6 +6,8 @@ import { User } from "../models/user.model";
 import { MenuController } from '@ionic/angular';
 import { StorageService } from './storage.service';
 import { ConductorApi } from '@domain/conductor.api';
+import { CoreLoggerService } from './core-logger.service';
+import { SessionStore } from '@core/session/session.store';
 
 
 
@@ -251,7 +253,9 @@ export class UserService {
     private http: HttpClient,
     private storage: StorageService,
     private router: Router,
-    private conductorApi: ConductorApi) { }
+    private conductorApi: ConductorApi,
+    private coreLogger?: CoreLoggerService,
+    @Optional() private sessionStore?: SessionStore) { }
 
   login(user: User): Observable<any> {
     return this.http.post("https://api.aldialogistica.com/api/auth/login-external", user);
@@ -613,10 +617,11 @@ export class UserService {
   }
 
   logout() {
+    this.sessionStore?.clearSession();
     localStorage.removeItem("token");
     localStorage.removeItem("placa");
     localStorage.removeItem("conductor");
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], { replaceUrl: true });
     this.menu.enable(false);
   }
 
@@ -706,8 +711,18 @@ export class UserService {
     let docs = []
     let statusDoc = true;
     var text: any = []
-    const data = await this.getFechas(token)
-    if (data.status) {
+    let data: any;
+    try {
+      data = await this.getFechas(token);
+    } catch (err: any) {
+      if (this.coreLogger) {
+        this.coreLogger.log('USER_SERVICE_FECHAS_DOCS_401_FALLBACK', {
+          error: err?.message || 'Error consultando fechas en 3SL'
+        });
+      }
+      return { status: true, docs: [] };
+    }
+    if (data && data.status) {
       statusDoc = true;
       docs = []
       text = []
@@ -756,7 +771,12 @@ export class UserService {
     try {
       const data = await this.getDataApi('lecturas=1&cedula=' + cedula, this.getToken(), 'api/capacitaciones');
       return Array.isArray(data) ? data : [];
-    } catch {
+    } catch (err: any) {
+      if (this.coreLogger) {
+        this.coreLogger.log('USER_SERVICE_VALIDATE_CAP_FALLBACK', {
+          error: err?.message || 'Fallo no bloqueante en capacitaciones 3SL'
+        });
+      }
       return [];
     }
   }

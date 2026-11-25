@@ -5,6 +5,9 @@ import { catchError, retry, shareReplay, tap, timeout } from 'rxjs/operators';
 import { StorageService } from '@core/services/storage.service';
 import { AldiaDatabase } from '@core/offline/database';
 import { Conductor, Conductor3SL, RespuestaIngresos3SL, mapearConductor3SL } from '@core/models/conductor.model';
+import { SessionStore } from '@core/session/session.store';
+import { AuthConductorApi } from '@domain/auth-conductor.api';
+import { CoreLoggerService } from '@core/services/core-logger.service';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +24,10 @@ export class ConductorApi {
   constructor(
     private http: HttpClient,
     private storage: StorageService,
-    private db: AldiaDatabase
+    private db: AldiaDatabase,
+    private sessionStore: SessionStore,
+    private authConductorApi: AuthConductorApi,
+    private coreLogger: CoreLoggerService
   ) {}
 
   /**
@@ -50,10 +56,8 @@ export class ConductorApi {
 
   /**
    * Obtiene el perfil completo del Conductor.
-   * Implementa:
-   * 1. Deduplicación concurrente (si AppComponent y HomePage llaman a la vez, solo sale 1 HTTP request).
-   * 2. Timeout ajustado a 10s con 1 retry (ideal para redes móviles).
-   * 3. Respaldo y caché persistente en Dexie.js (cache_store).
+   * Si existe sesión activa en Aldia-Backend, consulta GET /app/conductor/yo.
+   * Si es sesión legacy, consulta 3SL con deduplicación y caché en Dexie.js.
    */
   async getPerfilConductor(
     cedulaParam?: string,
@@ -63,8 +67,12 @@ export class ConductorApi {
   ): Promise<Conductor> {
     const cedula = (cedulaParam || this.getCedulaActiva()).trim();
     const placa = (placaParam || this.getPlacaActiva()).trim();
-    const token = (tokenParam || this.getTokenActivo()).trim();
 
+    if (this.sessionStore.hasAldiaSession()) {
+      return this.getPerfilConductorAldia(cedula, placa, forceRefresh);
+    }
+
+    const token = (tokenParam || this.getTokenActivo()).trim();
     const cacheKey = `conductor_perfil_${cedula}_${placa}`;
 
     // Si ya tenemos en memoria y no se fuerza refresco
@@ -102,11 +110,9 @@ export class ConductorApi {
         }
       }),
       catchError(async (err) => {
-        console.warn('[ConductorApi] Fallo en conexión con 3SL /api/ingresos. Verificando caché local...', err);
-        // Si la red falla o hace timeout, intentamos rescatar la última información en Dexie
+        this.coreLogger.log('CONDUCTOR_API_3SL_FETCH_ERROR', { error: err?.message });
         const cached = await this.db.getCache<Conductor>(cacheKey);
         if (cached) {
-          console.info('[ConductorApi] Perfil recuperado exitosamente desde Dexie IndexedDB');
           this.cachedConductor = cached;
           return { status: true, data: [cached.raw3sl as Conductor3SL] } as RespuestaIngresos3SL;
         }
@@ -125,9 +131,96 @@ export class ConductorApi {
       }
       throw new Error('No se encontraron datos del conductor en 3SL ni en la base local.');
     } finally {
-      // Liberar la petición en vuelo una vez resuelta
       this.inFlightRequest$ = null;
     }
+  }
+
+  /**
+   * Consulta el perfil de conductor vía GET /api/app/conductor/yo de Aldia-Backend.
+   */
+  private async getPerfilConductorAldia(
+    cedula: string,
+    placa: string,
+    forceRefresh: boolean
+  ): Promise<Conductor> {
+    const cacheKey = `conductor_perfil_aldia_${cedula}_${placa}`;
+
+    if (!forceRefresh && this.cachedConductor && this.inFlightCredentialsKey === cacheKey) {
+      return this.cachedConductor;
+    }
+
+    try {
+      const resp = await firstValueFrom(
+        this.authConductorApi.obtenerPerfil().pipe(
+          timeout(10000),
+          retry(1)
+        )
+      );
+
+      if (resp && resp.success && resp.data) {
+        const yo = resp.data;
+        const fullName = (yo.conductor?.nombre || '').trim();
+        const parts = fullName.split(/\s+/).filter(Boolean);
+        const nombres = parts.length > 2 ? parts.slice(0, parts.length - 2).join(' ') : (parts[0] || fullName);
+        const apell1 = parts.length > 2 ? parts[parts.length - 2] : (parts[1] || '');
+        const apell2 = parts.length > 2 ? parts[parts.length - 1] : '';
+
+        const raw3sl: Conductor3SL = {
+          codigoTercerox: yo.conductor?.documento || cedula,
+          nombreTercerox: nombres,
+          apell1Tercerox: apell1,
+          apell2Tercerox: apell2,
+          emailxTercerox: yo.conductor?.correo || undefined,
+          movilxTercerox: yo.conductor?.celular || undefined,
+          direccTercerox: undefined,
+          fechaxNacimien: undefined,
+          ciudadCreacion: undefined,
+          numeroPlacaxxx: yo.vehiculo_actual?.placa || placa,
+          numeroEstadoxx: 'ACTIVO'
+        };
+
+        const conductor: Conductor = {
+          cedula: raw3sl.codigoTercerox,
+          nombres,
+          apellidos: `${apell1} ${apell2}`.trim(),
+          nombreCompleto: fullName,
+          correo: raw3sl.emailxTercerox || '',
+          celular: raw3sl.movilxTercerox || '',
+          direccion: '',
+          fechaNacimiento: '',
+          ciudad: '',
+          placa: raw3sl.numeroPlacaxxx || placa,
+          estado: 'ACTIVO',
+          raw3sl
+        };
+
+        this.cachedConductor = conductor;
+        this.inFlightCredentialsKey = cacheKey;
+        await this.db.setCache(cacheKey, conductor, 24 * 60 * 60 * 1000);
+        return conductor;
+      }
+    } catch (err: any) {
+      this.coreLogger.log('CONDUCTOR_API_YO_FETCH_ERROR', { error: err?.message });
+      const cached = await this.db.getCache<Conductor>(cacheKey);
+      if (cached) {
+        this.cachedConductor = cached;
+        return cached;
+      }
+    }
+
+    if (this.cachedConductor) {
+      return this.cachedConductor;
+    }
+
+    const fallbackRaw: Conductor3SL = {
+      codigoTercerox: cedula,
+      nombreTercerox: this.sessionStore.snapshot.nombreConductor || 'Conductor',
+      apell1Tercerox: '',
+      apell2Tercerox: '',
+      numeroPlacaxxx: placa,
+      numeroEstadoxx: 'ACTIVO'
+    };
+    return mapearConductor3SL(fallbackRaw);
   }
 
   /**

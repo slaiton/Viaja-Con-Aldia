@@ -15,6 +15,37 @@ Plantilla:
 
 ---
 
+## 2026-11-23 · Implementación y Estabilización Bloque A: Core de Sesión + Login 2FA Conductor (WhatsApp OTP)
+- **Pedido:** Implementar y estabilizar exclusivamente el Bloque A para autenticación 2FA de conductor por WhatsApp contra `Aldia-Backend`. Resolver regresión de rebote a `/home` al pulsar "Cerrar sesión", prevenir bloqueos CORS en peticiones HTTP, blindar cola concurrente de refresco y asegurar ciclo de vida limpio en Ionic.
+- **Cambios Realizados:**
+  - `src/app/core/session/session.store.ts`:
+    - Agregada sincronización física con `localStorage` en `isSessionValid()` y `hasAldiaSession()`: si las claves `aldia_access_token` y `aldia_refresh_token` fueron borradas físicamente, resetea el `BehaviorSubject` en memoria y retorna `false`.
+    - `clearSession()` elimina tanto el estado reactivo en memoria como todas las claves en `localStorage` y `StorageService` (`aldia_access_token`, `aldia_refresh_token`, `aldia_expira_at`, `aldia_refresh_expira_at`, `aldia_sesion_id`, `aldia_conductor_nombre`, `token`, `conductor`, `placa`, `token_3sl`).
+  - `src/app/core/interceptors/auth.interceptor.ts`:
+    - Separación estricta de rutas: `isConductorAppRoute()` limita la inyección de `Bearer` exclusivamente a `/app/conductor/` y `/app/tramites/`, impidiendo inyectar tokens en `/tercero/preoperacional/*`, `/documento` o `/enturnamiento`.
+    - `shouldAttachBearer()` asegura que `DELETE /app/conductor/sesion` SÍ reciba token Bearer para revocación remota.
+    - `shouldAttemptRefresh()` excluye `/app/conductor/sesion` para que un 401 al cerrar sesión jamás intente renovar ni reanime la sesión zombi.
+    - Eliminado el encabezado HTTP de red `X-Aldia-Retried`, reemplazándolo por `IS_RETRIED_REQUEST = new HttpContextToken<boolean>(() => false)` de Angular (Cero riesgo de preflight CORS).
+    - Cola concurrente segura: implementada interfaz `RefreshOutcome { token: string | null; failed: boolean; }` sobre `refreshSubject` sin invocar `.error()`, liberando peticiones encoladas ante fallos y manteniendo el Subject operativo para logins posteriores.
+  - `src/app/core/services/auth.service.ts`:
+    - Reestructurado `logout()`: si existe sesión de Aldia, invoca `DELETE /app/conductor/sesion` vía `AuthConductorApi` inyectada perezosamente por `Injector` (sin ciclos DI `NG0200`). En el bloque `finally` incondicional, ejecuta `sessionStore.clearSession()`, limpia `localStorage` y navega a `/login` con `replaceUrl: true`.
+    - Para sesiones legacy de 3SL, la limpieza completa se ejecuta tanto en éxito como en el callback de error 401 de `delToken()`.
+  - `src/app/core/services/user.service.ts`:
+    - En `logout()`, asegura la llamada a `this.sessionStore.clearSession()` y navegación con `replaceUrl: true` antes de desactivar el menú, sin alterar contratos ni agregar métodos.
+  - `src/app/domain/vehiculo.api.ts`:
+    - En `validateFechasDocumentos()`, si `this.sessionStore.hasAldiaSession()` es `true` o ante un 401 de 3SL, retorna defensivamente `{ status: true, docs: [] }` registrando en `CoreLoggerService`, evitando que el `Promise.all` de `documentos.facade.ts` colapse la pantalla `/datos`.
+  - `src/app/features/login/pages/login.page.ts`:
+    - Implementados hooks de ciclo de vida de Ionic `ionViewWillEnter()` (limpieza de timers, reseteo de `mostrarPasoOtp = false`, reseteo de controles y auto-login condicional estricto) e `ionViewWillLeave()` (pausa de timers en segundo plano).
+  - `src/app/features/login/pages/login.page.html`:
+    - Reemplazadas clases utilitarias de Tailwind en SVGs (`w-5`, `w-8`, `w-4`) por atributos estándar explícitos `width` y `height`.
+  - `src/app/features/login/pages/login.page.scss`:
+    - Preservado ultraliviano (44 bytes, muy por debajo de la cuota de 1.80 kB y presupuesto de 2.00 kB).
+- **Verificación:** Compilación limpia verificada con `npx ng build` (**Exit Code 0, Hash: `8d8793827e9e4775`, 0 errores, 0 advertencias de presupuesto CSS**). Confirmado con `git status --short` que ningún archivo congelado por DevSentinel fue modificado (`registro.page.*`, `home.page.*`, `vehiculos.facade.ts`, `vehiculo.component.ts`, `photo.service.ts`, `camera-platform.*`, `global.scss`, `environment*.ts`). Cero archivos `.spec.ts` y cero commits ejecutados.
+- **Pendiente:** Bloque B: Reemplazo del endpoint de verificación de propietario en el flujo de registro (`/registro`), retirando el bypass temporal de SMS para consumir los endpoints `/api/verificacion/propietario/*`.
+- **Commit sugerido:** `feat(auth): stabilize 2fa driver login, session cleanup, http interceptor and lifecycle (block a)`
+
+---
+
 ## 2026-11-20 · Corrección Visual y Maquetación Semántica del Modal Bloqueante de Capacitaciones
 - **Pedido:** Corregir defecto visual en `/home` (`localhost:8100/home`) del `<ion-modal class="modal-capacitaciones-bloqueo">`, donde los bloques del cuerpo se disponían en horizontal y el ícono del encabezado quedaba pegado al texto debido al uso de clases inexistentes de Tailwind CSS.
 - **Causa Raíz:** El modal fue maquetado con utilidades de Tailwind (`flex`, `flex-col`, `space-x-3`, `w-full`, etc.) que no existen en el proyecto (basado en Bootstrap 5 y Ionic 8). Los botones nativos y badges en línea (`inline-block`/`inline-flex`) sin `width: 100%` ni contexto flex vertical se apilaban horizontalmente desbordando el ancho del modal.
