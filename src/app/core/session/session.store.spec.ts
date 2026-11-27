@@ -3,9 +3,10 @@ import { VerificarRegistroResult } from '@core/models/tramite-registro.model';
 import { StorageService } from '@core/services/storage.service';
 import { SessionStore } from './session.store';
 
-describe('SessionStore (sesión REGISTRO en memoria)', () => {
+describe('SessionStore (sesión REGISTRO en memoria y promoción ACTIVA)', () => {
   let store: SessionStore;
-  let storageSpy: jasmine.SpyObj<StorageService>;
+  let storageService: StorageService;
+  let setSpy: jasmine.Spy;
 
   const futureIso = (minutes: number): string => new Date(Date.now() + minutes * 60_000).toISOString();
 
@@ -22,16 +23,13 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    storageSpy = jasmine.createSpyObj<StorageService>('StorageService', ['get', 'set', 'remove', 'clear']);
-    storageSpy.get.and.returnValue(null);
 
     TestBed.configureTestingModule({
-      providers: [
-        SessionStore,
-        { provide: StorageService, useValue: storageSpy }
-      ]
+      providers: [StorageService, SessionStore]
     });
 
+    storageService = TestBed.inject(StorageService);
+    setSpy = spyOn(storageService, 'set').and.callThrough();
     store = TestBed.inject(SessionStore);
   });
 
@@ -39,10 +37,13 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
     localStorage.clear();
   });
 
-  it('setAldiaRegistroSession debe guardar la sesión únicamente en memoria y limpiar residuos en localStorage', () => {
+  it('setAldiaRegistroSession debe guardar en memoria, limpiar claves operativas y preservar token_3sl', () => {
     localStorage.setItem('token', 'legacy-old');
     localStorage.setItem('conductor', '99999');
+    localStorage.setItem('placa', 'AAA000');
     localStorage.setItem('aldia_access_token', 'old-access');
+    localStorage.setItem('aldia_tramite_id', '12');
+    localStorage.setItem('token_3sl', '3sl-vigente');
 
     store.setAldiaRegistroSession(buildRegistroResult(), '1012345678', 'sxt 482');
 
@@ -57,8 +58,15 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
     expect(store.accessToken).toBe('reg-access-token');
     expect(store.refreshToken).toBe('reg-refresh-token');
 
-    expect(storageSpy.set).not.toHaveBeenCalled();
-    expect(localStorage.length).toBe(0);
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('conductor')).toBeNull();
+    expect(localStorage.getItem('placa')).toBeNull();
+    expect(localStorage.getItem('aldia_access_token')).toBeNull();
+    expect(localStorage.getItem('aldia_tramite_id')).toBeNull();
+    expect(localStorage.getItem('token_3sl')).toBe('3sl-vigente');
+    expect(store.getLegacy3slToken()).toBe('3sl-vigente');
+    expect(localStorage.length).toBe(1);
   });
 
   it('updateRotatedTokens durante sesión REGISTRO debe actualizar tokens en memoria sin escribir en localStorage', () => {
@@ -71,12 +79,13 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
     expect(store.accessToken).toBe('reg-access-rotated');
     expect(store.refreshToken).toBe('reg-refresh-rotated');
     expect(store.isRegistroSession()).toBeTrue();
-    expect(storageSpy.set).not.toHaveBeenCalled();
+    expect(setSpy).not.toHaveBeenCalled();
     expect(localStorage.length).toBe(0);
   });
 
-  it('promoteRegistroToActiva debe activar sesión inmediata en memoria sin persistir tokens en localStorage', () => {
-    store.setAldiaRegistroSession(buildRegistroResult(), '1012345678', 'SXT482');
+  it('promoteRegistroToActiva debe persistir claves ACTIVA + legacy, permitir rotación persistente y sobrevivir a recarga', () => {
+    store.setAldiaRegistroSession(buildRegistroResult(), '1012345678', 'sxt 482');
+    localStorage.setItem('aldia_tramite_id', '45');
 
     store.promoteRegistroToActiva();
 
@@ -84,13 +93,40 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
     expect(store.snapshot.tramiteId).toBeNull();
     expect(store.isActiveConductorSession()).toBeTrue();
     expect(store.isRegistroSession()).toBeFalse();
-    expect(store.accessToken).toBe('reg-access-token');
-    expect(storageSpy.set).not.toHaveBeenCalled();
-    expect(localStorage.length).toBe(0);
+
+    expect(localStorage.getItem('aldia_estado')).toBe('ACTIVA');
+    expect(localStorage.getItem('aldia_access_token')).toBe('reg-access-token');
+    expect(localStorage.getItem('aldia_refresh_token')).toBe('reg-refresh-token');
+    expect(localStorage.getItem('aldia_sesion_id')).toBe('77');
+    expect(localStorage.getItem('token')).toBe('reg-access-token');
+    expect(localStorage.getItem('conductor')).toBe('1012345678');
+    expect(localStorage.getItem('placa')).toBe('SXT482');
+    expect(localStorage.getItem('aldia_tramite_id')).toBeNull();
+
+    const rotExp = futureIso(30);
+    const rotRefExp = futureIso(300);
+    store.updateRotatedTokens('activa-access-rotated', rotExp, 'activa-refresh-rotated', rotRefExp);
+
+    expect(localStorage.getItem('aldia_access_token')).toBe('activa-access-rotated');
+    expect(localStorage.getItem('aldia_refresh_token')).toBe('activa-refresh-rotated');
+    expect(localStorage.getItem('token')).toBe('activa-access-rotated');
+
+    const reloadedStore = new SessionStore(storageService);
+
+    expect(reloadedStore.isActiveConductorSession()).toBeTrue();
+    expect(reloadedStore.isSessionValid()).toBeTrue();
+    expect(reloadedStore.isRegistroSession()).toBeFalse();
+    expect(reloadedStore.accessToken).toBe('activa-access-rotated');
+    expect(reloadedStore.refreshToken).toBe('activa-refresh-rotated');
+    expect(reloadedStore.snapshot.cedula).toBe('1012345678');
+    expect(reloadedStore.snapshot.placa).toBe('SXT482');
+    expect(reloadedStore.snapshot.tramiteId).toBeNull();
   });
 
-  it('clearSession debe restablecer el estado en memoria a sesión vacía', () => {
+  it('clearSession debe limpiar memoria y todas las claves persistidas, incluyendo token_3sl', () => {
+    localStorage.setItem('token_3sl', '3sl-vigente');
     store.setAldiaRegistroSession(buildRegistroResult(), '1012345678', 'SXT482');
+    store.promoteRegistroToActiva();
 
     store.clearSession();
 
@@ -98,6 +134,8 @@ describe('SessionStore (sesión REGISTRO en memoria)', () => {
     expect(store.isSessionValid()).toBeFalse();
     expect(store.isRegistroSession()).toBeFalse();
     expect(store.isActiveConductorSession()).toBeFalse();
+    expect(localStorage.getItem('token_3sl')).toBeNull();
+    expect(localStorage.length).toBe(0);
     expect(store.snapshot).toEqual({
       accessToken: null,
       refreshToken: null,

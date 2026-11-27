@@ -22,7 +22,7 @@ export class SessionStore {
   private static readonly KEY_LEGACY_PLACA = 'placa';
   private static readonly KEY_LEGACY_TOKEN_3SL = 'token_3sl';
 
-  private static readonly ALL_STORAGE_KEYS: readonly string[] = [
+  private static readonly ALDIA_OPERATIONAL_STORAGE_KEYS: readonly string[] = [
     SessionStore.KEY_ALDIA_ACCESS_TOKEN,
     SessionStore.KEY_ALDIA_REFRESH_TOKEN,
     SessionStore.KEY_ALDIA_EXPIRA_AT,
@@ -33,7 +33,11 @@ export class SessionStore {
     SessionStore.KEY_ALDIA_TRAMITE_ID,
     SessionStore.KEY_LEGACY_TOKEN,
     SessionStore.KEY_LEGACY_CONDUCTOR,
-    SessionStore.KEY_LEGACY_PLACA,
+    SessionStore.KEY_LEGACY_PLACA
+  ];
+
+  private static readonly ALL_STORAGE_KEYS: readonly string[] = [
+    ...SessionStore.ALDIA_OPERATIONAL_STORAGE_KEYS,
     SessionStore.KEY_LEGACY_TOKEN_3SL
   ];
 
@@ -56,47 +60,15 @@ export class SessionStore {
   }
 
   public setAldiaSession(data: VerificarCodigoData, cedula: string, placa: string): void {
-    const cleanCedula = cedula.trim().replace(/^["']|["']$/g, '');
-    const cleanPlaca = placa.trim().replace(/\s+/g, '').toUpperCase();
-    const cleanAccessToken = (data.access_token || '').trim();
-    const cleanRefreshToken = (data.refresh_token || '').trim();
-    const cleanExpiraAt = (data.expira_at || '').trim();
-    const cleanRefreshExpiraAt = (data.refresh_expira_at || '').trim();
-    const nombre = (data.conductor?.nombre || '').trim();
-    const sesionId = data.sesion_id ?? null;
-
-    this.inMemoryOnly = false;
-
-    this.storage.set(SessionStore.KEY_ALDIA_ACCESS_TOKEN, cleanAccessToken);
-    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_TOKEN, cleanRefreshToken);
-    this.storage.set(SessionStore.KEY_ALDIA_EXPIRA_AT, cleanExpiraAt);
-    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT, cleanRefreshExpiraAt);
-    this.storage.set(SessionStore.KEY_ALDIA_SESION_ID, sesionId);
-    this.storage.set(SessionStore.KEY_ALDIA_NOMBRE, nombre);
-    this.storage.set(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
-    this.storage.remove(SessionStore.KEY_ALDIA_TRAMITE_ID);
-    localStorage.setItem(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
-    localStorage.removeItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
-
-    this.storage.set(SessionStore.KEY_LEGACY_TOKEN, cleanAccessToken);
-    this.storage.set(SessionStore.KEY_LEGACY_CONDUCTOR, cleanCedula);
-    this.storage.set(SessionStore.KEY_LEGACY_PLACA, cleanPlaca);
-
-    localStorage.setItem(SessionStore.KEY_LEGACY_TOKEN, cleanAccessToken);
-    localStorage.setItem(SessionStore.KEY_LEGACY_CONDUCTOR, cleanCedula);
-    localStorage.setItem(SessionStore.KEY_LEGACY_PLACA, cleanPlaca);
-
-    this.stateSubject.next({
-      accessToken: cleanAccessToken,
-      refreshToken: cleanRefreshToken,
-      expiraAt: cleanExpiraAt,
-      refreshExpiraAt: cleanRefreshExpiraAt,
-      sesionId,
-      cedula: cleanCedula,
-      placa: cleanPlaca,
-      nombreConductor: nombre,
-      estado: 'ACTIVA',
-      tramiteId: null
+    this.persistActivaSession({
+      accessToken: (data.access_token || '').trim(),
+      refreshToken: (data.refresh_token || '').trim(),
+      expiraAt: (data.expira_at || '').trim(),
+      refreshExpiraAt: (data.refresh_expira_at || '').trim(),
+      sesionId: data.sesion_id ?? null,
+      cedula: cedula.trim().replace(/^["']|["']$/g, ''),
+      placa: placa.trim().replace(/\s+/g, '').toUpperCase(),
+      nombreConductor: (data.conductor?.nombre || '').trim()
     });
   }
 
@@ -104,7 +76,7 @@ export class SessionStore {
     const cleanCedula = cedula.trim().replace(/^["']|["']$/g, '');
     const cleanPlaca = placa.trim().replace(/\s+/g, '').toUpperCase();
 
-    this.clearPersistedKeys();
+    this.clearPersistedKeys(SessionStore.ALDIA_OPERATIONAL_STORAGE_KEYS);
     this.inMemoryOnly = true;
 
     this.stateSubject.next({
@@ -131,10 +103,15 @@ export class SessionStore {
 
   public promoteRegistroToActiva(): void {
     const current = this.snapshot;
-    this.stateSubject.next({
-      ...current,
-      estado: 'ACTIVA',
-      tramiteId: null
+    this.persistActivaSession({
+      accessToken: (current.accessToken || '').trim(),
+      refreshToken: (current.refreshToken || '').trim(),
+      expiraAt: (current.expiraAt || '').trim(),
+      refreshExpiraAt: (current.refreshExpiraAt || '').trim(),
+      sesionId: current.sesionId ?? null,
+      cedula: (current.cedula || '').trim().replace(/^["']|["']$/g, ''),
+      placa: (current.placa || '').trim().replace(/\s+/g, '').toUpperCase(),
+      nombreConductor: (current.nombreConductor || '').trim()
     });
   }
 
@@ -257,12 +234,57 @@ export class SessionStore {
 
   public clearSession(): void {
     this.inMemoryOnly = false;
-    this.clearPersistedKeys();
+    this.clearPersistedKeys(SessionStore.ALL_STORAGE_KEYS);
     this.resetMemoryState();
   }
 
-  private clearPersistedKeys(): void {
-    for (const key of SessionStore.ALL_STORAGE_KEYS) {
+  private persistActivaSession(session: {
+    accessToken: string;
+    refreshToken: string;
+    expiraAt: string;
+    refreshExpiraAt: string;
+    sesionId: number | null;
+    cedula: string;
+    placa: string;
+    nombreConductor: string;
+  }): void {
+    this.inMemoryOnly = false;
+
+    this.storage.set(SessionStore.KEY_ALDIA_ACCESS_TOKEN, session.accessToken);
+    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_TOKEN, session.refreshToken);
+    this.storage.set(SessionStore.KEY_ALDIA_EXPIRA_AT, session.expiraAt);
+    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT, session.refreshExpiraAt);
+    this.storage.set(SessionStore.KEY_ALDIA_SESION_ID, session.sesionId);
+    this.storage.set(SessionStore.KEY_ALDIA_NOMBRE, session.nombreConductor);
+    this.storage.set(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    this.storage.remove(SessionStore.KEY_ALDIA_TRAMITE_ID);
+    localStorage.setItem(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    localStorage.removeItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
+
+    this.storage.set(SessionStore.KEY_LEGACY_TOKEN, session.accessToken);
+    this.storage.set(SessionStore.KEY_LEGACY_CONDUCTOR, session.cedula);
+    this.storage.set(SessionStore.KEY_LEGACY_PLACA, session.placa);
+
+    localStorage.setItem(SessionStore.KEY_LEGACY_TOKEN, session.accessToken);
+    localStorage.setItem(SessionStore.KEY_LEGACY_CONDUCTOR, session.cedula);
+    localStorage.setItem(SessionStore.KEY_LEGACY_PLACA, session.placa);
+
+    this.stateSubject.next({
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      expiraAt: session.expiraAt,
+      refreshExpiraAt: session.refreshExpiraAt,
+      sesionId: session.sesionId,
+      cedula: session.cedula,
+      placa: session.placa,
+      nombreConductor: session.nombreConductor,
+      estado: 'ACTIVA',
+      tramiteId: null
+    });
+  }
+
+  private clearPersistedKeys(keys: readonly string[]): void {
+    for (const key of keys) {
       this.storage.remove(key);
       localStorage.removeItem(key);
     }

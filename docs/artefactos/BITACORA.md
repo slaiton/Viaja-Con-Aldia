@@ -15,6 +15,15 @@ Plantilla:
 
 ---
 
+## 2026-11-27 · Ajuste quirúrgico DevSentinel: Promoción ACTIVA persistente y preservación de `token_3sl`
+- **Pedido:** Preservar `token_3sl` al iniciar sesión `REGISTRO`, persistir las llaves operativas y legacy al promover `REGISTRO` → `ACTIVA` para sobrevivir recargas, y validar recarga/promoción en `session.store.spec.ts`.
+- **Cambios:**
+  - `src/app/core/session/session.store.ts`: Separadas las listas `ALDIA_OPERATIONAL_STORAGE_KEYS` (sin `token_3sl`) y `ALL_STORAGE_KEYS` (`[...ALDIA_OPERATIONAL_STORAGE_KEYS, KEY_LEGACY_TOKEN_3SL]`). `setAldiaRegistroSession()` limpia únicamente `ALDIA_OPERATIONAL_STORAGE_KEYS` manteniendo `token_3sl`; extraído `persistActivaSession()` compartido entre `setAldiaSession()` y `promoteRegistroToActiva()` para desactivar `inMemoryOnly`, persistir claves `ACTIVA` + legacy (`token`, `conductor`, `placa`), eliminar `aldia_tramite_id` y permitir que `updateRotatedTokens()` persista tras la promoción.
+  - `src/app/core/session/session.store.spec.ts`: Actualizadas las 4 pruebas usando `StorageService` real + espía verificando preservación de `token_3sl` en `REGISTRO`, rotación en memoria, persistencia y rotación post-promoción `ACTIVA` con restauración completa al reinstanciar `SessionStore` (recarga simulada), y limpieza global de todas las claves incluido `token_3sl` en `clearSession()`.
+- **Verificación:** `npx ng test --watch=false --browsers=ChromeHeadlessCI` sobre los 6 `.spec.ts` → **37 of 37 SUCCESS (0 failures, TEST_EXIT=0)**; validación de recarga/promoción cubierta en `session.store.spec.ts`. Compilación final con `npx ng build` ejecutada a continuación.
+- **Pendiente:** Ninguno.
+- **Commit sugerido:** `fix(session): persistir sesion ACTIVA al promover REGISTRO y preservar token_3sl`
+
 ## 2026-11-27 · Bloque 4 DevSentinel (Final): Sesión REGISTRO en memoria y cierre de Gate
 - **Pedido:** Aislar completamente la sesión `REGISTRO` en memoria dentro de `SessionStore` sin escribir tokens/llaves en `localStorage`, retirar el puente `snake_case` residual y cerrar el gate DevSentinel con pruebas y build en verde.
 - **Cambios:**
@@ -22,7 +31,7 @@ Plantilla:
   - `src/app/core/models/tramite-registro.model.ts`, `src/app/features/tramite-registro/services/tramite-registro-error.helper.ts`, `src/app/features/tramite-registro/services/tramite-registro.facade.ts` y `tramite-registro.facade.spec.ts`: Retirado el puente temporal `VerificarRegistroData` / `toSessionRegistroBridge`.
   - `src/app/core/session/session.store.spec.ts`: 4 pruebas sustantivas validando aislamiento en memoria, limpieza de residuos previos, rotación sin `localStorage`, promoción a `'ACTIVA'` y `clearSession()`.
 - **Verificación:** `npx ng test --watch=false --browsers=ChromeHeadlessCI` sobre los 6 archivos `.spec.ts` → **37 of 37 SUCCESS (0 failures, TEST_EXIT=0)**; `npx ng build` Exit Code 0 sin warnings de presupuesto CSS; `tramite-registro.facade.ts` = 354 líneas; todos los `.scss` < 1.80 kB; `storage.service.ts` y archivos congelados intactos.
-- **Pendiente:** Prueba manual integral en dispositivo / navegador de registro completo, recarga y promoción post-aprobación.
+- **Pendiente:** Validación automatizada de recarga/promoción cubierta en el ajuste quirúrgico posterior.
 - **Commit sugerido:** `feat(session,gate): aislar sesion REGISTRO en memoria en SessionStore y cerrar gate DevSentinel`
 
 ## 2026-11-27 · Bloque 3 DevSentinel: Pruebas unitarias sustantivas (Domain + Facade + Interceptor)
