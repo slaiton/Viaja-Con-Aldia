@@ -21,7 +21,7 @@ const routes: Routes = [
   },
   {
     path: 'registro',
-    loadChildren: () => import('./features/registro/registro.module').then( m => m.RegistroPageModule)
+    loadChildren: () => import('./features/tramite-registro/tramite-registro.module').then( m => m.TramiteRegistroModule)
   },
   {
     path: 'turnos',

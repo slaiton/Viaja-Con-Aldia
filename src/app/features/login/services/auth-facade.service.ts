@@ -74,6 +74,7 @@ export class AuthFacadeService {
         return throwError(() => ({
           code,
           message,
+          status: httpErr?.status,
           reenviarEnSegundos
         } as OtpErrorResult));
       })
@@ -124,6 +125,7 @@ export class AuthFacadeService {
         return throwError(() => ({
           code,
           message,
+          status: httpErr?.status,
           intentosRestantes
         } as OtpErrorResult));
       })

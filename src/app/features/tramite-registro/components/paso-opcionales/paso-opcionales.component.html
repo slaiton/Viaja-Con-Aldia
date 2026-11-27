@@ -1,0 +1,229 @@
+<div class="opt-intro">
+  Estas secciones son <strong>opcionales</strong>. Activa únicamente las que apliquen a tu operación.
+</div>
+
+<!-- 1. TRÁILER -->
+<div class="reg-card">
+  <div class="opt-toggle-row">
+    <div class="opt-toggle-info">
+      <div class="reg-icon-badge">
+        <ion-icon name="bus-outline"></ion-icon>
+      </div>
+      <div>
+        <h3 class="reg-card-title">¿Llevas Tráiler?</h3>
+        <p class="reg-card-sub">
+          {{ tieneEntidad('TRAILER') ? 'Agregado ✓' : 'Semirremolque o furgón independiente' }}
+        </p>
+      </div>
+    </div>
+    <ion-toggle
+      [checked]="activo.trailer"
+      (ionChange)="onToggleSeccion('trailer', 'TRAILER', $event.detail.checked)"
+    ></ion-toggle>
+  </div>
+
+  <form *ngIf="activo.trailer" [formGroup]="trailerForm" (ngSubmit)="submitTrailer()" class="opt-form">
+    <div class="reg-field">
+      <label class="reg-label">Placa del tráiler <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="placa_trailer" placeholder="Ej. R12345"></ion-input>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Carrocería</label>
+        <ion-select *ngIf="carrocerias.length > 0; else carrTrailerTxt" fill="outline" class="reg-control" formControlName="tipo_carroceria" placeholder="Elegir">
+          <ion-select-option *ngFor="let c of carrocerias" [value]="c.nombre">{{ c.nombre }}</ion-select-option>
+        </ion-select>
+        <ng-template #carrTrailerTxt>
+          <ion-input fill="outline" class="reg-control" formControlName="tipo_carroceria"></ion-input>
+        </ng-template>
+      </div>
+
+      <div class="reg-field">
+        <label class="reg-label">Marca</label>
+        <ion-select *ngIf="marcas.length > 0; else marcaTrailerTxt" fill="outline" class="reg-control" formControlName="marca_trailer" placeholder="Elegir">
+          <ion-select-option *ngFor="let m of marcas" [value]="m.nombre">{{ m.nombre }}</ion-select-option>
+        </ion-select>
+        <ng-template #marcaTrailerTxt>
+          <ion-input fill="outline" class="reg-control" formControlName="marca_trailer"></ion-input>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Modelo</label>
+        <ion-input fill="outline" class="reg-control" formControlName="modelo"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Número de ejes</label>
+        <ion-input fill="outline" class="reg-control" formControlName="numero_ejes"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Peso vacío (kg)</label>
+      <ion-input fill="outline" class="reg-control" type="number" formControlName="peso_vacio"></ion-input>
+    </div>
+
+    <div class="opt-actions">
+      <ion-button expand="block" type="submit" [disabled]="guardando || trailerForm.invalid">
+        Guardar Tráiler
+      </ion-button>
+      <ion-button *ngIf="tieneEntidad('TRAILER')" expand="block" fill="outline" color="danger" [disabled]="guardando" (click)="quitar('trailer')">
+        Quitar Tráiler
+      </ion-button>
+    </div>
+  </form>
+</div>
+
+<!-- 2. PROPIETARIO -->
+<div class="reg-card">
+  <div class="opt-toggle-row">
+    <div class="opt-toggle-info">
+      <div class="reg-icon-badge">
+        <ion-icon name="person-circle-outline"></ion-icon>
+      </div>
+      <div>
+        <h3 class="reg-card-title">¿El propietario es otra persona?</h3>
+        <p class="reg-card-sub">
+          {{ tieneEntidad('PROPIETARIO') ? 'Agregado ✓' : 'Solo si el dueño es nuevo en ALDÍA' }}
+        </p>
+      </div>
+    </div>
+    <ion-toggle
+      [checked]="activo.propietario"
+      (ionChange)="onToggleSeccion('propietario', 'PROPIETARIO', $event.detail.checked)"
+    ></ion-toggle>
+  </div>
+
+  <form *ngIf="activo.propietario" [formGroup]="propietarioForm" (ngSubmit)="submitTercero('propietario')" class="opt-form">
+    <div class="reg-field">
+      <label class="reg-label">Tipo de documento</label>
+      <ion-select *ngIf="tiposDocumento.length > 0" fill="outline" class="reg-control" formControlName="tipo_documento" placeholder="Seleccionar">
+        <ion-select-option *ngFor="let t of tiposDocumento" [value]="t.nombre">{{ t.nombre }}</ion-select-option>
+      </ion-select>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Documento / NIT <span class="req">*</span></label>
+        <ion-input fill="outline" class="reg-control" formControlName="documento"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">DV</label>
+        <ion-input fill="outline" class="reg-control" formControlName="dv"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Nombre o Razón Social <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="nombre"></ion-input>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Apellidos</label>
+      <ion-input fill="outline" class="reg-control" formControlName="apellido"></ion-input>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Celular</label>
+        <ion-input fill="outline" class="reg-control" type="tel" formControlName="celular"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Correo</label>
+        <ion-input fill="outline" class="reg-control" type="email" formControlName="email"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Dirección</label>
+      <ion-input fill="outline" class="reg-control" formControlName="direccion"></ion-input>
+    </div>
+
+    <div class="opt-actions">
+      <ion-button expand="block" type="submit" [disabled]="guardando || propietarioForm.invalid">
+        Guardar Propietario
+      </ion-button>
+      <ion-button *ngIf="tieneEntidad('PROPIETARIO')" expand="block" fill="outline" color="danger" [disabled]="guardando" (click)="quitar('propietario')">
+        Quitar Propietario
+      </ion-button>
+    </div>
+  </form>
+</div>
+
+<!-- 3. TENEDOR -->
+<div class="reg-card">
+  <div class="opt-toggle-row">
+    <div class="opt-toggle-info">
+      <div class="reg-icon-badge">
+        <ion-icon name="briefcase-outline"></ion-icon>
+      </div>
+      <div>
+        <h3 class="reg-card-title">¿Hay Tenedor?</h3>
+        <p class="reg-card-sub">
+          {{ tieneEntidad('TENEDOR') ? 'Agregado ✓' : 'Persona distinta que administra el vehículo' }}
+        </p>
+      </div>
+    </div>
+    <ion-toggle
+      [checked]="activo.tenedor"
+      (ionChange)="onToggleSeccion('tenedor', 'TENEDOR', $event.detail.checked)"
+    ></ion-toggle>
+  </div>
+
+  <form *ngIf="activo.tenedor" [formGroup]="tenedorForm" (ngSubmit)="submitTercero('tenedor')" class="opt-form">
+    <div class="reg-field">
+      <label class="reg-label">Tipo de documento</label>
+      <ion-select *ngIf="tiposDocumento.length > 0" fill="outline" class="reg-control" formControlName="tipo_documento" placeholder="Seleccionar">
+        <ion-select-option *ngFor="let t of tiposDocumento" [value]="t.nombre">{{ t.nombre }}</ion-select-option>
+      </ion-select>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Documento / NIT <span class="req">*</span></label>
+        <ion-input fill="outline" class="reg-control" formControlName="documento"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">DV</label>
+        <ion-input fill="outline" class="reg-control" formControlName="dv"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Nombre o Razón Social <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="nombre"></ion-input>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Apellidos</label>
+      <ion-input fill="outline" class="reg-control" formControlName="apellido"></ion-input>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Celular</label>
+        <ion-input fill="outline" class="reg-control" type="tel" formControlName="celular"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Correo</label>
+        <ion-input fill="outline" class="reg-control" type="email" formControlName="email"></ion-input>
+      </div>
+    </div>
+
+    <div class="opt-actions">
+      <ion-button expand="block" type="submit" [disabled]="guardando || tenedorForm.invalid">
+        Guardar Tenedor
+      </ion-button>
+      <ion-button *ngIf="tieneEntidad('TENEDOR')" expand="block" fill="outline" color="danger" [disabled]="guardando" (click)="quitar('tenedor')">
+        Quitar Tenedor
+      </ion-button>
+    </div>
+  </form>
+</div>
+
+<button type="button" class="btn-reg-primary" (click)="onContinuar()">
+  <span>Continuar a Fotos y Envío →</span>
+</button>

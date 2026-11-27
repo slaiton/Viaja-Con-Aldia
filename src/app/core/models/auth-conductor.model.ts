@@ -79,6 +79,8 @@ export interface AldiaApiErrorBody {
   };
 }
 
+export type EstadoSesionAldia = 'ACTIVA' | 'REGISTRO';
+
 export interface AldiaSessionState {
   accessToken: string | null;
   refreshToken: string | null;
@@ -88,6 +90,8 @@ export interface AldiaSessionState {
   cedula: string | null;
   placa: string | null;
   nombreConductor: string | null;
+  estado: EstadoSesionAldia | null;
+  tramiteId: number | null;
 }
 
 export interface ConductorYoData {
@@ -136,6 +140,7 @@ export interface VerificacionOtpResult {
 export interface OtpErrorResult {
   code: string;
   message: string;
+  status?: number;
   intentosRestantes?: number;
   reenviarEnSegundos?: number;
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 
-import { catchError, retry, Subject, throwError, timeout } from 'rxjs';
+import { catchError, defaultIfEmpty, retry, Subject, throwError, timeout } from 'rxjs';
 
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -85,11 +85,12 @@ export class GeodataService {
       .pipe(
         timeout(5000),
         retry(2),
-        catchError((err: any) => {
+        catchError((err: unknown) => {
           return throwError(() => err);
-        })
+        }),
+        defaultIfEmpty(null)
       )
-      .toPromise()
+      .toPromise();
   }
 
   getGeoZona(nombre: any, lat: any, lon: any, token: any) {
@@ -123,11 +124,12 @@ export class GeodataService {
       .pipe(
         timeout(5000),
         retry(2),
-        catchError((err: any) => {
+        catchError((err: unknown) => {
           return throwError(() => err);
-        })
+        }),
+        defaultIfEmpty(null)
       )
-      .toPromise()
+      .toPromise();
   }
 
   tokenAcceso(user: any) {

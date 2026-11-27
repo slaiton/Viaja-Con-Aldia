@@ -13,19 +13,24 @@ export class LoginGuard implements CanActivate {
     private readonly sessionStore: SessionStore
   ) {}
 
-  private redirect(isValid: boolean): boolean {
-    if (!isValid) {
-      this.router.navigate(['/login']);
-      return false;
-    }
-    return true;
-  }
-
   canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
+    _route: ActivatedRouteSnapshot,
+    _state: RouterStateSnapshot
   ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    const isValid = this.sessionStore.isSessionValid();
-    return this.redirect(isValid);
+    if (!this.sessionStore.isSessionValid()) {
+      this.sessionStore.clearSession();
+      return this.router.createUrlTree(['/login']);
+    }
+
+    if (this.sessionStore.isRegistroSession()) {
+      return this.router.createUrlTree(['/registro']);
+    }
+
+    if (this.sessionStore.isActiveConductorSession()) {
+      return true;
+    }
+
+    this.sessionStore.clearSession();
+    return this.router.createUrlTree(['/login']);
   }
 }

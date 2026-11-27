@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { StorageService } from '@core/services/storage.service';
-import { AldiaSessionState, VerificarCodigoData } from '@core/models/auth-conductor.model';
+import { AldiaSessionState, EstadoSesionAldia, VerificarCodigoData } from '@core/models/auth-conductor.model';
+import { VerificarRegistroData } from '@core/models/tramite-registro.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,8 @@ export class SessionStore {
   private static readonly KEY_ALDIA_REFRESH_EXPIRA_AT = 'aldia_refresh_expira_at';
   private static readonly KEY_ALDIA_SESION_ID = 'aldia_sesion_id';
   private static readonly KEY_ALDIA_NOMBRE = 'aldia_conductor_nombre';
+  private static readonly KEY_ALDIA_ESTADO = 'aldia_estado';
+  private static readonly KEY_ALDIA_TRAMITE_ID = 'aldia_tramite_id';
 
   // Claves legacy para compatibilidad con home, app.component, preform, turnos
   private static readonly KEY_LEGACY_TOKEN = 'token';
@@ -49,6 +52,10 @@ export class SessionStore {
     this.storage.set(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT, cleanRefreshExpiraAt);
     this.storage.set(SessionStore.KEY_ALDIA_SESION_ID, sesionId);
     this.storage.set(SessionStore.KEY_ALDIA_NOMBRE, nombre);
+    this.storage.set(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    this.storage.remove(SessionStore.KEY_ALDIA_TRAMITE_ID);
+    localStorage.setItem(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    localStorage.removeItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
 
     // Sincronizar compatibilidad con pantallas legadas (home, app.component, preoperacional, turnos)
     this.storage.set(SessionStore.KEY_LEGACY_TOKEN, cleanAccessToken);
@@ -67,10 +74,92 @@ export class SessionStore {
       sesionId,
       cedula: cleanCedula,
       placa: cleanPlaca,
-      nombreConductor: nombre
+      nombreConductor: nombre,
+      estado: 'ACTIVA',
+      tramiteId: null
     };
 
     this.stateSubject.next(newState);
+  }
+
+  /**
+   * Guarda la sesión en estado REGISTRO emitida por POST /api/app/registro/verificar.
+   * CRÍTICO: NO escribe 'token' ni 'conductor' en localStorage para evitar mostrar la barra
+   * operativa inferior mientras el usuario completa su trámite de registro.
+   */
+  public setAldiaRegistroSession(data: VerificarRegistroData, cedula: string, placa: string): void {
+    const cleanCedula = cedula.trim().replace(/^["']|["']$/g, '');
+    const cleanPlaca = placa.trim().replace(/\s+/g, '').toUpperCase();
+    const cleanAccessToken = (data.access_token || '').trim();
+    const cleanRefreshToken = (data.refresh_token || '').trim();
+    const cleanExpiraAt = (data.expira_at || '').trim();
+    const cleanRefreshExpiraAt = (data.refresh_expira_at || '').trim();
+    const sesionId = data.sesion_id ?? null;
+    const tramiteId = data.tramite_id ?? null;
+
+    this.storage.set(SessionStore.KEY_ALDIA_ACCESS_TOKEN, cleanAccessToken);
+    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_TOKEN, cleanRefreshToken);
+    this.storage.set(SessionStore.KEY_ALDIA_EXPIRA_AT, cleanExpiraAt);
+    this.storage.set(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT, cleanRefreshExpiraAt);
+    this.storage.set(SessionStore.KEY_ALDIA_SESION_ID, sesionId);
+    this.storage.set(SessionStore.KEY_ALDIA_ESTADO, 'REGISTRO');
+    if (tramiteId !== null) {
+      this.storage.set(SessionStore.KEY_ALDIA_TRAMITE_ID, String(tramiteId));
+      localStorage.setItem(SessionStore.KEY_ALDIA_TRAMITE_ID, String(tramiteId));
+    }
+    this.storage.set(SessionStore.KEY_LEGACY_PLACA, cleanPlaca);
+    localStorage.setItem(SessionStore.KEY_ALDIA_ESTADO, 'REGISTRO');
+    localStorage.setItem(SessionStore.KEY_LEGACY_PLACA, cleanPlaca);
+
+    // Limpiar claves legadas de sesión operativa por seguridad
+    this.storage.remove(SessionStore.KEY_LEGACY_TOKEN);
+    this.storage.remove(SessionStore.KEY_LEGACY_CONDUCTOR);
+    localStorage.removeItem(SessionStore.KEY_LEGACY_TOKEN);
+    localStorage.removeItem(SessionStore.KEY_LEGACY_CONDUCTOR);
+
+    this.stateSubject.next({
+      accessToken: cleanAccessToken,
+      refreshToken: cleanRefreshToken,
+      expiraAt: cleanExpiraAt,
+      refreshExpiraAt: cleanRefreshExpiraAt,
+      sesionId,
+      cedula: cleanCedula,
+      placa: cleanPlaca,
+      nombreConductor: null,
+      estado: 'REGISTRO',
+      tramiteId
+    });
+  }
+
+  public isRegistroSession(): boolean {
+    return this.isSessionValid() && this.snapshot.estado === 'REGISTRO';
+  }
+
+  public isActiveConductorSession(): boolean {
+    return this.isSessionValid() && (this.snapshot.estado === 'ACTIVA' || this.snapshot.estado === null);
+  }
+
+  public promoteRegistroToActiva(): void {
+    this.storage.set(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    this.storage.remove(SessionStore.KEY_ALDIA_TRAMITE_ID);
+    localStorage.setItem(SessionStore.KEY_ALDIA_ESTADO, 'ACTIVA');
+    localStorage.removeItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
+
+    const current = this.snapshot;
+    if (current.accessToken) {
+      this.storage.set(SessionStore.KEY_LEGACY_TOKEN, current.accessToken);
+      localStorage.setItem(SessionStore.KEY_LEGACY_TOKEN, current.accessToken);
+    }
+    if (current.cedula) {
+      this.storage.set(SessionStore.KEY_LEGACY_CONDUCTOR, current.cedula);
+      localStorage.setItem(SessionStore.KEY_LEGACY_CONDUCTOR, current.cedula);
+    }
+
+    this.stateSubject.next({
+      ...current,
+      estado: 'ACTIVA',
+      tramiteId: null
+    });
   }
 
   /**
@@ -195,6 +284,8 @@ export class SessionStore {
     this.storage.remove(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT);
     this.storage.remove(SessionStore.KEY_ALDIA_SESION_ID);
     this.storage.remove(SessionStore.KEY_ALDIA_NOMBRE);
+    this.storage.remove(SessionStore.KEY_ALDIA_ESTADO);
+    this.storage.remove(SessionStore.KEY_ALDIA_TRAMITE_ID);
 
     this.storage.remove(SessionStore.KEY_LEGACY_TOKEN);
     this.storage.remove(SessionStore.KEY_LEGACY_CONDUCTOR);
@@ -207,6 +298,8 @@ export class SessionStore {
     localStorage.removeItem(SessionStore.KEY_ALDIA_REFRESH_EXPIRA_AT);
     localStorage.removeItem(SessionStore.KEY_ALDIA_SESION_ID);
     localStorage.removeItem(SessionStore.KEY_ALDIA_NOMBRE);
+    localStorage.removeItem(SessionStore.KEY_ALDIA_ESTADO);
+    localStorage.removeItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
 
     localStorage.removeItem(SessionStore.KEY_LEGACY_TOKEN);
     localStorage.removeItem(SessionStore.KEY_LEGACY_CONDUCTOR);
@@ -225,7 +318,9 @@ export class SessionStore {
       sesionId: null,
       cedula: null,
       placa: null,
-      nombreConductor: null
+      nombreConductor: null,
+      estado: null,
+      tramiteId: null
     });
   }
 
@@ -239,6 +334,11 @@ export class SessionStore {
     const nombreConductor = localStorage.getItem(SessionStore.KEY_ALDIA_NOMBRE) || null;
     const cedula = localStorage.getItem(SessionStore.KEY_LEGACY_CONDUCTOR) || null;
     const placa = localStorage.getItem(SessionStore.KEY_LEGACY_PLACA) || null;
+    const estadoRaw = localStorage.getItem(SessionStore.KEY_ALDIA_ESTADO);
+    const estado: EstadoSesionAldia | null =
+      estadoRaw === 'ACTIVA' || estadoRaw === 'REGISTRO' ? estadoRaw : null;
+    const tramiteIdRaw = localStorage.getItem(SessionStore.KEY_ALDIA_TRAMITE_ID);
+    const tramiteId = tramiteIdRaw ? Number(tramiteIdRaw) : null;
 
     return {
       accessToken,
@@ -248,7 +348,9 @@ export class SessionStore {
       sesionId,
       cedula,
       placa,
-      nombreConductor
+      nombreConductor,
+      estado,
+      tramiteId: tramiteId !== null && !isNaN(tramiteId) ? tramiteId : null
     };
   }
 }

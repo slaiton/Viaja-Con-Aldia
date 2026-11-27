@@ -89,7 +89,15 @@ export class LoginPage implements OnInit, OnDestroy {
       return;
     }
     this.authFacade.validateSession().subscribe({
-      next: () => void this.router.navigate(['/home'], { replaceUrl: true })
+      next: () => {
+        if (this.sessionStore.isRegistroSession()) {
+          void this.router.navigate(['/registro'], { replaceUrl: true });
+          return;
+        }
+        if (this.sessionStore.isActiveConductorSession()) {
+          void this.router.navigate(['/home'], { replaceUrl: true });
+        }
+      }
     });
   }
 
@@ -105,6 +113,19 @@ export class LoginPage implements OnInit, OnDestroy {
 
   irARegistro(): void {
     this.router.navigate(['/registro']);
+  }
+
+  private mostrarAlertaRegistroPendiente(mensaje?: string): void {
+    this.alert.presentAlertButtons(
+      'Registro en Proceso',
+      '',
+      mensaje || 'Tienes un trámite de registro pendiente de culminar o en revisión por Aldia.',
+      '',
+      [
+        { text: 'Continuar mi registro', handler: () => this.irARegistro() },
+        { text: 'Cerrar', handler: () => {} }
+      ]
+    );
   }
 
   volverAPaso1(): void {
@@ -142,7 +163,9 @@ export class LoginPage implements OnInit, OnDestroy {
       error: (err: OtpErrorResult) => {
         this.loadingPaso1 = false;
 
-        if (err.code === 'NO_REGISTRADO') {
+        if (err.code === 'REGISTRO_PENDIENTE') {
+          this.mostrarAlertaRegistroPendiente(err.message);
+        } else if (err.code === 'NO_REGISTRADO') {
           this.alert.presentAlertButtons(
             'Conductor No Registrado',
             '',
@@ -196,6 +219,10 @@ export class LoginPage implements OnInit, OnDestroy {
       next: () => {
         this.loadingPaso2 = false;
         this.limpiarTemporizador();
+        if (this.sessionStore.isRegistroSession()) {
+          void this.router.navigate(['/registro'], { replaceUrl: true });
+          return;
+        }
         this.router.navigate(['/home']);
       },
       error: (err: OtpErrorResult) => {
@@ -203,7 +230,9 @@ export class LoginPage implements OnInit, OnDestroy {
         this.intentosRestantes = err.intentosRestantes ?? null;
         this.errorMensajeOtp = err.message || 'Código incorrecto.';
 
-        if (err.code === 'CODIGO_BLOQUEADO') {
+        if (err.code === 'REGISTRO_PENDIENTE') {
+          this.mostrarAlertaRegistroPendiente(err.message);
+        } else if (err.code === 'CODIGO_BLOQUEADO') {
           this.alert.presentAlert(
             'Código Bloqueado',
             '',

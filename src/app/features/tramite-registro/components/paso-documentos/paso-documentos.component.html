@@ -1,0 +1,132 @@
+<div *ngIf="faltanEnviar.length > 0" class="faltan-banner">
+  <div class="faltan-title">
+    <ion-icon name="warning-outline"></ion-icon>
+    <span>Faltan campos obligatorios</span>
+  </div>
+  <ul class="faltan-list">
+    <li *ngFor="let f of faltanEnviar; trackBy: trackByFaltante">
+      <span>{{ f.etiqueta }}</span>
+      <button type="button" class="btn-link-paso" (click)="irAPaso.emit(f.paso)">
+        Ir a {{ f.paso }}
+      </button>
+    </li>
+  </ul>
+</div>
+
+<section *ngFor="let sec of seccionesActivas; trackBy: trackBySeccion" class="doc-section">
+  <h2 class="doc-section-title">{{ sec.titulo }}</h2>
+
+  <div *ngFor="let doc of sec.principales; trackBy: trackByDocumento" class="checklist-card">
+    <ng-container *ngTemplateOutlet="docItemTpl; context: { doc: doc, sec: sec }"></ng-container>
+  </div>
+
+  <div *ngIf="sec.adicionales.length > 0" class="adicionales-wrap">
+    <ion-button fill="clear" size="small" (click)="toggleAdicionales(sec.bloqueId)">
+      <ion-icon
+        [name]="adicionalesVisibles[sec.bloqueId] ? 'chevron-up-outline' : 'chevron-down-outline'"
+        slot="start"
+      ></ion-icon>
+      {{
+        adicionalesVisibles[sec.bloqueId]
+          ? 'Ocultar documentos adicionales'
+          : 'Ver documentos adicionales (' + sec.adicionales.length + ')'
+      }}
+    </ion-button>
+
+    <ng-container *ngIf="adicionalesVisibles[sec.bloqueId]">
+      <div *ngFor="let doc of sec.adicionales; trackBy: trackByDocumento" class="checklist-card">
+        <ng-container *ngTemplateOutlet="docItemTpl; context: { doc: doc, sec: sec }"></ng-container>
+      </div>
+    </ng-container>
+  </div>
+</section>
+
+<ng-template #docItemTpl let-doc="doc" let-sec="sec">
+  <ng-container *ngIf="doc.archivo as archivo; else pendienteTpl">
+    <div class="check-top">
+      <div class="check-icon check-icon-ok">
+        <ion-icon name="document-text-outline"></ion-icon>
+      </div>
+      <div class="check-info">
+        <h3 class="check-label">{{ doc.etiqueta }}</h3>
+        <span class="badge-estado badge-ok">Cargado ✓ · {{ doc.tamanoLabel }}</span>
+      </div>
+    </div>
+    <div class="check-actions">
+      <ion-button
+        size="small"
+        fill="outline"
+        class="btn-flex"
+        [disabled]="doc.subiendo || guardando"
+        (click)="seleccionarOrigenFoto(sec.entidadSlug, doc.tipo, doc.etiqueta)"
+      >
+        <ion-spinner *ngIf="doc.subiendo" name="crescent" slot="start"></ion-spinner>
+        <span>{{ doc.subiendo ? 'Subiendo...' : 'Cambiar' }}</span>
+      </ion-button>
+      <ion-button
+        size="small"
+        fill="outline"
+        color="danger"
+        [disabled]="doc.subiendo || guardando"
+        (click)="confirmarEliminacion(archivo, doc.etiqueta)"
+      >
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        Borrar
+      </ion-button>
+    </div>
+  </ng-container>
+
+  <ng-template #pendienteTpl>
+    <div class="check-top">
+      <div class="check-icon">
+        <ion-icon name="camera-outline"></ion-icon>
+      </div>
+      <div class="check-info">
+        <h3 class="check-label">{{ doc.etiqueta }}</h3>
+        <span class="badge-estado badge-pend">Pendiente</span>
+      </div>
+    </div>
+    <ion-button
+      expand="block"
+      color="primary"
+      class="btn-subir"
+      [disabled]="doc.subiendo || guardando"
+      (click)="seleccionarOrigenFoto(sec.entidadSlug, doc.tipo, doc.etiqueta)"
+    >
+      <ion-spinner *ngIf="doc.subiendo" name="crescent" slot="start"></ion-spinner>
+      <ion-icon *ngIf="!doc.subiendo" name="camera-outline" slot="start"></ion-icon>
+      <span>{{ doc.subiendo ? 'Subiendo...' : 'Tomar / Subir foto' }}</span>
+    </ion-button>
+  </ng-template>
+</ng-template>
+
+<div class="resumen-card">
+  <h3 class="resumen-title">Resumen antes de enviar</h3>
+  <div class="resumen-row">
+    <span>Datos del conductor</span>
+    <span class="badge-estado" [ngClass]="conductorListo ? 'badge-ok' : 'badge-pend'">
+      {{ conductorListo ? 'Completado ✓' : 'Pendiente' }}
+    </span>
+  </div>
+  <div class="resumen-row">
+    <span>Datos del vehículo</span>
+    <span class="badge-estado" [ngClass]="vehiculoListo ? 'badge-ok' : 'badge-pend'">
+      {{ vehiculoListo ? 'Completado ✓' : 'Pendiente' }}
+    </span>
+  </div>
+  <div class="resumen-row">
+    <span>Fotos y documentos adjuntos</span>
+    <span class="badge-estado badge-info">{{ totalArchivos }} archivo(s)</span>
+  </div>
+
+  <button
+    type="button"
+    class="btn-enviar-final"
+    [disabled]="guardando || subiendoArchivoKey !== null"
+    (click)="confirmarEnvioFinal()"
+  >
+    <ion-spinner *ngIf="guardando" name="crescent" color="light"></ion-spinner>
+    <ion-icon *ngIf="!guardando" name="checkmark-done-circle-outline"></ion-icon>
+    <span>{{ guardando ? 'Enviando solicitud...' : 'Enviar solicitud a ALDÍA' }}</span>
+  </button>
+</div>

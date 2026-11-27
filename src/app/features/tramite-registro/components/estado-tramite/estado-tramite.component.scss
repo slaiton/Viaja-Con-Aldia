@@ -1,0 +1,26 @@
+.estado-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  margin: 0;
+}
+
+.estado-rechazado {
+  border-left: 4px solid var(--ion-color-danger);
+}
+
+.motivo-box {
+  background: #fde8e8;
+  color: #7f1d1d;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.estado-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}

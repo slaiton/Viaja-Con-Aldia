@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, firstValueFrom, throwError } from 'rxjs';
+import { EMPTY, Observable, firstValueFrom, throwError } from 'rxjs';
 import { catchError, retry, shareReplay, tap, timeout } from 'rxjs/operators';
 import { StorageService } from '@core/services/storage.service';
 import { AldiaDatabase } from '@core/offline/database';
@@ -68,11 +68,18 @@ export class ConductorApi {
     const cedula = (cedulaParam || this.getCedulaActiva()).trim();
     const placa = (placaParam || this.getPlacaActiva()).trim();
 
+    if (this.sessionStore.isRegistroSession()) {
+      return firstValueFrom(EMPTY, { defaultValue: null as unknown as Conductor });
+    }
+
     if (this.sessionStore.hasAldiaSession()) {
       return this.getPerfilConductorAldia(cedula, placa, forceRefresh);
     }
 
     const token = (tokenParam || this.getTokenActivo()).trim();
+    if (!token || !cedula || !placa) {
+      return firstValueFrom(EMPTY, { defaultValue: null as unknown as Conductor });
+    }
     const cacheKey = `conductor_perfil_${cedula}_${placa}`;
 
     // Si ya tenemos en memoria y no se fuerza refresco
@@ -234,6 +241,9 @@ export class ConductorApi {
     forceRefresh: boolean = false
   ): Promise<{ data: Conductor3SL[] }> {
     const conductor = await this.getPerfilConductor(cedulaParam, placaParam, tokenParam, forceRefresh);
+    if (!conductor) {
+      return { data: [] };
+    }
     const raw = conductor.raw3sl || {
       codigoTercerox: conductor.cedula,
       nombreTercerox: conductor.nombres,

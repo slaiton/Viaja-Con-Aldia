@@ -1,7 +1,7 @@
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
-import { tap, takeUntil } from 'rxjs/operators';
+import { tap, takeUntil, defaultIfEmpty } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 
 import { Network } from '@capacitor/network';
@@ -139,11 +139,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 
- async getDataUser() {
-    // this.router.navigate(['/login']);
+  async getDataUser() {
+    if (!this.token) {
+      return;
+    }
 
     try {
-    const data = await this.auth.getUser3sL(this.token)
+      const data = await this.auth.getUser3sL(this.token);
+      if (!data?.data?.length) {
+        return;
+      }
 
       const datos = data.data[0];
       this.conductor = datos.nombreTercerox.toLowerCase();
@@ -186,8 +191,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   }
 
-  async getDocument(codigo: any, tipo: any, tipoRegistro: any): Promise<any> {
-    const resp: any = await this.photo.getFotoTercero(codigo, tipo, tipoRegistro).toPromise()
+  async getDocument(codigo: string, tipo: string, tipoRegistro: string): Promise<unknown> {
+    const resp = await this.photo.getFotoTercero(codigo, tipo, tipoRegistro)
+      .pipe(defaultIfEmpty(null))
+      .toPromise();
     return resp;
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { PluginListenerHandle } from '@capacitor/core';
 import {
-  PushNotifications,
+  // PushNotifications, // Deshabilitado temporalmente hasta configurar google-services.json
   PermissionStatus as PushPermissionStatus,
   Token,
   RegistrationError,
@@ -41,33 +41,21 @@ export class NotificationPlatformService {
 
   // Push Notifications API
   async checkPushPermissions(): Promise<PushPermissionStatus> {
-    try {
-      return await PushNotifications.checkPermissions();
-    } catch {
-      return { receive: 'denied' };
-    }
+    // Deshabilitado temporalmente: Push Notifications inactivas hasta configurar google-services.json
+    return { receive: 'denied' };
   }
 
   async requestPushPermissions(): Promise<PushPermissionStatus> {
-    try {
-      return await PushNotifications.requestPermissions();
-    } catch {
-      return { receive: 'denied' };
-    }
+    // Deshabilitado temporalmente: Push Notifications inactivas hasta configurar google-services.json
+    return { receive: 'denied' };
   }
 
   async registerPush(): Promise<void> {
-    try {
-      await PushNotifications.register();
-    } catch {
-      // Entorno sin soporte para notificaciones push
-    }
+    // Deshabilitado temporalmente: Push Notifications inactivas hasta configurar google-services.json
+    return;
   }
 
-  /**
-   * Envuelve listeners para asegurar captura tanto de excepciones síncronas
-   * como de rechazos de promesas en callbacks asíncronos (evita unhandled rejection).
-   */
+  /*
   private createSafeListener<T>(
     listenerFunc: (data: T) => void | Promise<void>
   ): (data: T) => void {
@@ -84,6 +72,7 @@ export class NotificationPlatformService {
       }
     };
   }
+  */
 
   async addPushListener(
     eventName: 'registration',
@@ -102,42 +91,14 @@ export class NotificationPlatformService {
     listenerFunc: (action: ActionPerformed) => void | Promise<void>
   ): Promise<PluginListenerHandle>;
   async addPushListener<K extends keyof PushNotificationEventMap>(
-    eventName: K,
-    listenerFunc: (data: PushNotificationEventMap[K]) => void | Promise<void>
+    _eventName: K,
+    _listenerFunc: (data: PushNotificationEventMap[K]) => void | Promise<void>
   ): Promise<PluginListenerHandle> {
-    try {
-      if (eventName === 'registration') {
-        const safeListener = this.createSafeListener(
-          listenerFunc as (token: Token) => void | Promise<void>
-        );
-        return await PushNotifications.addListener('registration', safeListener);
-      }
-      if (eventName === 'registrationError') {
-        const safeListener = this.createSafeListener(
-          listenerFunc as (error: RegistrationError) => void | Promise<void>
-        );
-        return await PushNotifications.addListener('registrationError', safeListener);
-      }
-      if (eventName === 'pushNotificationReceived') {
-        const safeListener = this.createSafeListener(
-          listenerFunc as (notification: PushNotificationSchema) => void | Promise<void>
-        );
-        return await PushNotifications.addListener('pushNotificationReceived', safeListener);
-      }
-      if (eventName === 'pushNotificationActionPerformed') {
-        const safeListener = this.createSafeListener(
-          listenerFunc as (action: ActionPerformed) => void | Promise<void>
-        );
-        return await PushNotifications.addListener('pushNotificationActionPerformed', safeListener);
-      }
-      return {
-        remove: async () => {}
-      };
-    } catch {
-      return {
-        remove: async () => {}
-      };
-    }
+    // Deshabilitado temporalmente: Push Notifications inactivas hasta configurar google-services.json
+    // En no-op se retorna handler seguro con remove()
+    return {
+      remove: async () => {}
+    };
   }
 
   // Local Notifications API

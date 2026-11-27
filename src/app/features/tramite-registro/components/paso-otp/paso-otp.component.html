@@ -1,0 +1,153 @@
+<div class="login-form-card" *ngIf="subpaso === 'SOLICITUD'; else verificacionStep">
+  <h2 class="otp-card-title">Registro de Conductor Nuevo</h2>
+  <p class="otp-card-sub">
+    Ingresa tu cédula, placa del vehículo y celular con WhatsApp para verificar tu identidad e iniciar tu expediente.
+  </p>
+
+  <form [formGroup]="datosForm" (ngSubmit)="enviarSolicitud()">
+    <div class="login-field-group">
+      <div class="login-field-header">
+        <label class="login-field-label">Cédula</label>
+        <span class="login-badge-numeric">Numérico</span>
+      </div>
+      <div class="login-input-wrapper">
+        <ion-icon name="card-outline" class="login-input-icon"></ion-icon>
+        <input
+          type="tel"
+          inputmode="numeric"
+          formControlName="cedula"
+          class="login-input-control"
+          placeholder="Número de documento"
+        />
+      </div>
+    </div>
+
+    <div class="login-field-group">
+      <div class="login-field-header">
+        <label class="login-field-label">Placa del Vehículo</label>
+        <span class="login-field-hint">Sin espacios</span>
+      </div>
+      <div class="login-input-wrapper">
+        <ion-icon name="car-sport-outline" class="login-input-icon"></ion-icon>
+        <input
+          type="text"
+          maxlength="8"
+          formControlName="placa"
+          class="login-input-control login-input-plate"
+          placeholder="SXT482"
+        />
+      </div>
+    </div>
+
+    <div class="login-field-group">
+      <div class="login-field-header">
+        <label class="login-field-label">Celular WhatsApp</label>
+        <span class="login-badge-numeric">10 dígitos</span>
+      </div>
+      <div class="login-input-wrapper">
+        <ion-icon name="logo-whatsapp" class="login-input-icon"></ion-icon>
+        <input
+          type="tel"
+          inputmode="numeric"
+          maxlength="10"
+          formControlName="celular"
+          class="login-input-control"
+          placeholder="3001234567"
+        />
+      </div>
+    </div>
+
+    <p *ngIf="errorLocal || errorMensaje" class="otp-error-text">
+      {{ errorLocal || errorMensaje }}
+    </p>
+
+    <button
+      type="submit"
+      class="btn-login-submit"
+      [disabled]="cargando || datosForm.invalid"
+    >
+      <ion-spinner *ngIf="cargando" name="crescent" color="light"></ion-spinner>
+      <span>{{ cargando ? 'Enviando código...' : 'Enviar código por WhatsApp' }}</span>
+    </button>
+  </form>
+
+  <div class="login-bottom-section">
+    <button type="button" class="btn-login-register" (click)="irALogin()">
+      Ya tengo cuenta, ir a Iniciar Sesión
+    </button>
+  </div>
+</div>
+
+<ng-template #verificacionStep>
+  <div class="login-form-card otp-card-center">
+    <div class="otp-icon-shield">
+      <ion-icon name="shield-checkmark-outline" size="large"></ion-icon>
+    </div>
+
+    <h3 class="otp-card-title">Código de Verificación</h3>
+    <p class="otp-card-sub">
+      Enviamos un código de 6 dígitos por WhatsApp al número terminado en
+      <span class="otp-badge-phone">{{ celularMask }}</span>
+    </p>
+
+    <div class="otp-input-container">
+      <div class="otp-grid">
+        <div
+          *ngFor="let idx of [0, 1, 2, 3, 4, 5]"
+          class="otp-box"
+          [ngClass]="{
+            'otp-box-filled': (codigoControl.value || '')[idx],
+            'otp-box-active': (codigoControl.value || '').length === idx,
+            'otp-box-empty': !(codigoControl.value || '')[idx] && (codigoControl.value || '').length !== idx
+          }"
+        >
+          {{ (codigoControl.value || '')[idx] || '' }}
+        </div>
+      </div>
+      <input
+        type="tel"
+        inputmode="numeric"
+        maxlength="6"
+        autocomplete="one-time-code"
+        [formControl]="codigoControl"
+        (input)="onOtpInput($event)"
+        class="otp-hidden-input"
+        aria-label="Código de verificación de 6 dígitos"
+      />
+    </div>
+
+    <p *ngIf="errorLocal || errorMensaje" class="otp-error-text">
+      {{ errorLocal || errorMensaje }}
+      <span *ngIf="intentosRestantes !== null"> (Intentos restantes: {{ intentosRestantes }})</span>
+    </p>
+
+    <div *ngIf="tiempoRestanteReenvio > 0" class="otp-resend-pill">
+      <span>Reenviar código en <strong class="text-aldia-primary">{{ tiempoFormateado }}</strong></span>
+    </div>
+
+    <ion-button
+      *ngIf="tiempoRestanteReenvio === 0"
+      fill="outline"
+      size="small"
+      shape="round"
+      (click)="reenviarCodigo()"
+      [disabled]="cargando"
+    >
+      Reenviar código por WhatsApp
+    </ion-button>
+
+    <button
+      type="button"
+      class="btn-login-submit"
+      (click)="validarCodigo()"
+      [disabled]="cargando || codigoControl.invalid"
+    >
+      <ion-spinner *ngIf="cargando" name="crescent" color="light"></ion-spinner>
+      <span>{{ cargando ? 'Verificando...' : 'Confirmar y Continuar' }}</span>
+    </button>
+
+    <ion-button fill="clear" size="small" color="medium" (click)="volverASolicitud()">
+      Cambiar datos
+    </ion-button>
+  </div>
+</ng-template>

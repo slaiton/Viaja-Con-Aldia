@@ -1232,13 +1232,7 @@ export class RegistroPage implements OnInit {
           this.vehiculo.celularPropietarioLast = datos.celularPropietario.charAt(datos.celularPropietario.length - 1)
         }
 
-        // =========================================================================
-        // [BYPASS TEMPORAL DE PRUEBAS - SMS 2FA]
-        // Se neutraliza la condición para ingresar de inmediato al bloque 'else'
-        // y se activa codeValidation para permitir el guardado final (L988).
-        // =========================================================================
-        this.codeValidation = true;
-        if (false /* cedulaTer != null && !this.codeValidation */) {
+        if (cedulaTer != null && !this.codeValidation) {
           this.presentAlert("Alerta", "", "Vehiculo ya registra en el app", "Cerrar");
           // this.checkVehicle = false;
           // this.alertVehiculo = true;

@@ -1,0 +1,156 @@
+<ng-container *ngIf="state$ | async as state">
+  <ion-header class="ion-no-border">
+    <div class="reg-header aldia-header-pattern">
+      <div class="reg-header-row">
+        <div>
+          <span class="reg-brand-sub">Viaja con Aldia</span>
+          <h1 class="reg-brand-title">Registro de Conductor</h1>
+          <p class="reg-brand-meta" *ngIf="state.tramite?.placa || cedulaSesion">
+            <span *ngIf="state.tramite?.placa">Placa {{ state.tramite?.placa }}</span>
+            <span *ngIf="state.tramite?.placa && cedulaSesion"> · </span>
+            <span *ngIf="cedulaSesion">CC {{ cedulaSesion }}</span>
+          </p>
+        </div>
+
+        <ion-button
+          *ngIf="state.estadoRegistro !== 'SIN_SESION'"
+          fill="outline"
+          color="light"
+          size="small"
+          class="btn-salir"
+          (click)="onCerrarSesion()"
+        >
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Salir
+        </ion-button>
+      </div>
+    </div>
+
+    <div *ngIf="state.estadoRegistro === 'BORRADOR'" class="reg-progress-bar-wrap">
+      <div class="reg-progress-head">
+        <span class="reg-progress-label">Paso {{ numeroEtapa }} de 4: {{ tituloEtapa }}</span>
+        <span class="reg-progress-pct">{{ (numeroEtapa * 25) }}%</span>
+      </div>
+      <ion-progress-bar [value]="numeroEtapa / 4" color="primary"></ion-progress-bar>
+
+      <div class="steps-nav">
+        <button
+          type="button"
+          class="step-pill"
+          [class.step-active]="etapaActual === 'conductor'"
+          (click)="seleccionarEtapa('conductor')"
+        >
+          <span>1. Conductor</span>
+          <ion-icon *ngIf="pasoCompleto(state.pasos, 'CONDUCTOR')" name="checkmark-circle" color="success"></ion-icon>
+        </button>
+
+        <button
+          type="button"
+          class="step-pill"
+          [class.step-active]="etapaActual === 'vehiculo'"
+          (click)="seleccionarEtapa('vehiculo')"
+        >
+          <span>2. Vehículo</span>
+          <ion-icon *ngIf="pasoCompleto(state.pasos, 'VEHICULO')" name="checkmark-circle" color="success"></ion-icon>
+        </button>
+
+        <button
+          type="button"
+          class="step-pill"
+          [class.step-active]="etapaActual === 'opcionales'"
+          (click)="seleccionarEtapa('opcionales')"
+        >
+          <span>3. Opcionales</span>
+        </button>
+
+        <button
+          type="button"
+          class="step-pill"
+          [class.step-active]="etapaActual === 'documentos'"
+          (click)="seleccionarEtapa('documentos')"
+        >
+          <span>4. Fotos</span>
+        </button>
+      </div>
+    </div>
+  </ion-header>
+
+  <ion-content class="registro-content">
+    <div class="registro-body">
+      <ion-progress-bar *ngIf="state.cargando" type="indeterminate" class="mb-bar"></ion-progress-bar>
+
+      <div *ngIf="state.errorMensaje && state.estadoRegistro !== 'SIN_SESION'" class="alert-banner alert-danger">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ state.errorMensaje }}</span>
+      </div>
+
+      <ng-container [ngSwitch]="state.estadoRegistro">
+        <app-paso-otp
+          *ngSwitchCase="'SIN_SESION'"
+          [cargando]="state.cargando"
+          [errorMensaje]="state.errorMensaje"
+          [iniciarOtpFn]="iniciarOtpFn"
+          [verificarOtpFn]="verificarOtpFn"
+          (limpiarError)="limpiarMensajes()"
+        ></app-paso-otp>
+
+        <app-estado-tramite
+          *ngSwitchCase="'ENVIADO'"
+          [tramite]="state.tramite!"
+          [cargando]="state.cargando"
+          (actualizarEstado)="onActualizarEstado()"
+          (cerrarSesion)="onCerrarSesion()"
+        ></app-estado-tramite>
+
+        <app-estado-tramite
+          *ngSwitchCase="'RECHAZADO'"
+          [tramite]="state.tramite!"
+          [cargando]="state.cargando"
+          (reabrir)="onReabrir()"
+          (cerrarSesion)="onCerrarSesion()"
+        ></app-estado-tramite>
+
+        <ng-container *ngSwitchCase="'BORRADOR'">
+          <ng-container [ngSwitch]="etapaActual">
+            <app-paso-conductor
+              *ngSwitchCase="'conductor'"
+              [tramite]="state.tramite"
+              [guardando]="state.guardando"
+              (guardar)="onGuardarConductor($event)"
+            ></app-paso-conductor>
+
+            <app-paso-vehiculo
+              *ngSwitchCase="'vehiculo'"
+              [tramite]="state.tramite"
+              [cedulaConductor]="cedulaSesion"
+              [guardando]="state.guardando"
+              (guardar)="onGuardarVehiculo($event)"
+            ></app-paso-vehiculo>
+
+            <app-paso-opcionales
+              *ngSwitchCase="'opcionales'"
+              [tramite]="state.tramite"
+              [guardando]="state.guardando"
+              (guardarEntidad)="onGuardarOpcional($event)"
+              (eliminarEntidad)="onEliminarOpcional($event)"
+              (continuar)="onContinuarOpcionales()"
+            ></app-paso-opcionales>
+
+            <app-paso-documentos
+              *ngSwitchCase="'documentos'"
+              [tramite]="state.tramite"
+              [pasos]="state.pasos"
+              [guardando]="state.guardando"
+              [subiendoArchivoKey]="state.subiendoArchivoKey"
+              [faltanEnviar]="state.faltanEnviar"
+              (subirArchivo)="onSubirArchivo($event)"
+              (eliminarArchivo)="onEliminarArchivo($event)"
+              (enviarTramite)="onEnviarTramite()"
+              (irAPaso)="onIrAPasoDesdeError($event)"
+            ></app-paso-documentos>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </div>
+  </ion-content>
+</ng-container>

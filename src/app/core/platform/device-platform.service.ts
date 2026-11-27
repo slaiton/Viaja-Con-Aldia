@@ -81,14 +81,7 @@ export class DevicePlatformService {
   }
 
   private resolveStoredPushToken(): string | undefined {
-    try {
-      const push = this.storage.get<string>('push_token') || this.storage.get<string>('fcm_token');
-      if (push && push.trim()) {
-        return push.trim();
-      }
-    } catch {
-      // Ignorar lectura
-    }
+    // Deshabilitado temporalmente: Push Notifications inactivas hasta configurar google-services.json
     return undefined;
   }
 

@@ -1,0 +1,249 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <ion-progress-bar *ngIf="cargandoCatalogos" type="indeterminate" class="reg-loader"></ion-progress-bar>
+
+  <!-- 1. Datos básicos y Licencia (Siempre visible) -->
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <div class="reg-icon-badge">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <div>
+        <h2 class="reg-card-title">Datos básicos y Licencia</h2>
+        <p class="reg-card-sub">Completa tus datos personales y tu licencia de conducción.</p>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Tipo de documento</label>
+      <ion-select *ngIf="tiposDocumento.length > 0; else tipoDocTxt" fill="outline" class="reg-control" formControlName="tipo_documento" placeholder="Seleccionar">
+        <ion-select-option *ngFor="let t of tiposDocumento" [value]="t.nombre">{{ t.nombre }}</ion-select-option>
+      </ion-select>
+      <ng-template #tipoDocTxt>
+        <ion-input fill="outline" class="reg-control" formControlName="tipo_documento" placeholder="Ej. Cédula de ciudadanía"></ion-input>
+      </ng-template>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Número de cédula</label>
+      <ion-input fill="outline" class="reg-control reg-readonly" formControlName="documento" readonly="true"></ion-input>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Nombres <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="nombre" placeholder="Ej. Carlos Alberto"></ion-input>
+      <p class="reg-err" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.invalid">Ingresa tus nombres</p>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Apellidos <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="apellido" placeholder="Ej. Pérez Gómez"></ion-input>
+      <p class="reg-err" *ngIf="form.get('apellido')?.touched && form.get('apellido')?.invalid">Ingresa tus apellidos</p>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Fecha nacimiento</label>
+        <ion-input fill="outline" class="reg-control" type="date" formControlName="fecha_nacimiento"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Grupo sanguíneo</label>
+        <ion-select fill="outline" class="reg-control" formControlName="grupo_sanguineo" placeholder="RH">
+          <ion-select-option *ngFor="let g of gruposSanguineos" [value]="g">{{ g }}</ion-select-option>
+        </ion-select>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Ciudad de residencia</label>
+      <ng-container *ngIf="ciudades.length > 0; else ciudadResTxt">
+        <input class="reg-search-input" type="text" placeholder="Buscar ciudad…" [value]="filtroCiudad" (input)="filtrarCiudades($any($event.target).value)" autocomplete="off" />
+        <ion-select fill="outline" class="reg-control" formControlName="ciudad_residencia" placeholder="Seleccionar">
+          <ion-select-option *ngFor="let c of ciudadesFiltradas" [value]="c.nombre">{{ c.nombre }}</ion-select-option>
+        </ion-select>
+      </ng-container>
+      <ng-template #ciudadResTxt>
+        <ion-input fill="outline" class="reg-control" formControlName="ciudad_residencia" placeholder="Ciudad"></ion-input>
+      </ng-template>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Dirección y Barrio</label>
+      <ion-input fill="outline" class="reg-control" formControlName="direccion" placeholder="Dirección de residencia"></ion-input>
+      <ion-input fill="outline" class="reg-control reg-mt-8" formControlName="barrio" placeholder="Barrio (opcional)"></ion-input>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Celular</label>
+        <ion-input fill="outline" class="reg-control" type="tel" formControlName="celular"></ion-input>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Correo electrónico</label>
+        <ion-input fill="outline" class="reg-control" type="email" formControlName="email" placeholder="correo@ejemplo.com"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-subhead">
+      <ion-icon name="id-card-outline"></ion-icon>
+      <span>Licencia de conducción</span>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Número de licencia</label>
+      <ion-input fill="outline" class="reg-control" formControlName="pase_conduccion" placeholder="Número del pase"></ion-input>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Categoría</label>
+        <ion-select fill="outline" class="reg-control" formControlName="categoria_pase" placeholder="Elegir">
+          <ion-select-option *ngFor="let cat of categoriasLicencia" [value]="cat">{{ cat }}</ion-select-option>
+        </ion-select>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label">Vigencia</label>
+        <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_pase"></ion-input>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acordeones opcionales -->
+  <ion-accordion-group [multiple]="true" class="reg-accordions">
+    <ion-accordion value="seguridad-social" class="reg-acc">
+      <ion-item slot="header" lines="none" class="reg-acc-header">
+        <ion-icon name="medkit-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Seguridad Social (opcional)</h3>
+          <p>EPS, ARL y Fondo de Pensión</p>
+        </ion-label>
+      </ion-item>
+
+      <div slot="content" class="reg-acc-body">
+        <div class="reg-field">
+          <label class="reg-label">EPS (Salud)</label>
+          <ion-select *ngIf="epsList.length > 0; else epsTxt" fill="outline" class="reg-control" formControlName="eps" placeholder="Seleccionar">
+            <ion-select-option *ngFor="let item of epsList" [value]="item.nombre">{{ item.nombre }}</ion-select-option>
+          </ion-select>
+          <ng-template #epsTxt>
+            <ion-input fill="outline" class="reg-control" formControlName="eps" placeholder="Nombre de la EPS"></ion-input>
+          </ng-template>
+        </div>
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Número planilla EPS</label>
+            <ion-input fill="outline" class="reg-control" inputmode="numeric" formControlName="numero_eps"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Vigencia EPS</label>
+            <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_eps"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-field">
+          <label class="reg-label">ARL (Riesgos Laborales)</label>
+          <ion-select *ngIf="arlList.length > 0; else arlTxt" fill="outline" class="reg-control" formControlName="arl" placeholder="Seleccionar">
+            <ion-select-option *ngFor="let item of arlList" [value]="item.nombre">{{ item.nombre }}</ion-select-option>
+          </ion-select>
+          <ng-template #arlTxt>
+            <ion-input fill="outline" class="reg-control" formControlName="arl" placeholder="Nombre de la ARL"></ion-input>
+          </ng-template>
+        </div>
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Número planilla ARL</label>
+            <ion-input fill="outline" class="reg-control" inputmode="numeric" formControlName="numero_arl"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Vigencia ARL</label>
+            <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_arl"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-field">
+          <label class="reg-label">AFP (Fondo de Pensión)</label>
+          <ion-select *ngIf="afpList.length > 0; else afpTxt" fill="outline" class="reg-control" formControlName="afp" placeholder="Seleccionar">
+            <ion-select-option *ngFor="let item of afpList" [value]="item.nombre">{{ item.nombre }}</ion-select-option>
+          </ion-select>
+          <ng-template #afpTxt>
+            <ion-input fill="outline" class="reg-control" formControlName="afp" placeholder="Nombre de la AFP"></ion-input>
+          </ng-template>
+        </div>
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Número planilla AFP</label>
+            <ion-input fill="outline" class="reg-control" inputmode="numeric" formControlName="numero_afp"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Vigencia AFP</label>
+            <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_afp"></ion-input>
+          </div>
+        </div>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="emergencia-banco" class="reg-acc">
+      <ion-item slot="header" lines="none" class="reg-acc-header">
+        <ion-icon name="call-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Emergencia y Cuenta bancaria (opcional)</h3>
+          <p>Banco para pagos, contacto y referencia</p>
+        </ion-label>
+      </ion-item>
+
+      <div slot="content" class="reg-acc-body">
+        <div class="reg-field">
+          <label class="reg-label">Banco afiliado</label>
+          <ion-select *ngIf="bancos.length > 0; else bancoTxt" fill="outline" class="reg-control" formControlName="banco_afiliado" placeholder="Seleccionar">
+            <ion-select-option *ngFor="let b of bancos" [value]="b.nombre">{{ b.nombre }}</ion-select-option>
+          </ion-select>
+          <ng-template #bancoTxt>
+            <ion-input fill="outline" class="reg-control" formControlName="banco_afiliado" placeholder="Banco"></ion-input>
+          </ng-template>
+        </div>
+        <div class="reg-field">
+          <label class="reg-label">Número de cuenta bancaria</label>
+          <ion-input fill="outline" class="reg-control" formControlName="cuenta_banco"></ion-input>
+        </div>
+
+        <div class="reg-subhead">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>Contacto de emergencia</span>
+        </div>
+        <div class="reg-field">
+          <label class="reg-label">Nombre completo</label>
+          <ion-input fill="outline" class="reg-control" formControlName="llamar_a"></ion-input>
+        </div>
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Parentesco</label>
+            <ion-input fill="outline" class="reg-control" formControlName="parentesco_contacto"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Teléfono</label>
+            <ion-input fill="outline" class="reg-control" type="tel" formControlName="telefono_llamar_a"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-subhead">
+          <ion-icon name="person-add-outline"></ion-icon>
+          <span>Referencia personal / familiar</span>
+        </div>
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Nombre</label>
+            <ion-input fill="outline" class="reg-control" formControlName="referencia_nombre"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Teléfono</label>
+            <ion-input fill="outline" class="reg-control" type="tel" formControlName="referencia_telefono"></ion-input>
+          </div>
+        </div>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+
+  <button type="submit" class="btn-reg-primary" [disabled]="guardando">
+    <ion-spinner *ngIf="guardando" name="crescent" color="light"></ion-spinner>
+    <span>{{ guardando ? 'Guardando...' : 'Guardar y continuar →' }}</span>
+  </button>
+</form>

@@ -1,0 +1,233 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <ion-progress-bar *ngIf="cargandoCatalogos || cargandoLineas" type="indeterminate" class="reg-loader"></ion-progress-bar>
+
+  <!-- 1. Datos principales del vehículo (Siempre visible) -->
+  <div class="reg-card">
+    <div class="reg-card-head">
+      <div class="reg-icon-badge">
+        <ion-icon name="car-sport-outline"></ion-icon>
+      </div>
+      <div>
+        <h2 class="reg-card-title">Datos principales del vehículo</h2>
+        <p class="reg-card-sub">Indica la clase, marca, línea y quién figura como propietario.</p>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Placa del vehículo</label>
+      <ion-input fill="outline" class="reg-control reg-readonly" formControlName="placa" readonly="true"></ion-input>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Clase de vehículo <span class="req">*</span></label>
+      <ion-select *ngIf="clasesVehiculo.length > 0; else claseTxt" fill="outline" class="reg-control" formControlName="clase_vehiculo" placeholder="Toca para elegir">
+        <ion-select-option *ngFor="let c of clasesVehiculo" [value]="c.nombre">{{ c.nombre }}</ion-select-option>
+      </ion-select>
+      <ng-template #claseTxt>
+        <ion-input fill="outline" class="reg-control" formControlName="clase_vehiculo"></ion-input>
+      </ng-template>
+      <p class="reg-err" *ngIf="form.get('clase_vehiculo')?.touched && form.get('clase_vehiculo')?.invalid">
+        Selecciona la clase de vehículo
+      </p>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Marca <span class="req">*</span></label>
+      <ion-select
+        *ngIf="marcas.length > 0; else marcaTxt"
+        fill="outline"
+        class="reg-control"
+        formControlName="marca"
+        placeholder="Toca para elegir"
+        (ionChange)="onMarcaChange($event.detail.value)"
+      >
+        <ion-select-option *ngFor="let m of marcas" [value]="m.nombre">{{ m.nombre }}</ion-select-option>
+      </ion-select>
+      <ng-template #marcaTxt>
+        <ion-input fill="outline" class="reg-control" formControlName="marca"></ion-input>
+      </ng-template>
+      <p class="reg-err" *ngIf="form.get('marca')?.touched && form.get('marca')?.invalid">
+        Selecciona la marca del vehículo
+      </p>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Línea</label>
+        <ion-select *ngIf="lineas.length > 0; else lineaTxt" fill="outline" class="reg-control" formControlName="clase_linea" placeholder="Elegir">
+          <ion-select-option *ngFor="let l of lineas" [value]="l.nombre">{{ l.nombre }}</ion-select-option>
+        </ion-select>
+        <ng-template #lineaTxt>
+          <ion-input fill="outline" class="reg-control" formControlName="clase_linea" placeholder="Ej. T800"></ion-input>
+        </ng-template>
+      </div>
+
+      <div class="reg-field">
+        <label class="reg-label">Modelo (año)</label>
+        <ion-input fill="outline" class="reg-control" formControlName="modelo" placeholder="Ej. 2022"></ion-input>
+      </div>
+    </div>
+
+    <div class="reg-row-2">
+      <div class="reg-field">
+        <label class="reg-label">Carrocería</label>
+        <ion-select *ngIf="carrocerias.length > 0; else carroTxt" fill="outline" class="reg-control" formControlName="carroceria" placeholder="Elegir">
+          <ion-select-option *ngFor="let c of carrocerias" [value]="c.nombre">{{ c.nombre }}</ion-select-option>
+        </ion-select>
+        <ng-template #carroTxt>
+          <ion-input fill="outline" class="reg-control" formControlName="carroceria"></ion-input>
+        </ng-template>
+      </div>
+
+      <div class="reg-field">
+        <label class="reg-label">Color</label>
+        <ion-select *ngIf="colores.length > 0; else colorTxt" fill="outline" class="reg-control" formControlName="color" placeholder="Elegir">
+          <ion-select-option *ngFor="let c of colores" [value]="c.nombre">{{ c.nombre }}</ion-select-option>
+        </ion-select>
+        <ng-template #colorTxt>
+          <ion-input fill="outline" class="reg-control" formControlName="color" placeholder="Ej. Blanco"></ion-input>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Cédula / NIT del propietario <span class="req">*</span></label>
+      <ion-input fill="outline" class="reg-control" formControlName="cedula_propietario" placeholder="Documento del propietario"></ion-input>
+      <p class="reg-hint">Por defecto es tu cédula; cámbiala si el dueño es otra persona.</p>
+      <p class="reg-err" *ngIf="form.get('cedula_propietario')?.touched && form.get('cedula_propietario')?.invalid">
+        La cédula/NIT del propietario es obligatoria
+      </p>
+    </div>
+
+    <div class="reg-field">
+      <label class="reg-label">Cédula / NIT del tenedor (opcional)</label>
+      <ion-input fill="outline" class="reg-control" formControlName="cedula_poseedor" placeholder="Solo si aplica"></ion-input>
+    </div>
+  </div>
+
+  <!-- Acordeones secundarios -->
+  <ion-accordion-group [multiple]="true" class="reg-accordions">
+    <ion-accordion value="docs-vehiculo" class="reg-acc">
+      <ion-item slot="header" lines="none" class="reg-acc-header">
+        <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Documentos (SOAT y Tecnomecánica)</h3>
+          <p>Tarjeta de propiedad, póliza y fechas</p>
+        </ion-label>
+      </ion-item>
+
+      <div slot="content" class="reg-acc-body">
+        <div class="reg-field">
+          <label class="reg-label">Número tarjeta de propiedad</label>
+          <ion-input fill="outline" class="reg-control" formControlName="tarjeta_propiedad"></ion-input>
+        </div>
+
+        <div class="reg-field">
+          <label class="reg-label">Aseguradora SOAT</label>
+          <ion-select *ngIf="aseguradoras.length > 0; else asegTxt" fill="outline" class="reg-control" formControlName="aseguradora" placeholder="Seleccionar">
+            <ion-select-option *ngFor="let a of aseguradoras" [value]="a.nombre">{{ a.nombre }}</ion-select-option>
+          </ion-select>
+          <ng-template #asegTxt>
+            <ion-input fill="outline" class="reg-control" formControlName="aseguradora"></ion-input>
+          </ng-template>
+        </div>
+
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Número SOAT</label>
+            <ion-input fill="outline" class="reg-control" formControlName="soat"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Vigencia SOAT</label>
+            <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_soat"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">N° Tecnomecánica</label>
+            <ion-input fill="outline" class="reg-control" formControlName="tecnomecanica"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Vigencia Tecno</label>
+            <ion-input fill="outline" class="reg-control" type="date" formControlName="vigencia_tecnomecanica"></ion-input>
+          </div>
+        </div>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="tecnicas-gps" class="reg-acc">
+      <ion-item slot="header" lines="none" class="reg-acc-header">
+        <ion-icon name="hardware-chip-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Características técnicas y GPS (opcional)</h3>
+          <p>Motor, chasis, capacidad y rastreo satelital</p>
+        </ion-label>
+      </ion-item>
+
+      <div slot="content" class="reg-acc-body">
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Capacidad (kg)</label>
+            <ion-input fill="outline" class="reg-control" type="number" formControlName="capacidad"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Peso vacío (kg)</label>
+            <ion-input fill="outline" class="reg-control" type="number" formControlName="peso_vacio"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Número de ejes</label>
+            <ion-input fill="outline" class="reg-control" type="number" formControlName="numero_ejes"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Número de motor</label>
+            <ion-input fill="outline" class="reg-control" formControlName="numero_motor"></ion-input>
+          </div>
+        </div>
+
+        <div class="reg-field">
+          <label class="reg-label">Número de chasis</label>
+          <ion-input fill="outline" class="reg-control" formControlName="numero_chasis"></ion-input>
+        </div>
+
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">¿Posee GPS?</label>
+            <ion-select fill="outline" class="reg-control" formControlName="posee_gps" placeholder="Elegir">
+              <ion-select-option value="SI">SI</ion-select-option>
+              <ion-select-option value="NO">NO</ion-select-option>
+            </ion-select>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Proveedor GPS</label>
+            <ion-select *ngIf="proveedoresGps.length > 0; else gpsTxt" fill="outline" class="reg-control" formControlName="proveedor_gps" placeholder="Elegir">
+              <ion-select-option *ngFor="let g of proveedoresGps" [value]="g.nombre">{{ g.nombre }}</ion-select-option>
+            </ion-select>
+            <ng-template #gpsTxt>
+              <ion-input fill="outline" class="reg-control" formControlName="proveedor_gps" placeholder="Empresa GPS"></ion-input>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="reg-row-2">
+          <div class="reg-field">
+            <label class="reg-label">Usuario GPS</label>
+            <ion-input fill="outline" class="reg-control" formControlName="usuario_gps"></ion-input>
+          </div>
+          <div class="reg-field">
+            <label class="reg-label">Clave GPS</label>
+            <ion-input fill="outline" class="reg-control" type="password" formControlName="clave_gps"></ion-input>
+          </div>
+        </div>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+
+  <button type="submit" class="btn-reg-primary" [disabled]="guardando">
+    <ion-spinner *ngIf="guardando" name="crescent" color="light"></ion-spinner>
+    <span>{{ guardando ? 'Guardando...' : 'Guardar y continuar →' }}</span>
+  </button>
+</form>

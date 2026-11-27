@@ -45,7 +45,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   /**
    * Retorna true únicamente si la URL apunta a baseUrlAldia Y la ruta pertenece
-   * a la aplicación del conductor (/app/conductor/ o /app/tramites/).
+   * a la aplicación del conductor (/app/conductor/, /app/registro, /app/tramites o /app/catalogos/).
    * Nunca inyecta Bearer en /tercero/preoperacional/*, /documento, /enturnamiento ni en 3SL.
    */
   private isConductorAppRoute(url: string): boolean {
@@ -54,7 +54,26 @@ export class AuthInterceptor implements HttpInterceptor {
     if (!cleanUrl.startsWith(base)) {
       return false;
     }
-    return cleanUrl.includes('/app/conductor/') || cleanUrl.includes('/app/tramites/');
+    return (
+      cleanUrl.includes('/app/conductor/') ||
+      cleanUrl.includes('/app/registro') ||
+      cleanUrl.includes('/app/tramites') ||
+      cleanUrl.includes('/app/catalogos/')
+    );
+  }
+
+  /**
+   * Retorna true si es una ruta pública de inicio/verificación OTP o renovación.
+   */
+  private isPublicAuthRoute(url: string): boolean {
+    const cleanUrl = url.toLowerCase();
+    return (
+      cleanUrl.includes('/app/conductor/login/verificar') ||
+      cleanUrl.includes('/app/conductor/login') ||
+      cleanUrl.includes('/app/conductor/token/renovar') ||
+      cleanUrl.includes('/app/registro/iniciar') ||
+      cleanUrl.includes('/app/registro/verificar')
+    );
   }
 
   /**
@@ -65,12 +84,7 @@ export class AuthInterceptor implements HttpInterceptor {
     if (!this.isConductorAppRoute(url)) {
       return false;
     }
-    const cleanUrl = url.toLowerCase();
-    const isPublic =
-      cleanUrl.includes('/app/conductor/login/verificar') ||
-      cleanUrl.includes('/app/conductor/login') ||
-      cleanUrl.includes('/app/conductor/token/renovar');
-    return !isPublic;
+    return !this.isPublicAuthRoute(url);
   }
 
   /**

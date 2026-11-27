@@ -15,6 +15,161 @@ Plantilla:
 
 ---
 
+## 2026-11-27 · Pulido final Paso 4: exclusión de soportes técnicos/redundantes y orden lógico por bloques
+- **Pedido:** Excluir `foto_diferencial`, `recibo_bascula`, `contrato_autorizacion` y `foto_conductor_cara` del Paso 4 y organizar los soportes en bloques ordenados con etiquetas claras y pares frontal/posterior contiguos.
+- **Cambios:**
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.ts` y `.html`:
+    - Ampliado `SOPORTES_EXCLUIDOS` con `'foto_diferencial'`, `'recibo_bascula'`, `'contrato_autorizacion'` y `'foto_conductor_cara'`.
+    - Reestructurado `reconstruirVista()` con `ORDEN_POR_BLOQUE` y `construirBloque()` en 4 bloques lógicos ordenados: **Documentos del Conductor** (cédula frontal/posterior, licencia frontal/posterior), **Documentos del Vehículo** (tarjeta frontal/posterior, SOAT vigente, tecnomecánica vigente + reversos secundarios), **Fotografías del Vehículo** (vista frontal, vista lateral + motor como secundario) y **Tráiler / Propietario / Tenedor** si aplican.
+    - Identificador único `bloqueId` para `trackBySeccion` y `adicionalesVisibles` (evitando colisión entre los dos bloques de `VEHICULO`) y etiquetas amigables en español (`Cédula de Ciudadanía - Lado Frontal`, `SOAT Vigente`, etc.).
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; todos los `.scss` < 1.80 kB; archivos congelados intactos.
+- **Pendiente:** Validación visual final del Paso 4 en navegador / Android.
+- **Commit sugerido:** `refactor(registro): ordenar soportes en bloques lógicos y excluir documentos técnicos en Paso 4`
+
+## 2026-11-27 · Paso 4: selector nativo Cámara/Galería y exclusión de soportes backoffice
+- **Pedido:** Ofrecer selector dual nativo Cámara/Galería al adjuntar fotos en Paso 4 y excluir soportes administrativos/externos de backoffice de las tarjetas visibles al conductor.
+- **Cambios:**
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.ts`:
+    - Reemplazado `ActionSheetController` + métodos separados por `PlatformCameraService.getPhoto` con `CameraSource.Prompt` (`Elegir de galería` / `Tomar con cámara`), convirtiendo el resultado con `PhotoService.readAsBase64(photo)` sin tocar `photo.service.ts` ni `camera-platform.service.ts`.
+    - Añadido `SOPORTES_EXCLUIDOS` para filtrar `runt_digitalizado`, `procuraduria_digitalizado`, `comparendos_digitalizado`, `risk_digitalizado`, `defencarga_digitalizado`, `acuerdo_pago_digitalizado`, `seguridad_social`, `rut_transporte_digitalizado` y `seguro_obligatorio_digitalizado` en `reconstruirVista()` (validado en `AppTramiteService.php` que no son obligatorios al enviar).
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; archivos congelados intactos.
+- **Pendiente:** Probar en dispositivo Android y web el selector dual `CameraSource.Prompt` y confirmar la lista filtrada en Paso 4.
+- **Commit sugerido:** `feat(registro): selector CameraSource.Prompt y exclusión de soportes backoffice en Paso 4`
+
+## 2026-11-27 · Eliminación de bucle infinito de Change Detection en Paso 4 (Documentos)
+- **Pedido:** Corregir el congelamiento del navegador ("¿Deseas esperar?") al entrar al Paso 4 (`documentos`) causado por recreación continua del DOM durante Change Detection.
+- **Cambios:**
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.ts`: Eliminados getters mutables (`seccionesActivas`, `conductorListo`, `vehiculoListo`, `totalArchivos`) y métodos llamados en plantilla (`archivoCargado`, `estaSubiendo`, `tamanoKb`). Implementado `ChangeDetectionStrategy.OnPush`, `ngOnInit` + `ngOnChanges` con `reconstruirVista()` para precomputar propiedades estáticas planas (`DocumentoItemView` con `archivo`, `tamanoLabel`, `subiendo`), además de `trackBySeccion`, `trackByDocumento` y `trackByFaltante`.
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.html`: Enlazado directo a propiedades precomputadas (`doc.archivo`, `doc.tamanoLabel`, `doc.subiendo`) y `trackBy` en todos los `*ngFor`.
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.scss` y `src/app/features/tramite-registro/pages/tramite-registro.page.scss`: Compactados a una línea para mantener todos los `.scss` por debajo de `1.80 kB`.
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; todos los `.scss` < 1.80 kB; archivos congelados sin cambios.
+- **Pendiente:** Validar en navegador local el ingreso fluido al Paso 4 y carga de soportes fotográficos.
+- **Commit sugerido:** `perf(registro): eliminar bucle de renderizado en paso-documentos con OnPush y trackBy`
+
+## 2026-11-27 · Instrumentación CoreLoggerService y transición directa Paso 3 → Paso 4
+- **Pedido:** Diagnosticar con trazas limpias (`CoreLoggerService.info`) por qué el botón Continuar del Paso 3 (Opcionales) no avanzaba al Paso 4 y garantizar transición inmediata y resiliente a `documentos`.
+- **Cambios:**
+  - `src/app/core/services/core-logger.service.ts`: Añadido método `info(context, meta?)` que registra en el buffer circular e imprime en `console.info` únicamente en modo no productivo (`!environment.production`).
+  - `src/app/features/tramite-registro/components/paso-opcionales/paso-opcionales.component.ts` y `.html`: Reemplazado `(click)="continuar.emit()"` por `(click)="onContinuar()"` con trazas `CoreLoggerService.info(...)` en `onContinuar`, `onToggleSeccion` y `quitar`, sin validaciones de formularios opcionales.
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.ts`: Añadido `avanzarADocumentosDesdeOpcionales()` que limpia explícitamente `cargando: false`, `guardando: false` y mensajes previos registrando estado vía `CoreLoggerService.info`; blindado `recalcularPasos()` con arreglos seguros y trazas en `eliminarEntidadOpcional()`.
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.ts`: Eliminado el bloqueo en `onContinuarOpcionales()` que impedía cambiar de etapa; ahora cambia `etapaActual = 'documentos'` de forma síncrona, invoca `avanzarADocumentosDesdeOpcionales()` + `ChangeDetectorRef.markForCheck()` y traza cada punto de control.
+  - `src/app/features/tramite-registro/components/paso-documentos/paso-documentos.component.ts`: Blindado `seccionesActivas` ante arreglos/objetos inesperados en `pasos` o `imagenes_permitidas`.
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; todos los `.scss` < 1.80 kB; archivos congelados intactos.
+- **Pendiente:** Confirmar en consola local las trazas `[CoreLogger]` al pulsar "Continuar a Fotos y Envío →" en Paso 3 y verificar carga del Paso 4.
+- **Commit sugerido:** `fix(registro): instrumentar trazas Paso 3 y garantizar transición directa a Paso 4`
+
+## 2026-11-27 · Corrección bloqueo Paso 3 (Opcionales) y EmptyError en getData3SL
+- **Pedido:** Desbloquear avance desde el Paso 3 (Opcionales) hacia el Paso 4 cuando no se agregan entidades opcionales, y eliminar `EmptyErrorImpl: no elements in sequence` en flujos reactivos (`getData3SL` / `ConductorApi` / `AppComponent`).
+- **Cambios:**
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.ts`: En `eliminarEntidadOpcional()`, si la entidad no existe en el trámite actual (`!this.tieneEntidad(...)`) retorna `true` sin disparar `DELETE` innecesario, y si el backend responde `404` libera `guardando: false` y retorna `true` silenciosamente.
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.ts` y `.html`: Añadido `onContinuarOpcionales()` vinculado a `(continuar)` en `<app-paso-opcionales>`, validando únicamente que `CONDUCTOR` y `VEHICULO` estén guardados y avanzando directo a `'documentos'` sin exigir entidades opcionales.
+  - `src/app/domain/conductor.api.ts`: Sustituido `firstValueFrom(EMPTY)` por `firstValueFrom(EMPTY, { defaultValue: null as unknown as Conductor })` en las salidas tempranas de `getPerfilConductor()`, y protegido `getEnvelope3SL()` para retornar `{ data: [] }` cuando `conductor` es `null`.
+  - `src/app/app.component.ts`: Añadida guarda temprana en `getDataUser()` si no hay `token` o `data.data` viene vacío, e incorporado `defaultIfEmpty(null)` en `getDocument()`.
+  - `src/app/api/geodata.service.ts`: Importado `defaultIfEmpty` faltante para los flujos `.toPromise()`.
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; archivos congelados intactos.
+- **Pendiente:** Validar en prueba local/dispositivo el salto directo de Paso 3 a Paso 4 sin opcionales y verificar consola limpia sin `EmptyErrorImpl`.
+- **Commit sugerido:** `fix(registro): desbloquear paso opcionales y blindar flujos contra EmptyError`
+
+## 2026-11-27 · Blindaje de catálogos (500/404) y búsqueda en selector de ciudad
+- **Pedido:** Defender `CatalogosAppApi.obtenerCatalogo()` contra respuestas HTTP 500/404 y timeout que congelaban `forkJoin` en `ngOnInit` de los componentes de registro. Agregar filtro de búsqueda tipo autocompletar para el selector de ciudad.
+- **Cambios:**
+  - `src/app/domain/catalogos-app.api.ts`: Reemplazado `catchError` parcial (solo 404 → re-throw en 500) por `timeout(8000)` + `catchError` universal que loguea vía `CoreLoggerService`, cachea `[]` en error y siempre retorna `of([])`. Eliminados imports `HttpErrorResponse` y `throwError` ya no usados.
+  - `src/app/features/tramite-registro/components/paso-conductor/paso-conductor.component.ts`: Añadidas propiedades `ciudadesFiltradas: CatalogoItem[]` y `filtroCiudad = ''`; método `filtrarCiudades(query: string)` con filtro parcial case-insensitive; `ciudadesFiltradas` inicializada al cargar el catálogo.
+  - `src/app/features/tramite-registro/components/paso-conductor/paso-conductor.component.html`: Selector de ciudad reemplazado por bloque con `<input class="reg-search-input">` que filtra `ciudadesFiltradas` + `<ion-select>` que itera la lista filtrada. Texto fallback conservado.
+  - `src/app/features/tramite-registro/components/paso-conductor/paso-conductor.component.scss`: Reescrito en una sola línea (1777 B < 1800 B); añadida regla `.reg-search-input` para el campo de búsqueda.
+  - `src/app/features/tramite-registro/components/paso-opcionales/paso-opcionales.component.ts`: Añadido manejador `error: () => {}` al `forkJoin` de catálogos (previousamente faltaba, exponiendo la suscripción a errores sin capturar).
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 advertencias de presupuesto CSS. Frozen files sin tocar (verificado con `git diff`).
+- **Pendiente:** Probar en dispositivo Android que los catálogos que responden 500 (`carroceria`, `proveedorgps`) degradan a `<ion-input>` text y el formulario avanza sin bloqueo.
+- **Commit sugerido:** `fix(catalogos): catchError universal + búsqueda ciudad en paso-conductor`
+
+## 2026-11-26 · Pulido UX/UI y Corrección de Scroll — Módulo Trámite de Registro
+- **Pedido:** Corregir el corte de scroll en pantalla móvil dentro de `src/app/features/tramite-registro/`, alinear la estética visual con `Viaja-Con-Aldia` (`#0094DA`, `#F3F6F9`, tarjetas blancas, `Atkinson Hyperlegible`), organizar formularios con acordeones y convertir el Paso 4 en checklist visual amigable.
+- **Cambios:**
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.*`: Eliminado `:host { height: 100% }` que bloqueaba el scroll de Ionic; implementado `<ion-header>` corporativo con placa/cédula, indicador **"Paso X de 4"**, `<ion-progress-bar>`, `<ion-content>` con `--padding-bottom: 96px` y `scrollToTop(250)` al cambiar de etapa.
+  - `src/app/features/tramite-registro/components/paso-conductor/`: Tarjetas blancas limpias, campos táctiles `fill="outline"`, bloque visible de Datos básicos y Licencia + acordeones (`ion-accordion-group`) para Seguridad Social y Emergencia/Banco, hints de validación claros y botón **"Guardar y continuar →"**.
+  - `src/app/features/tramite-registro/components/paso-vehiculo/`: Tarjeta blanca principal + acordeones para Documentos (SOAT/Tecnomecánica) y Características técnicas/GPS.
+  - `src/app/features/tramite-registro/components/paso-opcionales/`: Interruptores claros (*"¿Llevas Tráiler?"*, *"¿El propietario es otra persona?"*, *"¿Hay Tenedor?"*) ocultando formularios innecesarios.
+  - `src/app/features/tramite-registro/components/paso-documentos/`: Checklist visual con íconos, badges **"Cargado ✓"** / **"Pendiente"** y botón **"Enviar solicitud a ALDÍA"**.
+  - `src/app/features/tramite-registro/components/estado-tramite/`: Ajustada tarjeta blanca coherente con la paleta del módulo.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0, 0 errores, **0 warnings de presupuesto CSS** en todos los componentes). Ningún archivo congelado modificado, cero `console.*`, cero `any` explícitos, cero `.spec.ts` nuevos y cero commits.
+- **Pendiente:** Pruebas visuales y funcionales completas en móvil/navegador.
+- **Commit sugerido:** `style(registro): polish mobile scroll, white cards, accordions and checklist UI`
+
+---
+
+## 2026-11-26 · Fase 4 Migración Registro 3SL → Trámites Aldía: Campos Completos, Soportes, Envío Final y Limpieza
+- **Pedido:** Completar campos faltantes de Licencia y Seguridad Social en Conductor, flujo guiado de avance entre pasos, Paso 4 de evidencias fotográficas con `PhotoService` (`POST /tramites/{id}/archivos`) y envío a revisión (`POST /tramites/{id}/enviar`), retiro del bypass temporal en `registro.page.ts` y supresión de peticiones 401 residuales de 3SL sin sesión.
+- **Cambios:**
+  - `src/app/features/tramite-registro/components/paso-conductor/`: Añadidos bloques completos de Licencia (`pase_conduccion`, `categoria_pase` C1/C2/C3, `vigencia_pase`), Seguridad Social (EPS, ARL y AFP con números y vigencias), grupo sanguíneo RH, referencia personal/familiar y acción **"Guardar y continuar a Vehículo"**.
+  - `src/app/features/tramite-registro/components/paso-vehiculo/`: Añadidos controles de GPS (`posee_gps` SI/NO, `usuario_gps`, `clave_gps`) y acción **"Guardar y continuar"**.
+  - `src/app/features/tramite-registro/components/paso-opcionales/`: Añadida acción **"Continuar a Soportes y Envío"**.
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.ts`: Implementados `subirSoporte()`, `eliminarSoporte()` y `enviarTramiteARevision()` con manejo de `422 REGISTRO_INCOMPLETO` (`faltan`).
+  - `src/app/features/tramite-registro/components/paso-documentos/` (nuevo): Catálogo legible de documentos por entidad activa (`CONDUCTOR`, `VEHICULO` y dinámicamente `TRAILER`/`PROPIETARIO`/`TENEDOR`), captura cámara/galería vía `PhotoService`, reemplazo/eliminación, resumen de cumplimiento y envío definitivo a revisión.
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.*` y `tramite-registro.module.ts`: Integrado Paso 4, toast de confirmación al guardar y navegación directa ante campos faltantes.
+  - `src/app/features/registro/registro.page.ts`: Retirado limpiamente el bypass temporal de validación SMS alrededor de L1236.
+  - `src/app/domain/conductor.api.ts`: En `getPerfilConductor()`, retorna `EMPTY` sin disparar HTTP 3SL ni `/conductor/yo` cuando la sesión está en estado `REGISTRO` o sin credenciales/tokens previos.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0, 0 errores, 0 warnings de presupuesto CSS en ningún componente). Cero archivos prohibidos modificados, cero `@capacitor/*` directos en UI/facade, cero `console.*`, cero `any` explícitos, cero `.spec.ts` nuevos y cero commits.
+- **Pendiente:** Pruebas integrales E2E de extremo a extremo en navegador/APK (OTP → pasos → captura de fotos → envío a revisión → aprobación en Aldia One → transición automática a `/home`).
+- **Commit sugerido:** `feat(registro): complete document uploads, final submission, step navigation and cleanup (phase 4)`
+
+---
+
+## 2026-11-26 · Fase 3 Migración Registro 3SL → Trámites Aldía: Feature Modular `tramite-registro`
+- **Pedido:** Construir la nueva feature modular `src/app/features/tramite-registro/` con UI corporativa, gestión OTP de inicio de registro, formularios reactivos de conductor/vehículo/opcionales con catálogos dinámicos y degradación ante `404`, gestión de estados `BORRADOR`/`ENVIADO`/`RECHAZADO` y enrutamiento de `/registro` hacia el nuevo módulo sin tocar archivos congelados.
+- **Cambios:**
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.ts`: Estado reactivo del trámite (`SIN_SESION`, `BORRADOR`, `ENVIADO`, `RECHAZADO`, `APROBADO`), invocación OTP (`iniciar`/`verificar`), hidratación de pasos, guardado parcial de ítems, eliminación de opcionales y reapertura de trámites rechazados.
+  - `src/app/features/tramite-registro/components/paso-otp/`: Subpasos de solicitud de código WhatsApp (cédula, placa, celular) y verificación de 6 dígitos con temporizador de reenvío y detección de `YA_REGISTRADO`.
+  - `src/app/features/tramite-registro/components/estado-tramite/`: Vistas de espera para estado `ENVIADO` (con actualización en línea) y corrección para `RECHAZADO` (`motivo_rechazo` y reapertura).
+  - `src/app/features/tramite-registro/components/paso-conductor/`: Formulario reactivo con catálogos (`tipodocumento`, `ciudad`, `banco`) y degradación automática a `<ion-input>` cuando `eps`, `arl` o `afp` devuelven `[]`.
+  - `src/app/features/tramite-registro/components/paso-vehiculo/`: Formulario reactivo con carga en cascada de `claselinea` al cambiar `marca`, precarga de `cedula_propietario` y fallback a `<ion-input>` para `color` y `proveedorgps`.
+  - `src/app/features/tramite-registro/components/paso-opcionales/`: Formularios opcionales independientes para `trailer`, `propietario` y `tenedor` con acciones de guardado y retiro (`DELETE`).
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.*` y `tramite-registro*.module.ts`: Contenedor con barra de progreso por etapas (dejando el Paso 4 preparado para subida de fotos y envío final en Fase 4).
+  - `src/app/app-routing.module.ts`: Ruta `/registro` redirigida lazy-loaded a `TramiteRegistroModule`.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0, 0 errores, 0 warnings de presupuesto CSS en ningún componente). Cero archivos prohibidos modificados, cero `@capacitor/*` directos en UI/facade, cero `console.*`, cero `any` explícitos, cero `.spec.ts` nuevos y cero commits.
+- **Pendiente:** Fase 4: integración de captura fotográfica en Paso 4, envío final del expediente (`POST /enviar`) y retiro limpio del bypass temporal en `registro.page.ts`.
+- **Commit sugerido:** `feat(registro): add modular tramite-registro feature with dynamic catalogs and state handling (phase 3)`
+
+---
+
+## 2026-11-26 · Fase 2 Migración Registro 3SL → Trámites Aldía: Protección de Navegación (LoginGuard + LoginPage)
+- **Pedido:** Implementar la Fase 2 en `Viaja-Con-Aldia` para aislar sesiones en estado `REGISTRO` impidiendo su ingreso a `/home` o rutas operativas, y gestionar `403 REGISTRO_PENDIENTE` en `LoginPage`.
+- **Cambios:**
+  - `src/app/guard/login.guard.ts`: Verifica `isSessionValid()`, limpia y redirige a `/login` si expiró; bloquea rutas operativas y redirige a `/registro` si `isRegistroSession()` es `true`; permite acceso únicamente si `isActiveConductorSession()` es `true`.
+  - `src/app/core/models/auth-conductor.model.ts` y `src/app/features/login/services/auth-facade.service.ts`: Expuesto `status` HTTP en `OtpErrorResult`.
+  - `src/app/features/login/pages/login.page.ts`: `handleAutoLogin()` y `verificarCodigo()` redirigen a `/registro` (`replaceUrl: true`) cuando `isRegistroSession()` es `true`; agregado manejo de `REGISTRO_PENDIENTE` tanto en `solicitarCodigo()` como en `verificarCodigo()` con botón directo `"Continuar mi registro"` hacia `/registro`.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0, 0 errores, 0 warnings de presupuesto CSS). Cero archivos prohibidos modificados, cero `console.*`, cero `any` explícitos, cero `.spec.ts` nuevos y cero commits.
+- **Pendiente:** Fase 3: implementación de la nueva feature UI de trámite de registro por pasos y retiro del bypass temporal en `registro.page.ts`.
+- **Commit sugerido:** `feat(auth): isolate REGISTRO sessions in LoginGuard and handle REGISTRO_PENDIENTE in LoginPage (phase 2)`
+
+---
+
+## 2026-11-26 · Fase 1 Migración Registro 3SL → Trámites Aldía: Modelos, Clientes HTTP y Sesión REGISTRO
+- **Pedido:** Implementar exclusivamente la Fase 1 en `Viaja-Con-Aldia`: contratos TypeScript, clientes HTTP (`TramiteRegistroApi`, `CatalogosAppApi`), soporte de sesión en estado `REGISTRO` en `SessionStore` y cobertura de rutas en `AuthInterceptor`.
+- **Cambios:**
+  - `src/app/core/models/tramite-registro.model.ts` (nuevo): Interfaces estrictas para los 12 endpoints de registro/trámites/catálogos, payloads de ítems (`CONDUCTOR`, `VEHICULO`, `TRAILER`, `PROPIETARIO`, `TENEDOR`), archivos base64 y respuestas de estado.
+  - `src/app/domain/tramite-registro.api.ts` (nuevo): Servicio HTTP tipado para `/app/registro/*` y `/app/tramites/*` sin secretos `X-Client-*`.
+  - `src/app/domain/catalogos-app.api.ts` (nuevo): Servicio HTTP para `/app/catalogos/{nombre}` con caché en memoria y degradación silenciosa a `[]` ante HTTP `404 CATALOGO_NO_DISPONIBLE`.
+  - `src/app/core/models/auth-conductor.model.ts`: Extendido `AldiaSessionState` con `estado: EstadoSesionAldia | null` y `tramiteId: number | null`.
+  - `src/app/core/session/session.store.ts`: Agregado `setAldiaRegistroSession()` (sin escribir claves legadas `token`/`conductor` para ocultar la barra operativa durante registro), `isRegistroSession()`, `isActiveConductorSession()`, `promoteRegistroToActiva()` y limpieza de `aldia_estado`/`aldia_tramite_id` en `clearSession()`.
+  - `src/app/core/interceptors/auth.interceptor.ts`: Extendido `isConductorAppRoute()` para cubrir `/app/registro`, `/app/tramites` y `/app/catalogos/`, excluyendo rutas públicas `/app/registro/iniciar` y `/app/registro/verificar`.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0). Cero archivos congelados modificados, cero `console.*`, cero `any` explícitos, cero `.spec.ts` nuevos y cero commits.
+- **Pendiente:** Fase 2: actualización de `LoginGuard` y `LoginPage` para enrutamiento de sesiones `REGISTRO` sin acceso a `/home`.
+- **Commit sugerido:** `feat(registro): add domain models, http clients and REGISTRO session state (phase 1)`
+
+---
+
+## 2026-11-25 · Desactivación Temporal de Notificaciones Push (Capacitor / Firebase)
+- **Pedido:** Desactivar temporalmente llamadas a `@capacitor/push-notifications` y registro de Firebase por falta de `google-services.json`, previniendo cierre forzoso/crash nativo al arrancar la app en Android.
+- **Cambios:**
+  - `src/app/core/platform/notification-platform.service.ts`: Comentado el import de `PushNotifications`; métodos `checkPushPermissions()` y `requestPushPermissions()` retornan `{ receive: 'denied' }`, `registerPush()` neutralizado a no-op inmediato (`return;`), y `addPushListener()` retorna handler `{ remove: async () => {} }` sin invocar plugin nativo ni listeners de Capacitor.
+  - `src/app/core/platform/device-platform.service.ts`: `resolveStoredPushToken()` neutralizado para retornar directamente `undefined` sin interactuar con tokens push/FCM.
+  - `src/app/api/notificaciones.service.ts`: Comentado import de `PushNotifications` y neutralizada la rutina de `getTokenNotifications()`.
+- **Verificación:** Compilación limpia verificada con `npx ng build` (Exit Code 0). Ningún archivo congelado por DevSentinel fue modificado (`registro.page.*`, `home.page.*`, `user.service.ts`, `photo.service.ts`, `global.scss`, `package.json`, `android/`). Cero llamadas a `PushNotifications.register()` o `FirebaseMessaging` activas. Cero commits ni pushes.
+- **Pendiente:** Configurar `google-services.json` y credenciales de FCM en Android/Firebase cuando se retome la integración de notificaciones push.
+- **Commit sugerido:** `fix(notifications): temporarily disable push notifications and firebase registration`
+
+---
+
 ## 2026-11-23 · Implementación y Estabilización Bloque A: Core de Sesión + Login 2FA Conductor (WhatsApp OTP)
 - **Pedido:** Implementar y estabilizar exclusivamente el Bloque A para autenticación 2FA de conductor por WhatsApp contra `Aldia-Backend`. Resolver regresión de rebote a `/home` al pulsar "Cerrar sesión", prevenir bloqueos CORS en peticiones HTTP, blindar cola concurrente de refresco y asegurar ciclo de vida limpio en Ionic.
 - **Cambios Realizados:**
