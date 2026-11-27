@@ -11,6 +11,7 @@ import { PasoConductorComponent } from './components/paso-conductor/paso-conduct
 import { PasoVehiculoComponent } from './components/paso-vehiculo/paso-vehiculo.component';
 import { PasoOpcionalesComponent } from './components/paso-opcionales/paso-opcionales.component';
 import { PasoDocumentosComponent } from './components/paso-documentos/paso-documentos.component';
+import { TramiteRegistroRecursosService } from './services/tramite-registro-recursos.service';
 
 @NgModule({
   imports: [
@@ -28,6 +29,7 @@ import { PasoDocumentosComponent } from './components/paso-documentos/paso-docum
     PasoVehiculoComponent,
     PasoOpcionalesComponent,
     PasoDocumentosComponent
-  ]
+  ],
+  providers: [TramiteRegistroRecursosService]
 })
 export class TramiteRegistroModule {}

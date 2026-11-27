@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 
-import { catchError, defaultIfEmpty, retry, Subject, throwError, timeout } from 'rxjs';
+import { catchError, defaultIfEmpty, firstValueFrom, retry, Subject, throwError, timeout } from 'rxjs';
 
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -81,8 +81,8 @@ export class GeodataService {
 
     const requestOptions = { headers: headers, params: params };
 
-    return this.http.get("https://api.3slogistica.com/api/zonas/gps", requestOptions)
-      .pipe(
+    return firstValueFrom(
+      this.http.get("https://api.3slogistica.com/api/zonas/gps", requestOptions).pipe(
         timeout(5000),
         retry(2),
         catchError((err: unknown) => {
@@ -90,7 +90,7 @@ export class GeodataService {
         }),
         defaultIfEmpty(null)
       )
-      .toPromise();
+    );
   }
 
   getGeoZona(nombre: any, lat: any, lon: any, token: any) {
@@ -120,8 +120,8 @@ export class GeodataService {
 
     const url = "https://api.aldialogistica.com/api/enturnamiento"
 
-    return this.http.post(url, turno, requestOptions)
-      .pipe(
+    return firstValueFrom(
+      this.http.post(url, turno, requestOptions).pipe(
         timeout(5000),
         retry(2),
         catchError((err: unknown) => {
@@ -129,7 +129,7 @@ export class GeodataService {
         }),
         defaultIfEmpty(null)
       )
-      .toPromise();
+    );
   }
 
   tokenAcceso(user: any) {

@@ -10,17 +10,12 @@ export interface IniciarRegistroRequest {
   celular: string;
 }
 
-export interface IniciarRegistroData {
+export interface IniciarRegistroResult {
   id: number;
   celular: string;
-  expira_at: string;
-  expira_en_segundos: number;
-  reenviar_en_segundos: number;
-}
-
-export interface IniciarRegistroResponse {
-  success: boolean;
-  data: IniciarRegistroData;
+  expiraAt: string;
+  expiraEnSegundos: number;
+  reenviarEnSegundos: number;
 }
 
 export interface VerificarRegistroRequest {
@@ -28,26 +23,21 @@ export interface VerificarRegistroRequest {
   placa: string;
   celular: string;
   codigo: string;
-  dispositivo_id?: string;
+  dispositivoId?: string;
   plataforma?: string;
-  version_app?: string;
-  push_token?: string;
+  versionApp?: string;
+  pushToken?: string;
 }
 
-export interface VerificarRegistroData {
-  access_token: string;
-  token_type: string;
-  expira_at: string;
-  refresh_token: string;
-  refresh_expira_at: string;
-  sesion_id: number;
+export interface VerificarRegistroResult {
+  accessToken: string;
+  tokenType: string;
+  expiraAt: string;
+  refreshToken: string;
+  refreshExpiraAt: string;
+  sesionId: number;
   estado: 'REGISTRO';
-  tramite_id: number;
-}
-
-export interface VerificarRegistroResponse {
-  success: boolean;
-  data: VerificarRegistroData;
+  tramiteId: number;
 }
 
 export interface TramiteItem {
@@ -63,7 +53,7 @@ export interface TramiteArchivo {
   tipo: string;
   mime: string;
   tamano: number;
-  subido_at: string;
+  subidoAt: string;
 }
 
 export interface TramiteEvento {
@@ -77,9 +67,9 @@ export interface TramiteDetalle {
   tipo: string;
   estado: EstadoTramite;
   placa: string;
-  enviado_at: string | null;
-  revisado_at: string | null;
-  motivo_rechazo: string | null;
+  enviadoAt: string | null;
+  revisadoAt: string | null;
+  motivoRechazo: string | null;
   items: TramiteItem[];
   archivos: TramiteArchivo[];
   eventos: TramiteEvento[];
@@ -89,15 +79,16 @@ export interface PasoRegistro {
   paso: EntidadTramiteSlug;
   entidad: EntidadTramiteUpper;
   requerido: boolean;
-  con_datos: boolean;
+  conDatos: boolean;
   imagenes: number;
-  imagenes_permitidas: string[];
+  imagenesPermitidas: string[];
 }
 
 export interface EstadoRegistroEnCursoData {
   estado: Exclude<EstadoTramite, 'APROBADO'>;
   tramite: TramiteDetalle;
   pasos: PasoRegistro[];
+  reabiertoId?: number;
 }
 
 export interface EstadoRegistroAprobadoData {
@@ -106,15 +97,7 @@ export interface EstadoRegistroAprobadoData {
   mensaje: string;
 }
 
-export interface EstadoRegistroResponse {
-  success: boolean;
-  data: EstadoRegistroEnCursoData | EstadoRegistroAprobadoData;
-}
-
-export interface TramiteDetalleResponse {
-  success: boolean;
-  data: TramiteDetalle;
-}
+export type EstadoRegistroData = EstadoRegistroEnCursoData | EstadoRegistroAprobadoData;
 
 export interface ReferenciaConductor {
   nombre: string;
@@ -257,10 +240,6 @@ export interface DatosTrailerTramite {
   anexo_ecuatoriano?: string;
 }
 
-export interface GuardarItemRequest<T> {
-  datos: T;
-}
-
 export interface SubirArchivoRequest {
   entidad: EntidadTramiteSlug;
   tipo: string;
@@ -295,12 +274,12 @@ export interface CampoFaltanteRegistro {
   etiqueta: string;
 }
 
-export interface ErrorTramiteBody {
-  success?: boolean;
-  error?: string;
-  message?: string;
-  intentos_restantes?: number;
-  reenviar_en_segundos?: number;
-  faltan?: CampoFaltanteRegistro[];
-  errors?: Record<string, string[]>;
+export interface ErrorTramiteDomain {
+  status: number;
+  code: string;
+  message: string;
+  reenviarEnSegundos?: number;
+  intentosRestantes?: number;
+  erroresCampo: Record<string, string[]>;
+  faltan: CampoFaltanteRegistro[];
 }

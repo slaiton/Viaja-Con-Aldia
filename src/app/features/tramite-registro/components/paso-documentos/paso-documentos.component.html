@@ -6,7 +6,7 @@
   <ul class="faltan-list">
     <li *ngFor="let f of faltanEnviar; trackBy: trackByFaltante">
       <span>{{ f.etiqueta }}</span>
-      <button type="button" class="btn-link-paso" (click)="irAPaso.emit(f.paso)">
+      <button type="button" class="btn-link-paso" (click)="emitirIrAPaso(f.paso)">
         Ir a {{ f.paso }}
       </button>
     </li>
@@ -58,7 +58,7 @@
         fill="outline"
         class="btn-flex"
         [disabled]="doc.subiendo || guardando"
-        (click)="seleccionarOrigenFoto(sec.entidadSlug, doc.tipo, doc.etiqueta)"
+        (click)="solicitarSubirSoporte(sec.entidadSlug, doc.tipo, doc.etiqueta)"
       >
         <ion-spinner *ngIf="doc.subiendo" name="crescent" slot="start"></ion-spinner>
         <span>{{ doc.subiendo ? 'Subiendo...' : 'Cambiar' }}</span>
@@ -68,7 +68,7 @@
         fill="outline"
         color="danger"
         [disabled]="doc.subiendo || guardando"
-        (click)="confirmarEliminacion(archivo, doc.etiqueta)"
+        (click)="solicitarEliminarSoporte.emit(archivo.id)"
       >
         <ion-icon name="trash-outline" slot="start"></ion-icon>
         Borrar
@@ -91,7 +91,7 @@
       color="primary"
       class="btn-subir"
       [disabled]="doc.subiendo || guardando"
-      (click)="seleccionarOrigenFoto(sec.entidadSlug, doc.tipo, doc.etiqueta)"
+      (click)="solicitarSubirSoporte(sec.entidadSlug, doc.tipo, doc.etiqueta)"
     >
       <ion-spinner *ngIf="doc.subiendo" name="crescent" slot="start"></ion-spinner>
       <ion-icon *ngIf="!doc.subiendo" name="camera-outline" slot="start"></ion-icon>
@@ -123,7 +123,7 @@
     type="button"
     class="btn-enviar-final"
     [disabled]="guardando || subiendoArchivoKey !== null"
-    (click)="confirmarEnvioFinal()"
+    (click)="solicitarEnviarTramite.emit()"
   >
     <ion-spinner *ngIf="guardando" name="crescent" color="light"></ion-spinner>
     <ion-icon *ngIf="!guardando" name="checkmark-done-circle-outline"></ion-icon>

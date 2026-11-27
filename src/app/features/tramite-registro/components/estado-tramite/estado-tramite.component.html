@@ -27,11 +27,11 @@
           <h3>{{ tramite.placa }}</h3>
         </ion-label>
       </ion-item>
-      <ion-item *ngIf="tramite.enviado_at">
+      <ion-item *ngIf="tramite.enviadoAt">
         <ion-icon name="calendar-outline" slot="start" color="primary"></ion-icon>
         <ion-label>
           <p>Fecha de envío</p>
-          <h3>{{ tramite.enviado_at }}</h3>
+          <h3>{{ tramite.enviadoAt }}</h3>
         </ion-label>
       </ion-item>
     </ion-list>
@@ -63,7 +63,7 @@
   <ion-card-content>
     <div class="motivo-box">
       <strong>Motivo reportado por ALDÍA:</strong>
-      <p>{{ tramite.motivo_rechazo || 'Revisa la información ingresada y los documentos adjuntos.' }}</p>
+      <p>{{ tramite.motivoRechazo || 'Revisa la información ingresada y los documentos adjuntos.' }}</p>
     </div>
 
     <div class="estado-acciones">

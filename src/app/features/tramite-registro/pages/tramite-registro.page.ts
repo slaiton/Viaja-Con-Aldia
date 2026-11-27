@@ -1,6 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { IonContent, ToastController } from '@ionic/angular';
-import { Observable } from 'rxjs';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { IonContent } from '@ionic/angular';
+import { Observable, Subject } from 'rxjs';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import {
   DatosConductorTramite,
   DatosTerceroOpcionalTramite,
@@ -8,19 +9,13 @@ import {
   DatosVehiculoTramite,
   EntidadTramiteSlug,
   EntidadTramiteUpper,
-  IniciarRegistroData,
-  PasoRegistro
+  PasoRegistro,
+  TramiteDetalle
 } from '@core/models/tramite-registro.model';
-import { CoreLoggerService } from '@core/services/core-logger.service';
-import { SessionStore } from '@core/session/session.store';
 import { EntidadOpcionalSlug } from '../components/paso-opcionales/paso-opcionales.component';
-import {
-  OtpRegistroActionResult,
-  TramiteRegistroFacade,
-  TramiteRegistroState
-} from '../services/tramite-registro.facade';
-
-export type EtapaBorrador = 'conductor' | 'vehiculo' | 'opcionales' | 'documentos';
+import { SolicitudOtpPayload, VerificacionOtpPayload } from '../components/paso-otp/paso-otp.component';
+import { EtapaRegistro, puedeAccederAEtapa } from '../services/tramite-registro-error.helper';
+import { TramiteRegistroFacade, TramiteRegistroState } from '../services/tramite-registro.facade';
 
 @Component({
   selector: 'app-tramite-registro',
@@ -28,206 +23,140 @@ export type EtapaBorrador = 'conductor' | 'vehiculo' | 'opcionales' | 'documento
   styleUrls: ['./tramite-registro.page.scss'],
   providers: [TramiteRegistroFacade]
 })
-export class TramiteRegistroPage implements OnInit {
+export class TramiteRegistroPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) content?: IonContent;
   public readonly state$: Observable<TramiteRegistroState>;
-  public etapaActual: EtapaBorrador = 'conductor';
+  private readonly destroy$ = new Subject<void>();
 
-  public readonly iniciarOtpFn: (
-    cedula: string,
-    placa: string,
-    celular: string
-  ) => Promise<OtpRegistroActionResult<IniciarRegistroData>>;
-
-  public readonly verificarOtpFn: (
-    cedula: string,
-    placa: string,
-    celular: string,
-    codigo: string
-  ) => Promise<OtpRegistroActionResult<void>>;
-
-  constructor(
-    private readonly facade: TramiteRegistroFacade,
-    private readonly sessionStore: SessionStore,
-    private readonly toastCtrl: ToastController,
-    private readonly coreLogger: CoreLoggerService,
-    private readonly cdr: ChangeDetectorRef
-  ) {
+  constructor(private readonly facade: TramiteRegistroFacade) {
     this.state$ = this.facade.state$;
-    this.iniciarOtpFn = (c, p, cel) => this.facade.iniciarSolicitudOtp(c, p, cel);
-    this.verificarOtpFn = (c, p, cel, cod) => this.facade.verificarSolicitudOtp(c, p, cel, cod);
-  }
-
-  get cedulaSesion(): string | null {
-    return this.sessionStore.snapshot.cedula;
-  }
-
-  get numeroEtapa(): number {
-    const mapa: Record<EtapaBorrador, number> = {
-      conductor: 1,
-      vehiculo: 2,
-      opcionales: 3,
-      documentos: 4
-    };
-    return mapa[this.etapaActual];
-  }
-
-  get tituloEtapa(): string {
-    const titulos: Record<EtapaBorrador, string> = {
-      conductor: 'Tus datos personales',
-      vehiculo: 'Datos del vehículo',
-      opcionales: 'Tráiler y terceros (opcional)',
-      documentos: 'Fotos de documentos'
-    };
-    return titulos[this.etapaActual];
   }
 
   ngOnInit(): void {
-    void this.facade.inicializarFlujo();
+    this.state$
+      .pipe(
+        map((s) => s.etapaActual),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        void this.content?.scrollToTop(250);
+      });
   }
 
   ionViewWillEnter(): void {
     void this.facade.inicializarFlujo();
   }
 
-  limpiarMensajes(): void {
-    this.facade.limpiarMensajes();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  seleccionarEtapa(etapa: EtapaBorrador): void {
-    const snap = this.facade.snapshot;
-    this.coreLogger.info('PAGE_SELECCIONAR_ETAPA', {
-      desde: this.etapaActual,
-      hacia: etapa,
-      cargando: snap.cargando,
-      guardando: snap.guardando,
-      estadoRegistro: snap.estadoRegistro
-    });
-    this.etapaActual = etapa;
-    if (etapa === 'documentos') {
-      this.facade.avanzarADocumentosDesdeOpcionales();
-    } else {
-      this.facade.limpiarMensajes();
-    }
-    this.cdr.markForCheck();
-    void this.content?.scrollToTop(250);
+  numeroEtapa(etapa: EtapaRegistro): number {
+    const mapa: Record<EtapaRegistro, number> = {
+      conductor: 1,
+      vehiculo: 2,
+      opcionales: 3,
+      documentos: 4
+    };
+    return mapa[etapa];
+  }
+
+  tituloEtapa(etapa: EtapaRegistro): string {
+    const titulos: Record<EtapaRegistro, string> = {
+      conductor: 'Tus datos personales',
+      vehiculo: 'Datos del vehículo',
+      opcionales: 'Tráiler y terceros (opcional)',
+      documentos: 'Fotos de documentos'
+    };
+    return titulos[etapa];
+  }
+
+  puedeAcceder(etapa: EtapaRegistro, tramite: TramiteDetalle | null): boolean {
+    return puedeAccederAEtapa(etapa, tramite);
   }
 
   pasoCompleto(pasos: PasoRegistro[], entidad: EntidadTramiteUpper): boolean {
-    return Boolean(pasos.find((p) => p.entidad === entidad)?.con_datos);
+    return Boolean(pasos.find((p) => p.entidad === entidad)?.conDatos);
   }
 
-  async onGuardarConductor(datos: DatosConductorTramite): Promise<void> {
-    const ok = await this.facade.guardarEntidad('conductor', datos);
-    if (ok) {
-      await this.mostrarToast('Datos del conductor guardados');
-      this.etapaActual = 'vehiculo';
-      void this.content?.scrollToTop(250);
-    }
+  seleccionarEtapa(etapa: EtapaRegistro): void {
+    this.facade.seleccionarEtapa(etapa);
   }
 
-  async onGuardarVehiculo(datos: DatosVehiculoTramite): Promise<void> {
-    const ok = await this.facade.guardarEntidad('vehiculo', datos);
-    if (ok) {
-      await this.mostrarToast('Datos del vehículo guardados');
-      this.etapaActual = 'opcionales';
-      void this.content?.scrollToTop(250);
-    }
+  onSolicitarOtp(payload: SolicitudOtpPayload): void {
+    void this.facade.iniciarSolicitudOtp(payload);
   }
 
-  async onGuardarOpcional(event: {
+  onVerificarOtp(payload: VerificacionOtpPayload): void {
+    void this.facade.verificarSolicitudOtp(payload);
+  }
+
+  onCambiarDatosOtp(): void {
+    this.facade.volverASolicitudOtp();
+  }
+
+  onLimpiarErrorOtp(): void {
+    this.facade.limpiarErrorOtp();
+  }
+
+  onIrALogin(): void {
+    void this.facade.irALogin();
+  }
+
+  onGuardarConductor(datos: DatosConductorTramite): void {
+    void this.facade.guardarEntidad('conductor', datos);
+  }
+
+  onGuardarVehiculo(datos: DatosVehiculoTramite): void {
+    void this.facade.guardarEntidad('vehiculo', datos);
+  }
+
+  onMarcaCambio(marcaId: number): void {
+    void this.facade.cargarLineasPorMarca(marcaId);
+  }
+
+  onFormularioInvalido(mensaje: string): void {
+    void this.facade.notificarFormularioInvalido(mensaje);
+  }
+
+  onGuardarOpcional(event: {
     entidad: EntidadOpcionalSlug;
     datos: DatosTrailerTramite | DatosTerceroOpcionalTramite;
-  }): Promise<void> {
-    const ok = await this.facade.guardarEntidad(event.entidad, event.datos);
-    if (ok) {
-      await this.mostrarToast(`Datos de ${event.entidad} guardados`);
-    }
+  }): void {
+    void this.facade.guardarEntidad(event.entidad, event.datos);
   }
 
-  async onEliminarOpcional(entidad: EntidadOpcionalSlug): Promise<void> {
-    const ok = await this.facade.eliminarEntidadOpcional(entidad);
-    if (ok) {
-      await this.mostrarToast(`Sección ${entidad} retirada`);
-    }
-  }
-
-  async onSubirArchivo(event: {
-    entidad: EntidadTramiteSlug;
-    tipo: string;
-    data64: string;
-  }): Promise<void> {
-    const ok = await this.facade.subirSoporte(event.entidad, event.tipo, event.data64);
-    if (ok) {
-      await this.mostrarToast('Documento cargado correctamente');
-    }
-  }
-
-  async onEliminarArchivo(archivoId: number): Promise<void> {
-    const ok = await this.facade.eliminarSoporte(archivoId);
-    if (ok) {
-      await this.mostrarToast('Documento eliminado');
-    }
-  }
-
-  async onEnviarTramite(): Promise<void> {
-    const ok = await this.facade.enviarTramiteARevision();
-    if (ok) {
-      await this.mostrarToast('Registro enviado a revisión por operaciones ALDÍA');
-    }
-  }
-
-  onIrAPasoDesdeError(paso: string): void {
-    if (paso === 'conductor' || paso === 'vehiculo' || paso === 'opcionales' || paso === 'documentos') {
-      this.etapaActual = paso;
-    } else {
-      this.etapaActual = 'opcionales';
-    }
+  onQuitarOpcional(entidad: EntidadOpcionalSlug): void {
+    void this.facade.eliminarEntidadOpcional(entidad);
   }
 
   onContinuarOpcionales(): void {
-    const snap = this.facade.snapshot;
-    const pasos = snap.pasos || [];
-    this.coreLogger.info('PAGE_PASO3_ON_CONTINUAR_OPCIONALES', {
-      etapaPrevia: this.etapaActual,
-      cargando: snap.cargando,
-      guardando: snap.guardando,
-      estadoRegistro: snap.estadoRegistro,
-      tramiteId: snap.tramite?.id ?? null,
-      conductorCompleto: this.pasoCompleto(pasos, 'CONDUCTOR'),
-      vehiculoCompleto: this.pasoCompleto(pasos, 'VEHICULO'),
-      tieneTrailer: this.facade.tieneEntidad('TRAILER'),
-      tienePropietario: this.facade.tieneEntidad('PROPIETARIO'),
-      tieneTenedor: this.facade.tieneEntidad('TENEDOR')
-    });
-
-    // Transición inmediata y sin condiciones bloqueantes al Paso 4 (Soporte Fotográfico).
-    this.etapaActual = 'documentos';
     this.facade.avanzarADocumentosDesdeOpcionales();
-    this.cdr.markForCheck();
-    this.coreLogger.info('PAGE_PASO3_TRANSICION_DOCUMENTOS_OK', { etapaActual: this.etapaActual });
-    void this.content?.scrollToTop(250);
   }
 
-  private async mostrarToast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 2200,
-      position: 'top',
-      color: 'success'
-    });
-    await toast.present();
+  onSubirSoporte(event: { entidad: EntidadTramiteSlug; tipo: string; etiqueta: string }): void {
+    void this.facade.capturarYSubirSoporte(event.entidad, event.tipo, event.etiqueta);
   }
 
-  async onReabrir(): Promise<void> {
-    await this.facade.reabrirTramiteRechazado();
+  onSolicitarEliminarSoporte(archivoId: number): void {
+    void this.facade.solicitarEliminacionSoporte(archivoId);
   }
 
-  async onActualizarEstado(): Promise<void> {
-    await this.facade.inicializarFlujo();
+  onSolicitarEnviarTramite(): void {
+    void this.facade.solicitarEnvioFinal();
   }
 
-  async onCerrarSesion(): Promise<void> {
-    await this.facade.cerrarSesionRegistro();
+  onReabrir(): void {
+    void this.facade.reabrirTramiteRechazado();
+  }
+
+  onActualizarEstado(): void {
+    void this.facade.inicializarFlujo();
+  }
+
+  onCerrarSesion(): void {
+    void this.facade.cerrarSesionRegistro();
   }
 }

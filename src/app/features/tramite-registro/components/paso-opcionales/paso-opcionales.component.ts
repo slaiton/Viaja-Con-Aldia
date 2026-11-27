@@ -1,9 +1,12 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { CatalogoItem, DatosTerceroOpcionalTramite, DatosTrailerTramite, EntidadTramiteUpper, TramiteDetalle } from '@core/models/tramite-registro.model';
-import { CoreLoggerService } from '@core/services/core-logger.service';
-import { CatalogosAppApi } from '@domain/catalogos-app.api';
+import {
+  CatalogoItem,
+  DatosTerceroOpcionalTramite,
+  DatosTrailerTramite,
+  EntidadTramiteUpper,
+  TramiteDetalle
+} from '@core/models/tramite-registro.model';
 
 export type EntidadOpcionalSlug = 'trailer' | 'propietario' | 'tenedor';
 
@@ -15,12 +18,16 @@ export type EntidadOpcionalSlug = 'trailer' | 'propietario' | 'tenedor';
 export class PasoOpcionalesComponent implements OnInit, OnChanges {
   @Input() tramite: TramiteDetalle | null = null;
   @Input() guardando = false;
+  @Input() carrocerias: CatalogoItem[] = [];
+  @Input() marcas: CatalogoItem[] = [];
+  @Input() tiposDocumento: CatalogoItem[] = [];
+  @Input() ciudades: CatalogoItem[] = [];
 
   @Output() guardarEntidad = new EventEmitter<{
     entidad: EntidadOpcionalSlug;
     datos: DatosTrailerTramite | DatosTerceroOpcionalTramite;
   }>();
-  @Output() eliminarEntidad = new EventEmitter<EntidadOpcionalSlug>();
+  @Output() quitarEntidad = new EventEmitter<EntidadOpcionalSlug>();
   @Output() continuar = new EventEmitter<void>();
 
   activo: Record<EntidadOpcionalSlug, boolean> = {
@@ -33,21 +40,11 @@ export class PasoOpcionalesComponent implements OnInit, OnChanges {
   propietarioForm!: FormGroup;
   tenedorForm!: FormGroup;
 
-  carrocerias: CatalogoItem[] = [];
-  marcas: CatalogoItem[] = [];
-  tiposDocumento: CatalogoItem[] = [];
-  ciudades: CatalogoItem[] = [];
-
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly catalogosApi: CatalogosAppApi,
-    private readonly coreLogger: CoreLoggerService
-  ) {
+  constructor(private readonly fb: FormBuilder) {
     this.buildForms();
   }
 
   ngOnInit(): void {
-    this.cargarCatalogos();
     this.hidratarDesdeTramite();
   }
 
@@ -62,11 +59,9 @@ export class PasoOpcionalesComponent implements OnInit, OnChanges {
   }
 
   onToggleSeccion(slug: EntidadOpcionalSlug, upper: EntidadTramiteUpper, checked: boolean): void {
-    const tieneEntidad = this.tieneEntidad(upper);
-    this.coreLogger.info('PASO3_OPCIONALES_TOGGLE', { slug, upper, checked, tieneEntidad, guardando: this.guardando });
     this.activo[slug] = checked;
-    if (!checked && tieneEntidad) {
-      this.eliminarEntidad.emit(slug);
+    if (!checked && this.tieneEntidad(upper)) {
+      this.quitarEntidad.emit(slug);
     }
   }
 
@@ -97,23 +92,6 @@ export class PasoOpcionalesComponent implements OnInit, OnChanges {
       direccion: [''],
       celular: [''],
       email: ['', [Validators.email]]
-    });
-  }
-
-  private cargarCatalogos(): void {
-    forkJoin({
-      carrocerias: this.catalogosApi.obtenerCatalogo('carroceria'),
-      marcas: this.catalogosApi.obtenerCatalogo('marcavehiculo'),
-      tiposDocumento: this.catalogosApi.obtenerCatalogo('tipodocumento'),
-      ciudades: this.catalogosApi.obtenerCatalogo('ciudad')
-    }).subscribe({
-      next: (res) => {
-        this.carrocerias = res.carrocerias;
-        this.marcas = res.marcas;
-        this.tiposDocumento = res.tiposDocumento;
-        this.ciudades = res.ciudades;
-      },
-      error: () => { /* catalogs degrade silently — selects replaced by text inputs */ }
     });
   }
 
@@ -239,22 +217,11 @@ export class PasoOpcionalesComponent implements OnInit, OnChanges {
   }
 
   quitar(entidad: EntidadOpcionalSlug): void {
-    this.coreLogger.info('PASO3_OPCIONALES_QUITAR', { entidad, guardando: this.guardando });
     this.activo[entidad] = false;
-    this.eliminarEntidad.emit(entidad);
+    this.quitarEntidad.emit(entidad);
   }
 
   onContinuar(): void {
-    this.coreLogger.info('PASO3_OPCIONALES_BOTON_CONTINUAR', {
-      guardando: this.guardando,
-      activo: { ...this.activo },
-      tieneTrailer: this.tieneEntidad('TRAILER'),
-      tienePropietario: this.tieneEntidad('PROPIETARIO'),
-      tieneTenedor: this.tieneEntidad('TENEDOR'),
-      trailerValido: this.trailerForm.valid,
-      propietarioValido: this.propietarioForm.valid,
-      tenedorValido: this.tenedorForm.valid
-    });
     this.continuar.emit();
   }
 }

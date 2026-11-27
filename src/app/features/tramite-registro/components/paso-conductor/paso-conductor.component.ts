@@ -1,13 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
-import { forkJoin } from 'rxjs';
 import {
   CatalogoItem,
   DatosConductorTramite,
   TramiteDetalle
 } from '@core/models/tramite-registro.model';
-import { CatalogosAppApi } from '@domain/catalogos-app.api';
 
 @Component({
   selector: 'app-paso-conductor',
@@ -17,39 +14,37 @@ import { CatalogosAppApi } from '@domain/catalogos-app.api';
 export class PasoConductorComponent implements OnInit, OnChanges {
   @Input() tramite: TramiteDetalle | null = null;
   @Input() guardando = false;
+  @Input() cargandoCatalogos = false;
+  @Input() tiposDocumento: CatalogoItem[] = [];
+  @Input() ciudades: CatalogoItem[] = [];
+  @Input() bancos: CatalogoItem[] = [];
+  @Input() epsList: CatalogoItem[] = [];
+  @Input() arlList: CatalogoItem[] = [];
+  @Input() afpList: CatalogoItem[] = [];
 
   @Output() guardar = new EventEmitter<DatosConductorTramite>();
+  @Output() formularioInvalido = new EventEmitter<string>();
 
   form!: FormGroup;
-
-  tiposDocumento: CatalogoItem[] = [];
-  ciudades: CatalogoItem[] = [];
   ciudadesFiltradas: CatalogoItem[] = [];
   filtroCiudad = '';
-  bancos: CatalogoItem[] = [];
-  epsList: CatalogoItem[] = [];
-  arlList: CatalogoItem[] = [];
-  afpList: CatalogoItem[] = [];
-
-  cargandoCatalogos = false;
 
   readonly gruposSanguineos = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
   readonly categoriasLicencia = ['C1', 'C2', 'C3'];
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly catalogosApi: CatalogosAppApi,
-    private readonly toastCtrl: ToastController
-  ) {
+  constructor(private readonly fb: FormBuilder) {
     this.buildForm();
   }
 
   ngOnInit(): void {
-    this.cargarCatalogos();
+    this.filtrarCiudades(this.filtroCiudad);
     this.hidratarDesdeTramite();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['ciudades']) {
+      this.filtrarCiudades(this.filtroCiudad);
+    }
     if (changes['tramite'] && this.form) {
       this.hidratarDesdeTramite();
     }
@@ -95,32 +90,6 @@ export class PasoConductorComponent implements OnInit, OnChanges {
       referencia_nombre: [''],
       referencia_telefono: [''],
       observacion_documentacion: ['']
-    });
-  }
-
-  private cargarCatalogos(): void {
-    this.cargandoCatalogos = true;
-    forkJoin({
-      tiposDocumento: this.catalogosApi.obtenerCatalogo('tipodocumento'),
-      ciudades: this.catalogosApi.obtenerCatalogo('ciudad'),
-      bancos: this.catalogosApi.obtenerCatalogo('banco'),
-      eps: this.catalogosApi.obtenerCatalogo('eps'),
-      arl: this.catalogosApi.obtenerCatalogo('arl'),
-      afp: this.catalogosApi.obtenerCatalogo('afp')
-    }).subscribe({
-      next: (res) => {
-        this.tiposDocumento = res.tiposDocumento;
-        this.ciudades = res.ciudades;
-        this.ciudadesFiltradas = res.ciudades;
-        this.bancos = res.bancos;
-        this.epsList = res.eps;
-        this.arlList = res.arl;
-        this.afpList = res.afp;
-        this.cargandoCatalogos = false;
-      },
-      error: () => {
-        this.cargandoCatalogos = false;
-      }
     });
   }
 
@@ -177,25 +146,21 @@ export class PasoConductorComponent implements OnInit, OnChanges {
   }
 
   filtrarCiudades(query: string): void {
-    const q = (query || '').toLowerCase().trim();
+    this.filtroCiudad = query || '';
+    const q = this.filtroCiudad.toLowerCase().trim();
+    const lista = Array.isArray(this.ciudades) ? this.ciudades : [];
     this.ciudadesFiltradas = q
-      ? this.ciudades.filter((c) => c.nombre.toLowerCase().includes(q))
-      : this.ciudades;
+      ? lista.filter((c) => c.nombre.toLowerCase().includes(q))
+      : lista;
   }
 
-  async submit(): Promise<void> {
+  submit(): void {
     if (this.guardando) {
       return;
     }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      const toast = await this.toastCtrl.create({
-        message: 'Completa los campos obligatorios marcados con *',
-        duration: 2400,
-        position: 'top',
-        color: 'warning'
-      });
-      await toast.present();
+      this.formularioInvalido.emit('Completa los campos obligatorios marcados con *');
       return;
     }
 

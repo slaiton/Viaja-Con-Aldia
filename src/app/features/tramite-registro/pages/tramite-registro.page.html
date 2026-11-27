@@ -5,10 +5,10 @@
         <div>
           <span class="reg-brand-sub">Viaja con Aldia</span>
           <h1 class="reg-brand-title">Registro de Conductor</h1>
-          <p class="reg-brand-meta" *ngIf="state.tramite?.placa || cedulaSesion">
-            <span *ngIf="state.tramite?.placa">Placa {{ state.tramite?.placa }}</span>
-            <span *ngIf="state.tramite?.placa && cedulaSesion"> · </span>
-            <span *ngIf="cedulaSesion">CC {{ cedulaSesion }}</span>
+          <p class="reg-brand-meta" *ngIf="state.tramite?.placa || state.placaActiva || state.cedulaActiva">
+            <span *ngIf="state.tramite?.placa || state.placaActiva">Placa {{ state.tramite?.placa || state.placaActiva }}</span>
+            <span *ngIf="(state.tramite?.placa || state.placaActiva) && state.cedulaActiva"> · </span>
+            <span *ngIf="state.cedulaActiva">CC {{ state.cedulaActiva }}</span>
           </p>
         </div>
 
@@ -28,16 +28,16 @@
 
     <div *ngIf="state.estadoRegistro === 'BORRADOR'" class="reg-progress-bar-wrap">
       <div class="reg-progress-head">
-        <span class="reg-progress-label">Paso {{ numeroEtapa }} de 4: {{ tituloEtapa }}</span>
-        <span class="reg-progress-pct">{{ (numeroEtapa * 25) }}%</span>
+        <span class="reg-progress-label">Paso {{ numeroEtapa(state.etapaActual) }} de 4: {{ tituloEtapa(state.etapaActual) }}</span>
+        <span class="reg-progress-pct">{{ numeroEtapa(state.etapaActual) * 25 }}%</span>
       </div>
-      <ion-progress-bar [value]="numeroEtapa / 4" color="primary"></ion-progress-bar>
+      <ion-progress-bar [value]="numeroEtapa(state.etapaActual) / 4" color="primary"></ion-progress-bar>
 
       <div class="steps-nav">
         <button
           type="button"
           class="step-pill"
-          [class.step-active]="etapaActual === 'conductor'"
+          [class.step-active]="state.etapaActual === 'conductor'"
           (click)="seleccionarEtapa('conductor')"
         >
           <span>1. Conductor</span>
@@ -47,7 +47,8 @@
         <button
           type="button"
           class="step-pill"
-          [class.step-active]="etapaActual === 'vehiculo'"
+          [class.step-active]="state.etapaActual === 'vehiculo'"
+          [disabled]="!puedeAcceder('vehiculo', state.tramite)"
           (click)="seleccionarEtapa('vehiculo')"
         >
           <span>2. Vehículo</span>
@@ -57,7 +58,8 @@
         <button
           type="button"
           class="step-pill"
-          [class.step-active]="etapaActual === 'opcionales'"
+          [class.step-active]="state.etapaActual === 'opcionales'"
+          [disabled]="!puedeAcceder('opcionales', state.tramite)"
           (click)="seleccionarEtapa('opcionales')"
         >
           <span>3. Opcionales</span>
@@ -66,7 +68,8 @@
         <button
           type="button"
           class="step-pill"
-          [class.step-active]="etapaActual === 'documentos'"
+          [class.step-active]="state.etapaActual === 'documentos'"
+          [disabled]="!puedeAcceder('documentos', state.tramite)"
           (click)="seleccionarEtapa('documentos')"
         >
           <span>4. Fotos</span>
@@ -89,9 +92,15 @@
           *ngSwitchCase="'SIN_SESION'"
           [cargando]="state.cargando"
           [errorMensaje]="state.errorMensaje"
-          [iniciarOtpFn]="iniciarOtpFn"
-          [verificarOtpFn]="verificarOtpFn"
-          (limpiarError)="limpiarMensajes()"
+          [subpaso]="state.subpasoOtp"
+          [celularMask]="state.celularEnmascarado"
+          [reenviarEnSegundos]="state.reenviarEnSegundos"
+          [intentosRestantes]="state.intentosRestantesOtp"
+          (solicitarOtp)="onSolicitarOtp($event)"
+          (verificarOtp)="onVerificarOtp($event)"
+          (cambiarDatos)="onCambiarDatosOtp()"
+          (irALogin)="onIrALogin()"
+          (limpiarError)="onLimpiarErrorOtp()"
         ></app-paso-otp>
 
         <app-estado-tramite
@@ -111,28 +120,51 @@
         ></app-estado-tramite>
 
         <ng-container *ngSwitchCase="'BORRADOR'">
-          <ng-container [ngSwitch]="etapaActual">
+          <ng-container [ngSwitch]="state.etapaActual">
             <app-paso-conductor
               *ngSwitchCase="'conductor'"
               [tramite]="state.tramite"
               [guardando]="state.guardando"
+              [cargandoCatalogos]="state.cargandoCatalogos"
+              [tiposDocumento]="state.catalogos.tiposDocumento"
+              [ciudades]="state.catalogos.ciudades"
+              [bancos]="state.catalogos.bancos"
+              [epsList]="state.catalogos.epsList"
+              [arlList]="state.catalogos.arlList"
+              [afpList]="state.catalogos.afpList"
               (guardar)="onGuardarConductor($event)"
+              (formularioInvalido)="onFormularioInvalido($event)"
             ></app-paso-conductor>
 
             <app-paso-vehiculo
               *ngSwitchCase="'vehiculo'"
               [tramite]="state.tramite"
-              [cedulaConductor]="cedulaSesion"
+              [cedulaConductor]="state.cedulaActiva"
               [guardando]="state.guardando"
+              [cargandoCatalogos]="state.cargandoCatalogos"
+              [cargandoLineas]="state.cargandoLineas"
+              [clasesVehiculo]="state.catalogos.clasesVehiculo"
+              [marcas]="state.catalogos.marcas"
+              [lineas]="state.lineasVehiculo"
+              [carrocerias]="state.catalogos.carrocerias"
+              [aseguradoras]="state.catalogos.aseguradoras"
+              [colores]="state.catalogos.colores"
+              [proveedoresGps]="state.catalogos.proveedoresGps"
               (guardar)="onGuardarVehiculo($event)"
+              (marcaCambio)="onMarcaCambio($event)"
+              (formularioInvalido)="onFormularioInvalido($event)"
             ></app-paso-vehiculo>
 
             <app-paso-opcionales
               *ngSwitchCase="'opcionales'"
               [tramite]="state.tramite"
               [guardando]="state.guardando"
+              [carrocerias]="state.catalogos.carrocerias"
+              [marcas]="state.catalogos.marcas"
+              [tiposDocumento]="state.catalogos.tiposDocumento"
+              [ciudades]="state.catalogos.ciudades"
               (guardarEntidad)="onGuardarOpcional($event)"
-              (eliminarEntidad)="onEliminarOpcional($event)"
+              (quitarEntidad)="onQuitarOpcional($event)"
               (continuar)="onContinuarOpcionales()"
             ></app-paso-opcionales>
 
@@ -143,10 +175,10 @@
               [guardando]="state.guardando"
               [subiendoArchivoKey]="state.subiendoArchivoKey"
               [faltanEnviar]="state.faltanEnviar"
-              (subirArchivo)="onSubirArchivo($event)"
-              (eliminarArchivo)="onEliminarArchivo($event)"
-              (enviarTramite)="onEnviarTramite()"
-              (irAPaso)="onIrAPasoDesdeError($event)"
+              (subirSoporte)="onSubirSoporte($event)"
+              (solicitarEliminarSoporte)="onSolicitarEliminarSoporte($event)"
+              (solicitarEnviarTramite)="onSolicitarEnviarTramite()"
+              (irAPaso)="seleccionarEtapa($event)"
             ></app-paso-documentos>
           </ng-container>
         </ng-container>

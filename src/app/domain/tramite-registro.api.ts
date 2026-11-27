@@ -1,19 +1,27 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_CONFIG, ApiConfig } from '@core/config/api.config';
 import {
   EntidadTramiteSlug,
-  EstadoRegistroResponse,
-  GuardarItemRequest,
+  EstadoRegistroData,
   IniciarRegistroRequest,
-  IniciarRegistroResponse,
+  IniciarRegistroResult,
   SubirArchivoRequest,
   TramiteDetalle,
-  TramiteDetalleResponse,
   VerificarRegistroRequest,
-  VerificarRegistroResponse
+  VerificarRegistroResult
 } from '@core/models/tramite-registro.model';
+import {
+  EstadoRegistroResponseDto,
+  GuardarItemRequestDto,
+  IniciarRegistroResponseDto,
+  ListaTramitesResponseDto,
+  TramiteDetalleResponseDto,
+  VerificarRegistroResponseDto
+} from './tramite-registro.dto';
+import { TramiteRegistroMapper } from './tramite-registro.mapper';
 
 @Injectable({
   providedIn: 'root'
@@ -28,66 +36,89 @@ export class TramiteRegistroApi {
     return this.apiConfig.baseUrlAldia.replace(/\/+$/, '');
   }
 
-  iniciarRegistro(payload: IniciarRegistroRequest): Observable<IniciarRegistroResponse> {
-    return this.http.post<IniciarRegistroResponse>(`${this.baseUrl}/app/registro/iniciar`, payload);
+  iniciarRegistro(payload: IniciarRegistroRequest): Observable<IniciarRegistroResult> {
+    return this.http
+      .post<IniciarRegistroResponseDto>(
+        `${this.baseUrl}/app/registro/iniciar`,
+        TramiteRegistroMapper.toIniciarRegistroDto(payload)
+      )
+      .pipe(map((res) => TramiteRegistroMapper.mapIniciarRegistroDto(res)));
   }
 
-  verificarRegistro(payload: VerificarRegistroRequest): Observable<VerificarRegistroResponse> {
-    return this.http.post<VerificarRegistroResponse>(`${this.baseUrl}/app/registro/verificar`, payload);
+  verificarRegistro(payload: VerificarRegistroRequest): Observable<VerificarRegistroResult> {
+    return this.http
+      .post<VerificarRegistroResponseDto>(
+        `${this.baseUrl}/app/registro/verificar`,
+        TramiteRegistroMapper.toVerificarRegistroDto(payload)
+      )
+      .pipe(map((res) => TramiteRegistroMapper.mapVerificarRegistroDto(res)));
   }
 
-  obtenerEstadoRegistro(): Observable<EstadoRegistroResponse> {
-    return this.http.get<EstadoRegistroResponse>(`${this.baseUrl}/app/registro`);
+  obtenerEstadoRegistro(): Observable<EstadoRegistroData> {
+    return this.http
+      .get<EstadoRegistroResponseDto>(`${this.baseUrl}/app/registro`)
+      .pipe(map((res) => TramiteRegistroMapper.mapEstadoRegistroDto(res)));
   }
 
-  reabrirRegistro(): Observable<TramiteDetalleResponse> {
-    return this.http.post<TramiteDetalleResponse>(`${this.baseUrl}/app/registro/reabrir`, {});
+  reabrirRegistro(): Observable<EstadoRegistroData> {
+    return this.http
+      .post<EstadoRegistroResponseDto>(`${this.baseUrl}/app/registro/reabrir`, {})
+      .pipe(map((res) => TramiteRegistroMapper.mapEstadoRegistroDto(res)));
   }
 
-  listarTramites(): Observable<{ success: boolean; data: TramiteDetalle[] }> {
-    return this.http.get<{ success: boolean; data: TramiteDetalle[] }>(`${this.baseUrl}/app/tramites`);
+  listarTramites(): Observable<TramiteDetalle[]> {
+    return this.http
+      .get<ListaTramitesResponseDto>(`${this.baseUrl}/app/tramites`)
+      .pipe(map((res) => TramiteRegistroMapper.mapListaTramitesDto(res)));
   }
 
-  obtenerDetalleTramite(tramiteId: number): Observable<TramiteDetalleResponse> {
-    return this.http.get<TramiteDetalleResponse>(`${this.baseUrl}/app/tramites/${tramiteId}`);
+  obtenerDetalleTramite(tramiteId: number): Observable<TramiteDetalle> {
+    return this.http
+      .get<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}`)
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
   guardarItemTramite<T extends object>(
     tramiteId: number,
     entidad: EntidadTramiteSlug,
     datos: T
-  ): Observable<TramiteDetalleResponse> {
-    const body: GuardarItemRequest<T> = { datos };
-    return this.http.put<TramiteDetalleResponse>(
-      `${this.baseUrl}/app/tramites/${tramiteId}/items/${entidad}`,
-      body
-    );
+  ): Observable<TramiteDetalle> {
+    const body: GuardarItemRequestDto<T> = { datos };
+    return this.http
+      .put<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}/items/${entidad}`, body)
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
-  eliminarItemTramite(tramiteId: number, entidad: EntidadTramiteSlug): Observable<TramiteDetalleResponse> {
-    return this.http.delete<TramiteDetalleResponse>(
-      `${this.baseUrl}/app/tramites/${tramiteId}/items/${entidad}`
-    );
+  eliminarItemTramite(tramiteId: number, entidad: EntidadTramiteSlug): Observable<TramiteDetalle> {
+    return this.http
+      .delete<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}/items/${entidad}`)
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
-  subirArchivoTramite(tramiteId: number, payload: SubirArchivoRequest): Observable<TramiteDetalleResponse> {
-    return this.http.post<TramiteDetalleResponse>(
-      `${this.baseUrl}/app/tramites/${tramiteId}/archivos`,
-      payload
-    );
+  subirArchivoTramite(tramiteId: number, payload: SubirArchivoRequest): Observable<TramiteDetalle> {
+    return this.http
+      .post<TramiteDetalleResponseDto>(
+        `${this.baseUrl}/app/tramites/${tramiteId}/archivos`,
+        TramiteRegistroMapper.toSubirArchivoDto(payload)
+      )
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
-  eliminarArchivoTramite(tramiteId: number, archivoId: number): Observable<TramiteDetalleResponse> {
-    return this.http.delete<TramiteDetalleResponse>(
-      `${this.baseUrl}/app/tramites/${tramiteId}/archivos/${archivoId}`
-    );
+  eliminarArchivoTramite(tramiteId: number, archivoId: number): Observable<TramiteDetalle> {
+    return this.http
+      .delete<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}/archivos/${archivoId}`)
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
-  enviarTramite(tramiteId: number): Observable<TramiteDetalleResponse> {
-    return this.http.post<TramiteDetalleResponse>(`${this.baseUrl}/app/tramites/${tramiteId}/enviar`, {});
+  enviarTramite(tramiteId: number): Observable<TramiteDetalle> {
+    return this.http
+      .post<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}/enviar`, {})
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 
-  cancelarTramite(tramiteId: number): Observable<TramiteDetalleResponse> {
-    return this.http.post<TramiteDetalleResponse>(`${this.baseUrl}/app/tramites/${tramiteId}/cancelar`, {});
+  cancelarTramite(tramiteId: number): Observable<TramiteDetalle> {
+    return this.http
+      .post<TramiteDetalleResponseDto>(`${this.baseUrl}/app/tramites/${tramiteId}/cancelar`, {})
+      .pipe(map((res) => TramiteRegistroMapper.mapTramiteDetalleDto(res)));
   }
 }

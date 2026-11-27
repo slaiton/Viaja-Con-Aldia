@@ -15,6 +15,54 @@ Plantilla:
 
 ---
 
+## 2026-11-27 · Bloque 4 DevSentinel (Final): Sesión REGISTRO en memoria y cierre de Gate
+- **Pedido:** Aislar completamente la sesión `REGISTRO` en memoria dentro de `SessionStore` sin escribir tokens/llaves en `localStorage`, retirar el puente `snake_case` residual y cerrar el gate DevSentinel con pruebas y build en verde.
+- **Cambios:**
+  - `src/app/core/session/session.store.ts`: `setAldiaRegistroSession()` recibe directamente `VerificarRegistroResult` (`camelCase`), limpia cualquier residuo previo en `StorageService`/`localStorage` mediante `clearPersistedKeys()` y almacena la sesión únicamente en memoria (`inMemoryOnly = true`). `updateRotatedTokens()` mantiene los tokens renovados en memoria mientras sea sesión `REGISTRO` o `inMemoryOnly`. `promoteRegistroToActiva()` promueve a `'ACTIVA'` y `tramiteId: null` en memoria sin persistir tokens en `localStorage`. `hasAldiaSession()`, `isSessionValid()`, `getAldiaAccessToken()`, `getAldiaRefreshToken()` y los getters `accessToken` / `refreshToken` evalúan primero el snapshot en memoria; `setAldiaSession()` operativo (`ACTIVA`) permanece intacto.
+  - `src/app/core/models/tramite-registro.model.ts`, `src/app/features/tramite-registro/services/tramite-registro-error.helper.ts`, `src/app/features/tramite-registro/services/tramite-registro.facade.ts` y `tramite-registro.facade.spec.ts`: Retirado el puente temporal `VerificarRegistroData` / `toSessionRegistroBridge`.
+  - `src/app/core/session/session.store.spec.ts`: 4 pruebas sustantivas validando aislamiento en memoria, limpieza de residuos previos, rotación sin `localStorage`, promoción a `'ACTIVA'` y `clearSession()`.
+- **Verificación:** `npx ng test --watch=false --browsers=ChromeHeadlessCI` sobre los 6 archivos `.spec.ts` → **37 of 37 SUCCESS (0 failures, TEST_EXIT=0)**; `npx ng build` Exit Code 0 sin warnings de presupuesto CSS; `tramite-registro.facade.ts` = 354 líneas; todos los `.scss` < 1.80 kB; `storage.service.ts` y archivos congelados intactos.
+- **Pendiente:** Prueba manual integral en dispositivo / navegador de registro completo, recarga y promoción post-aprobación.
+- **Commit sugerido:** `feat(session,gate): aislar sesion REGISTRO en memoria en SessionStore y cerrar gate DevSentinel`
+
+## 2026-11-27 · Bloque 3 DevSentinel: Pruebas unitarias sustantivas (Domain + Facade + Interceptor)
+- **Pedido:** Crear pruebas unitarias sustantivas para las APIs de dominio, mapper, `TramiteRegistroFacade` y `AuthInterceptor` sin modificar código de producción ni archivos congelados.
+- **Cambios:**
+  - `src/app/domain/tramite-registro.mapper.spec.ts`: Cobertura DTO → Dominio (`BORRADOR`, `APROBADO`, listas y nulos), Dominio → DTO (payloads `snake_case`) y `mapHttpError` (`409`, `422`, `429`).
+  - `src/app/domain/tramite-registro.api.spec.ts`: Verificación HTTP (`GET`/`POST`/`PUT`/`DELETE`), normalización de trailing slash en `API_CONFIG`, ausencia de `X-Client-Id`/`X-Client-Secret` y modelos de dominio mapeados.
+  - `src/app/domain/catalogos-app.api.spec.ts`: Prueba de concurrencia `shareReplay(1)` (1 sola petición HTTP para 2 suscriptores simultáneos), query param `?marca=12`, degradación segura a `[]` en `404`/`500` y `clearCache()`.
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.spec.ts`: Cobertura de `inicializarFlujo()` (`SIN_SESION`, `BORRADOR`, `APROBADO`, `401`), flujo OTP (`409`, `429`, verificación), prerrequisitos en `seleccionarEtapa()` con preservación de errores, `guardarEntidad()`, `eliminarEntidadOpcional()`, `avanzarADocumentosDesdeOpcionales()`, captura/cancelación en `capturarYSubirSoporte()`, confirmación de borrado y envío final (`200` / `422`).
+  - `src/app/core/interceptors/auth.interceptor.spec.ts`: Clasificación exacta de rutas públicas vs protegidas, prefijos engañosos (`/app/registro-malicioso`) y querystrings (`?next=/app/registro/verificar`).
+- **Verificación:** `npx ng test --watch=false --browsers=ChromeHeadlessCI` sobre los 5 archivos → **33 of 33 SUCCESS (0 failures, TEST_EXIT=0)**; `npx ng build` Exit Code 0 sin warnings de presupuesto CSS; cero `console.*` ni `any`; `session.store.ts`, `storage.service.ts` y archivos congelados sin cambios.
+- **Pendiente:** Bloque 4 (hardening `SessionStore` / `StorageService`).
+- **Commit sugerido:** `test(registro,domain,auth): pruebas unitarias de mapper, apis, facade e interceptor`
+
+## 2026-11-27 · Bloque 2 DevSentinel: Arquitectura limpia de `tramite-registro`
+- **Pedido:** Desacoplar `TramiteRegistroFacade`, convertir los 5 componentes hijos en presentacionales puros (`@Input`/`@Output`), limpiar `TramiteRegistroPage`, centralizar feedback en `UiFeedbackService` y bloquear saltos sin prerrequisitos en el stepper.
+- **Cambios:**
+  - `src/app/features/tramite-registro/services/tramite-registro-error.helper.ts`: Funciones puras `parsearErrorTramite`, `recalcularPasosTramite`, `tieneEntidadConDatos` y `puedeAccederAEtapa`.
+  - `src/app/features/tramite-registro/services/tramite-registro-recursos.service.ts`: Encapsula `CatalogosAppApi`, `PlatformCameraService` (`CameraSource.Prompt`) y `PhotoService` (`readAsBase64`), con manejo explícito `esCancelacionUsuario()`.
+  - `src/app/features/tramite-registro/services/tramite-registro.facade.ts`: Reducida por debajo de 380 líneas; coordina estado, OTP, catálogos, alertas/toasts vía `UiFeedbackService`, navegación vía `Router`, bloqueo de saltos en `seleccionarEtapa()` / `avanzarADocumentosDesdeOpcionales()` y retención de errores al navegar entre pasos.
+  - `src/app/features/tramite-registro/components/paso-{otp,conductor,vehiculo,opcionales,documentos}/`: Refactorizados a presentacionales puros (`@Input`/`@Output`), preservando buscador de ciudades, degradación a `<ion-input>`, `OnPush`, `trackBy*`, `SOPORTES_EXCLUIDOS` y orden por bloques en Paso 4.
+  - `src/app/features/tramite-registro/pages/tramite-registro.page.ts`, `.html` y `.scss`: Inyección única de `TramiteRegistroFacade`, eliminación de inicialización duplicada en `ngOnInit()`, `[disabled]` con `puedeAccederAEtapa` en píldoras del stepper y desplazamiento automático al cambiar `etapaActual`.
+  - `src/app/features/tramite-registro/tramite-registro.module.ts`: Registrado `TramiteRegistroRecursosService`.
+- **Verificación:** `TramiteRegistroFacade` < 380 líneas; todos los `.scss` < 1.80 kB; 0 dependencias prohibidas, `console.*` o `any` en `components/` y `pages/`; `npx ng build` Exit Code 0 sin warnings de presupuesto CSS.
+- **Pendiente:** Bloque 3 (pruebas unitarias `.spec.ts`) y Bloque 4 (`SessionStore` / `StorageService`).
+- **Commit sugerido:** `refactor(tramite-registro): arquitectura limpia con presentacionales puros, recursos y helper de errores`
+
+## 2026-11-27 · Bloque 1 DevSentinel: Core, Interceptor, Mappers/shareReplay y capa Core/UI
+- **Pedido:** Resolver hallazgos Core/Dominio de la auditoría DevSentinel sin alterar funcionalidad ni tocar `session.store.ts`, `storage.service.ts` ni archivos congelados.
+- **Cambios:**
+  - `src/app/core/services/core-logger.service.ts`: Retirado `console.info(...)` en `info()`; mantiene exclusivamente el buffer circular en memoria.
+  - `src/app/api/geodata.service.ts`: Sustituido `.toPromise()` por `firstValueFrom(...)` en `getCityByLatLon()` y `turnoCreacion()` conservando `.pipe(..., defaultIfEmpty(null))`.
+  - `src/app/core/interceptors/auth.interceptor.ts`: Reemplazadas validaciones por `includes()` por parseo estricto de origen y `pathname` vía `new URL(...)`, coincidencia exacta en `PUBLIC_AUTH_ROUTES` y límite de segmento en `CONDUCTOR_APP_PREFIXES` (`isConductorAppRoute`, `isPublicAuthRoute`, `shouldAttemptRefresh`).
+  - `src/app/domain/catalogos-app.api.ts`: Cacheado con `Map<string, Observable<CatalogoItem[]>>` y `shareReplay(1)` para deduplicar peticiones HTTP concurrentes y compartir respuestas/errores.
+  - `src/app/core/ui/ui-feedback.service.ts`: Creada capa centralizada para `showToast`, `showAlert` y `confirm` envolviendo `ToastController`, `AlertController` y `AlertService`.
+  - `src/app/domain/tramite-registro.dto.ts`, `src/app/domain/tramite-registro.mapper.ts`, `src/app/core/models/tramite-registro.model.ts` y `src/app/domain/tramite-registro.api.ts`: Separación completa DTO wire-format (`snake_case` + sobres `{ success, data }`) vs modelos de dominio (`camelCase`), mapeo puro en `TramiteRegistroMapper` para los 12 endpoints + payloads salientes, y ajuste mínimo de propiedades `camelCase` en `src/app/features/tramite-registro/` manteniendo intactos `session.store.ts` y `storage.service.ts`.
+- **Verificación:** `npx ng build` Exit Code 0, 0 errores TS, 0 warnings de presupuesto CSS; cero `console.*`, `any` o `.toPromise()` en archivos creados/modificados; `session.store.ts` y `storage.service.ts` sin cambios respecto a línea base previa.
+- **Pendiente:** Bloque 2 (refactor presentacional de componentes + división de facade usando `UiFeedbackService`), Bloque 3 (pruebas `.spec.ts`) y Bloque 4 (hardening `SessionStore`/`StorageService`).
+- **Commit sugerido:** `refactor(core,domain): hardening interceptor, shareReplay catalogos, mappers tramite y ui-feedback`
+
 ## 2026-11-27 · Pulido final Paso 4: exclusión de soportes técnicos/redundantes y orden lógico por bloques
 - **Pedido:** Excluir `foto_diferencial`, `recibo_bascula`, `contrato_autorizacion` y `foto_conductor_cara` del Paso 4 y organizar los soportes en bloques ordenados con etiquetas claras y pares frontal/posterior contiguos.
 - **Cambios:**

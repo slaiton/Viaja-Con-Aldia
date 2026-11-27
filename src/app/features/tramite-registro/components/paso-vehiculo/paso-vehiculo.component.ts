@@ -1,13 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
-import { forkJoin } from 'rxjs';
 import {
   CatalogoItem,
   DatosVehiculoTramite,
   TramiteDetalle
 } from '@core/models/tramite-registro.model';
-import { CatalogosAppApi } from '@domain/catalogos-app.api';
 
 @Component({
   selector: 'app-paso-vehiculo',
@@ -18,33 +15,27 @@ export class PasoVehiculoComponent implements OnInit, OnChanges {
   @Input() tramite: TramiteDetalle | null = null;
   @Input() cedulaConductor: string | null = null;
   @Input() guardando = false;
+  @Input() cargandoCatalogos = false;
+  @Input() cargandoLineas = false;
+  @Input() clasesVehiculo: CatalogoItem[] = [];
+  @Input() marcas: CatalogoItem[] = [];
+  @Input() lineas: CatalogoItem[] = [];
+  @Input() carrocerias: CatalogoItem[] = [];
+  @Input() aseguradoras: CatalogoItem[] = [];
+  @Input() colores: CatalogoItem[] = [];
+  @Input() proveedoresGps: CatalogoItem[] = [];
 
   @Output() guardar = new EventEmitter<DatosVehiculoTramite>();
+  @Output() marcaCambio = new EventEmitter<number>();
+  @Output() formularioInvalido = new EventEmitter<string>();
 
   form!: FormGroup;
 
-  clasesVehiculo: CatalogoItem[] = [];
-  marcas: CatalogoItem[] = [];
-  lineas: CatalogoItem[] = [];
-  carrocerias: CatalogoItem[] = [];
-  aseguradoras: CatalogoItem[] = [];
-  paises: CatalogoItem[] = [];
-  colores: CatalogoItem[] = [];
-  proveedoresGps: CatalogoItem[] = [];
-
-  cargandoCatalogos = false;
-  cargandoLineas = false;
-
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly catalogosApi: CatalogosAppApi,
-    private readonly toastCtrl: ToastController
-  ) {
+  constructor(private readonly fb: FormBuilder) {
     this.buildForm();
   }
 
   ngOnInit(): void {
-    this.cargarCatalogos();
     this.hidratarDesdeTramite();
   }
 
@@ -94,61 +85,12 @@ export class PasoVehiculoComponent implements OnInit, OnChanges {
     });
   }
 
-  private cargarCatalogos(): void {
-    this.cargandoCatalogos = true;
-    forkJoin({
-      clasesVehiculo: this.catalogosApi.obtenerCatalogo('clasevehiculo'),
-      marcas: this.catalogosApi.obtenerCatalogo('marcavehiculo'),
-      carrocerias: this.catalogosApi.obtenerCatalogo('carroceria'),
-      aseguradoras: this.catalogosApi.obtenerCatalogo('aseguradora'),
-      paises: this.catalogosApi.obtenerCatalogo('pais'),
-      colores: this.catalogosApi.obtenerCatalogo('color'),
-      proveedoresGps: this.catalogosApi.obtenerCatalogo('proveedorgps')
-    }).subscribe({
-      next: (res) => {
-        this.clasesVehiculo = res.clasesVehiculo;
-        this.marcas = res.marcas;
-        this.carrocerias = res.carrocerias;
-        this.aseguradoras = res.aseguradoras;
-        this.paises = res.paises;
-        this.colores = res.colores;
-        this.proveedoresGps = res.proveedoresGps;
-        this.cargandoCatalogos = false;
-
-        const marcaActual = String(this.form.get('marca')?.value || '');
-        if (marcaActual) {
-          this.cargarLineasPorMarcaNombre(marcaActual);
-        }
-      },
-      error: () => {
-        this.cargandoCatalogos = false;
-      }
-    });
-  }
-
   onMarcaChange(marcaNombre: string): void {
     this.form.patchValue({ clase_linea: '' }, { emitEvent: false });
-    this.cargarLineasPorMarcaNombre(marcaNombre);
-  }
-
-  private cargarLineasPorMarcaNombre(marcaNombre: string): void {
     const encontrada = this.marcas.find((m) => m.nombre === marcaNombre);
-    if (!encontrada) {
-      this.lineas = [];
-      return;
+    if (encontrada) {
+      this.marcaCambio.emit(encontrada.id);
     }
-
-    this.cargandoLineas = true;
-    this.catalogosApi.obtenerCatalogo('claselinea', encontrada.id).subscribe({
-      next: (items) => {
-        this.lineas = items;
-        this.cargandoLineas = false;
-      },
-      error: () => {
-        this.lineas = [];
-        this.cargandoLineas = false;
-      }
-    });
   }
 
   private hidratarDesdeTramite(): void {
@@ -201,25 +143,15 @@ export class PasoVehiculoComponent implements OnInit, OnChanges {
       },
       { emitEvent: false }
     );
-
-    if (d.marca && this.marcas.length > 0) {
-      this.cargarLineasPorMarcaNombre(d.marca);
-    }
   }
 
-  async submit(): Promise<void> {
+  submit(): void {
     if (this.guardando) {
       return;
     }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      const toast = await this.toastCtrl.create({
-        message: 'Completa Clase, Marca y Propietario antes de continuar',
-        duration: 2400,
-        position: 'top',
-        color: 'warning'
-      });
-      await toast.present();
+      this.formularioInvalido.emit('Completa Clase, Marca y Propietario antes de continuar');
       return;
     }
 

@@ -22,6 +22,21 @@ export interface RefreshOutcome {
   failed: boolean;
 }
 
+const PUBLIC_AUTH_ROUTES: ReadonlySet<string> = new Set([
+  '/app/conductor/login',
+  '/app/conductor/login/verificar',
+  '/app/conductor/token/renovar',
+  '/app/registro/iniciar',
+  '/app/registro/verificar'
+]);
+
+const CONDUCTOR_APP_PREFIXES: readonly string[] = [
+  '/app/conductor',
+  '/app/registro',
+  '/app/tramites',
+  '/app/catalogos'
+];
+
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
@@ -43,37 +58,81 @@ export class AuthInterceptor implements HttpInterceptor {
     return this.apiConfig.baseUrlAldia.replace(/\/+$/, '');
   }
 
+  private parseBaseApi(): { origin: string | null; prefix: string } {
+    const cleanBase = this.cleanBaseAldia;
+    try {
+      const parsed = new URL(cleanBase);
+      return {
+        origin: parsed.origin.toLowerCase(),
+        prefix: parsed.pathname.replace(/\/+$/, '').toLowerCase()
+      };
+    } catch {
+      return {
+        origin: null,
+        prefix: cleanBase.toLowerCase()
+      };
+    }
+  }
+
+  private extractApiRelativePath(url: string): string | null {
+    if (!url) {
+      return null;
+    }
+
+    const base = this.parseBaseApi();
+    let pathname = '';
+
+    try {
+      const parsed = new URL(url, base.origin ?? 'http://localhost');
+      const isAbsoluteHttp = /^https?:\/\//i.test(url);
+      if (isAbsoluteHttp && base.origin && parsed.origin.toLowerCase() !== base.origin) {
+        return null;
+      }
+      pathname = parsed.pathname.replace(/\/+$/, '').toLowerCase();
+    } catch {
+      const clean = url.split('#')[0].split('?')[0].replace(/\/+$/, '').toLowerCase();
+      pathname = clean.startsWith('/') ? clean : `/${clean}`;
+    }
+
+    if (!base.prefix) {
+      return pathname || '/';
+    }
+
+    if (pathname === base.prefix) {
+      return '/';
+    }
+
+    if (!pathname.startsWith(`${base.prefix}/`)) {
+      return null;
+    }
+
+    return pathname.slice(base.prefix.length);
+  }
+
   /**
-   * Retorna true únicamente si la URL apunta a baseUrlAldia Y la ruta pertenece
-   * a la aplicación del conductor (/app/conductor/, /app/registro, /app/tramites o /app/catalogos/).
-   * Nunca inyecta Bearer en /tercero/preoperacional/*, /documento, /enturnamiento ni en 3SL.
+   * Retorna true únicamente si la URL apunta a baseUrlAldia Y el pathname relativo
+   * coincide por segmento estricto con /app/conductor, /app/registro, /app/tramites o /app/catalogos.
    */
   private isConductorAppRoute(url: string): boolean {
-    const cleanUrl = url.toLowerCase();
-    const base = this.cleanBaseAldia.toLowerCase();
-    if (!cleanUrl.startsWith(base)) {
+    const relativePath = this.extractApiRelativePath(url);
+    if (!relativePath) {
       return false;
     }
-    return (
-      cleanUrl.includes('/app/conductor/') ||
-      cleanUrl.includes('/app/registro') ||
-      cleanUrl.includes('/app/tramites') ||
-      cleanUrl.includes('/app/catalogos/')
+    return CONDUCTOR_APP_PREFIXES.some(
+      (prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`)
     );
   }
 
   /**
-   * Retorna true si es una ruta pública de inicio/verificación OTP o renovación.
+   * Retorna true si el pathname relativo (sin querystring ni trailing slash) coincide
+   * exactamente con una de las rutas públicas de OTP/renovación.
    */
   private isPublicAuthRoute(url: string): boolean {
-    const cleanUrl = url.toLowerCase();
-    return (
-      cleanUrl.includes('/app/conductor/login/verificar') ||
-      cleanUrl.includes('/app/conductor/login') ||
-      cleanUrl.includes('/app/conductor/token/renovar') ||
-      cleanUrl.includes('/app/registro/iniciar') ||
-      cleanUrl.includes('/app/registro/verificar')
-    );
+    const relativePath = this.extractApiRelativePath(url);
+    if (!relativePath) {
+      return false;
+    }
+    return PUBLIC_AUTH_ROUTES.has(relativePath);
   }
 
   /**
@@ -95,8 +154,8 @@ export class AuthInterceptor implements HttpInterceptor {
     if (!this.shouldAttachBearer(url)) {
       return false;
     }
-    const cleanUrl = url.toLowerCase();
-    return !cleanUrl.includes('/app/conductor/sesion');
+    const relativePath = this.extractApiRelativePath(url);
+    return relativePath !== '/app/conductor/sesion' && !relativePath?.startsWith('/app/conductor/sesion/');
   }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {

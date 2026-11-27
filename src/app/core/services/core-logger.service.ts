@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 
 export interface SafeErrorLog {
   timestamp: string;
@@ -43,13 +42,10 @@ export class CoreLoggerService {
   }
 
   /**
-   * Registra trazas informativas limpias en memoria y en consola solo fuera de producción.
+   * Registra trazas informativas limpias en el buffer circular en memoria.
    */
   info(context: string, meta?: unknown): void {
     this.log(context, meta);
-    if (!environment.production && typeof console !== 'undefined' && typeof console.info === 'function') {
-      console.info(`[CoreLogger] ${context}`, meta ?? '');
-    }
   }
 
   /**

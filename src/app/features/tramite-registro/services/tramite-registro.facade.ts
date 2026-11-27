@@ -1,73 +1,46 @@
 import { Injectable } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import {
-  CampoFaltanteRegistro,
   EntidadTramiteSlug,
   EntidadTramiteUpper,
-  ErrorTramiteBody,
   EstadoRegistroEnCursoData,
-  EstadoTramite,
-  IniciarRegistroData,
-  PasoRegistro,
   TramiteDetalle
 } from '@core/models/tramite-registro.model';
 import { DevicePlatformService } from '@core/platform/device-platform.service';
 import { AuthService } from '@core/services/auth.service';
 import { CoreLoggerService } from '@core/services/core-logger.service';
 import { SessionStore } from '@core/session/session.store';
-import { CatalogosAppApi } from '@domain/catalogos-app.api';
+import { UiFeedbackService } from '@core/ui/ui-feedback.service';
 import { TramiteRegistroApi } from '@domain/tramite-registro.api';
+import {
+  EtapaRegistro,
+  INITIAL_TRAMITE_STATE,
+  TramiteRegistroState,
+  normalizarOtpInput,
+  parsearErrorTramite,
+  puedeAccederAEtapa,
+  recalcularPasosTramite
+} from './tramite-registro-error.helper';
+import { TramiteRegistroRecursosService } from './tramite-registro-recursos.service';
 
-export interface TramiteRegistroState {
-  cargando: boolean;
-  guardando: boolean;
-  subiendoArchivoKey: string | null;
-  errorMensaje: string | null;
-  erroresCampo: Record<string, string[]>;
-  faltanEnviar: CampoFaltanteRegistro[];
-  estadoRegistro: EstadoTramite | 'SIN_SESION';
-  tramite: TramiteDetalle | null;
-  pasos: PasoRegistro[];
-  mensajeExito: string | null;
-}
-
-export type OtpRegistroActionResult<T = void> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      code: string;
-      message: string;
-      reenviarEnSegundos?: number;
-      intentosRestantes?: number;
-    };
-
-const INITIAL_STATE: TramiteRegistroState = {
-  cargando: false,
-  guardando: false,
-  subiendoArchivoKey: null,
-  errorMensaje: null,
-  erroresCampo: {},
-  faltanEnviar: [],
-  estadoRegistro: 'SIN_SESION',
-  tramite: null,
-  pasos: [],
-  mensajeExito: null
-};
+export { TramiteRegistroState } from './tramite-registro-error.helper';
 
 @Injectable()
 export class TramiteRegistroFacade {
-  private readonly stateSubject = new BehaviorSubject<TramiteRegistroState>(INITIAL_STATE);
+  private readonly stateSubject = new BehaviorSubject<TramiteRegistroState>(INITIAL_TRAMITE_STATE);
   public readonly state$ = this.stateSubject.asObservable();
+  private inicializandoEnCurso = false;
+  private catalogosCargados = false;
 
   constructor(
     private readonly tramiteApi: TramiteRegistroApi,
-    private readonly catalogosApi: CatalogosAppApi,
+    private readonly recursos: TramiteRegistroRecursosService,
     private readonly sessionStore: SessionStore,
     private readonly devicePlatform: DevicePlatformService,
     private readonly authService: AuthService,
     private readonly coreLogger: CoreLoggerService,
+    private readonly ui: UiFeedbackService,
     private readonly router: Router
   ) {}
 
@@ -75,439 +48,333 @@ export class TramiteRegistroFacade {
     return this.stateSubject.getValue();
   }
 
-  limpiarMensajes(): void {
-    this.patchState({ errorMensaje: null, erroresCampo: {}, faltanEnviar: [], mensajeExito: null });
+  limpiarErrorOtp(): void {
+    this.patchState({ errorMensaje: null, intentosRestantesOtp: null });
+  }
+
+  volverASolicitudOtp(): void {
+    this.patchState({ subpasoOtp: 'SOLICITUD', errorMensaje: null, intentosRestantesOtp: null, reenviarEnSegundos: 0 });
+  }
+
+  seleccionarEtapa(etapa: EtapaRegistro): void {
+    if (!puedeAccederAEtapa(etapa, this.snapshot.tramite)) {
+      void this.ui.showToast('Completa y guarda los pasos previos antes de continuar.', 'warning');
+      return;
+    }
+    this.patchState({ etapaActual: etapa });
   }
 
   avanzarADocumentosDesdeOpcionales(): void {
-    this.coreLogger.info('FACADE_AVANZAR_A_DOCUMENTOS_DESDE_OPCIONALES', {
-      cargandoPrevio: this.snapshot.cargando,
-      guardandoPrevio: this.snapshot.guardando,
-      tramiteId: this.snapshot.tramite?.id ?? null,
-      itemsCount: this.snapshot.tramite?.items?.length ?? 0,
-      pasosCount: this.snapshot.pasos?.length ?? 0
-    });
-    this.patchState({
-      cargando: false,
-      guardando: false,
-      errorMensaje: null,
-      erroresCampo: {},
-      faltanEnviar: [],
-      mensajeExito: null
-    });
+    if (!puedeAccederAEtapa('documentos', this.snapshot.tramite)) {
+      void this.ui.showToast('Guarda primero los datos del conductor y del vehículo.', 'warning');
+      return;
+    }
+    this.patchState({ etapaActual: 'documentos' });
   }
 
   async inicializarFlujo(): Promise<void> {
-    if (!this.sessionStore.isRegistroSession()) {
-      this.patchState({
-        ...INITIAL_STATE,
-        estadoRegistro: 'SIN_SESION'
-      });
+    if (this.inicializandoEnCurso) {
       return;
     }
-
-    this.patchState({ cargando: true, errorMensaje: null, mensajeExito: null });
-
+    const { cedula, placa } = this.sessionStore.snapshot;
+    if (!this.sessionStore.isRegistroSession()) {
+      this.patchState({ ...INITIAL_TRAMITE_STATE, estadoRegistro: 'SIN_SESION', cedulaActiva: cedula, placaActiva: placa });
+      return;
+    }
+    this.inicializandoEnCurso = true;
+    this.patchState({ cargando: true, cedulaActiva: cedula, placaActiva: placa });
     try {
-      const res = await firstValueFrom(this.tramiteApi.obtenerEstadoRegistro());
-      if (!res?.success || !res.data) {
+      const data = await firstValueFrom(this.tramiteApi.obtenerEstadoRegistro());
+      if (!data) {
         this.patchState({ cargando: false, errorMensaje: 'No fue posible consultar el estado del registro.' });
         return;
       }
-
-      if (res.data.estado === 'APROBADO') {
+      if (data.estado === 'APROBADO') {
         this.sessionStore.promoteRegistroToActiva();
-        this.catalogosApi.clearCache();
+        this.recursos.limpiarCacheCatalogos();
         this.patchState({ cargando: false, estadoRegistro: 'APROBADO' });
         await this.router.navigate(['/home'], { replaceUrl: true });
         return;
       }
-
-      const enCurso = res.data as EstadoRegistroEnCursoData;
+      const enCurso = data as EstadoRegistroEnCursoData;
       this.patchState({
         cargando: false,
         estadoRegistro: enCurso.estado,
         tramite: enCurso.tramite,
-        pasos: enCurso.pasos || []
+        pasos: enCurso.pasos || [],
+        placaActiva: enCurso.tramite?.placa || placa,
+        errorMensaje: null
       });
+      void this.cargarCatalogosIniciales(enCurso.tramite);
     } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'Error al consultar el estado del registro.');
+      const parsed = parsearErrorTramite(err, 'Error al consultar el estado del registro.');
       this.coreLogger.log('TramiteRegistroFacade.inicializarFlujo error', parsed);
-
       if (parsed.status === 401) {
         this.sessionStore.clearSession();
-        this.patchState({ ...INITIAL_STATE, estadoRegistro: 'SIN_SESION', errorMensaje: parsed.message });
+        this.patchState({ ...INITIAL_TRAMITE_STATE, estadoRegistro: 'SIN_SESION', errorMensaje: parsed.message });
         return;
       }
-
       this.patchState({ cargando: false, errorMensaje: parsed.message });
+    } finally {
+      this.inicializandoEnCurso = false;
     }
   }
 
-  async iniciarSolicitudOtp(
-    cedula: string,
-    placa: string,
-    celular: string
-  ): Promise<OtpRegistroActionResult<IniciarRegistroData>> {
-    const cleanCedula = (cedula || '').replace(/\D/g, '').trim();
-    const cleanPlaca = (placa || '').replace(/[\s\-]/g, '').toUpperCase().trim();
-    const cleanCelular = (celular || '').replace(/\D/g, '').trim();
-
-    this.patchState({ cargando: true, errorMensaje: null, erroresCampo: {}, mensajeExito: null });
-
+  async iniciarSolicitudOtp(payload: { cedula: string; placa: string; celular: string }): Promise<void> {
+    const { cedula, placa, celular } = normalizarOtpInput(payload);
+    this.patchState({ cargando: true, errorMensaje: null, erroresCampo: {} });
     try {
-      const res = await firstValueFrom(
-        this.tramiteApi.iniciarRegistro({
-          cedula: cleanCedula,
-          placa: cleanPlaca,
-          celular: cleanCelular
-        })
-      );
-      this.patchState({ cargando: false });
-      return { ok: true, data: res.data };
+      const res = await firstValueFrom(this.tramiteApi.iniciarRegistro({ cedula, placa, celular }));
+      this.patchState({
+        cargando: false,
+        subpasoOtp: 'VERIFICACION',
+        celularEnmascarado: res.celular || celular.slice(-4),
+        reenviarEnSegundos: res.reenviarEnSegundos || 60,
+        intentosRestantesOtp: null
+      });
     } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'No fue posible enviar el código de registro por WhatsApp.');
+      const parsed = parsearErrorTramite(err, 'No fue posible enviar el código de registro por WhatsApp.');
       this.coreLogger.log('TramiteRegistroFacade.iniciarSolicitudOtp error', parsed);
+      if (parsed.code === 'YA_REGISTRADO') {
+        this.patchState({ cargando: false, errorMensaje: parsed.message });
+        const irLogin = await this.ui.confirm({
+          header: 'Conductor Ya Registrado',
+          message: parsed.message,
+          confirmText: 'Ir a Iniciar Sesión',
+          cancelText: 'Cerrar'
+        });
+        if (irLogin) {
+          await this.irALogin();
+        }
+        return;
+      }
+      const irAVerif = parsed.code === 'ESPERA_REENVIO' && (parsed.reenviarEnSegundos ?? 0) > 0;
       this.patchState({
         cargando: false,
         errorMensaje: parsed.message,
-        erroresCampo: parsed.erroresCampo
+        erroresCampo: parsed.erroresCampo,
+        subpasoOtp: irAVerif ? 'VERIFICACION' : this.snapshot.subpasoOtp,
+        reenviarEnSegundos: irAVerif ? parsed.reenviarEnSegundos ?? 0 : this.snapshot.reenviarEnSegundos
       });
-      return {
-        ok: false,
-        code: parsed.code,
-        message: parsed.message,
-        reenviarEnSegundos: parsed.reenviarEnSegundos
-      };
     }
   }
 
-  async verificarSolicitudOtp(
-    cedula: string,
-    placa: string,
-    celular: string,
-    codigo: string
-  ): Promise<OtpRegistroActionResult<void>> {
-    const cleanCedula = (cedula || '').replace(/\D/g, '').trim();
-    const cleanPlaca = (placa || '').replace(/[\s\-]/g, '').toUpperCase().trim();
-    const cleanCelular = (celular || '').replace(/\D/g, '').trim();
-    const cleanCodigo = (codigo || '').replace(/\D/g, '').trim();
-
-    this.patchState({ cargando: true, errorMensaje: null, erroresCampo: {}, mensajeExito: null });
-
+  async verificarSolicitudOtp(payload: { cedula: string; placa: string; celular: string; codigo: string }): Promise<void> {
+    const { cedula, placa, celular, codigo } = normalizarOtpInput(payload);
+    this.patchState({ cargando: true, errorMensaje: null, erroresCampo: {}, intentosRestantesOtp: null });
     try {
       const meta = await this.devicePlatform.getDeviceMetadata();
       const res = await firstValueFrom(
         this.tramiteApi.verificarRegistro({
-          cedula: cleanCedula,
-          placa: cleanPlaca,
-          celular: cleanCelular,
-          codigo: cleanCodigo,
-          dispositivo_id: meta.dispositivo_id,
+          cedula,
+          placa,
+          celular,
+          codigo,
+          dispositivoId: meta.dispositivo_id,
           plataforma: meta.plataforma,
-          version_app: meta.version_app,
-          push_token: meta.push_token
+          versionApp: meta.version_app,
+          pushToken: meta.push_token
         })
       );
-
-      this.sessionStore.setAldiaRegistroSession(res.data, cleanCedula, cleanPlaca);
+      this.sessionStore.setAldiaRegistroSession(res, cedula, placa);
       await this.inicializarFlujo();
-      return { ok: true, data: undefined };
     } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'Código incorrecto o expirado.');
+      const parsed = parsearErrorTramite(err, 'Código incorrecto o expirado.');
       this.coreLogger.log('TramiteRegistroFacade.verificarSolicitudOtp error', parsed);
       this.patchState({
         cargando: false,
         errorMensaje: parsed.message,
-        erroresCampo: parsed.erroresCampo
+        erroresCampo: parsed.erroresCampo,
+        intentosRestantesOtp: parsed.intentosRestantes ?? null,
+        subpasoOtp: parsed.code === 'CODIGO_BLOQUEADO' ? 'SOLICITUD' : this.snapshot.subpasoOtp
       });
-      return {
-        ok: false,
-        code: parsed.code,
-        message: parsed.message,
-        intentosRestantes: parsed.intentosRestantes
-      };
     }
   }
 
-  async guardarEntidad(entidad: EntidadTramiteSlug, datos: object): Promise<boolean> {
-    const tramiteId = this.resolveTramiteId();
-    if (!tramiteId) {
-      this.patchState({ errorMensaje: 'No se encontró un trámite de registro activo.' });
-      return false;
+  async guardarEntidad(entidad: EntidadTramiteSlug, datos: object): Promise<void> {
+    const etapa = entidad === 'conductor' ? 'vehiculo' : entidad === 'vehiculo' ? 'opcionales' : this.snapshot.etapaActual;
+    await this.ejecutarMutacion(
+      (id) => firstValueFrom(this.tramiteApi.guardarItemTramite(id, entidad, datos)),
+      `Error al guardar los datos de ${entidad}.`,
+      `Datos de ${entidad} guardados`,
+      { etapaActual: etapa }
+    );
+  }
+
+  async eliminarEntidadOpcional(entidad: 'trailer' | 'propietario' | 'tenedor'): Promise<void> {
+    const upper = entidad.toUpperCase() as EntidadTramiteUpper;
+    if (!this.snapshot.tramite?.items?.some((i) => i.entidad === upper)) {
+      return;
     }
+    await this.ejecutarMutacion(
+      (id) => firstValueFrom(this.tramiteApi.eliminarItemTramite(id, entidad)),
+      `No fue posible quitar ${entidad} del trámite.`,
+      `Sección ${entidad} retirada`,
+      { ignorar404: true }
+    );
+  }
 
-    this.patchState({ guardando: true, errorMensaje: null, erroresCampo: {}, mensajeExito: null });
-
+  async cargarLineasPorMarca(marcaId: number): Promise<void> {
+    this.patchState({ cargandoLineas: true });
     try {
-      const res = await firstValueFrom(this.tramiteApi.guardarItemTramite(tramiteId, entidad, datos));
-      if (res?.data) {
-        const pasosActualizados = this.recalcularPasos(this.snapshot.pasos, res.data);
-        this.patchState({
-          guardando: false,
-          tramite: res.data,
-          pasos: pasosActualizados,
-          estadoRegistro: res.data.estado,
-          mensajeExito: `Datos de ${entidad} guardados correctamente.`
-        });
-        return true;
-      }
-      this.patchState({ guardando: false });
-      return false;
-    } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, `Error al guardar los datos de ${entidad}.`);
-      this.coreLogger.log('TramiteRegistroFacade.guardarEntidad error', { entidad, ...parsed });
-      this.patchState({
-        guardando: false,
-        errorMensaje: parsed.message,
-        erroresCampo: parsed.erroresCampo
-      });
-      return false;
+      const lineasVehiculo = await firstValueFrom(this.recursos.cargarLineasPorMarca(marcaId));
+      this.patchState({ lineasVehiculo, cargandoLineas: false });
+    } catch {
+      this.patchState({ lineasVehiculo: [], cargandoLineas: false });
     }
   }
 
-  async eliminarEntidadOpcional(entidad: 'trailer' | 'propietario' | 'tenedor'): Promise<boolean> {
-    const tramiteId = this.resolveTramiteId();
-    const entidadUpper = entidad.toUpperCase() as 'TRAILER' | 'PROPIETARIO' | 'TENEDOR';
-    const existeEntidad = this.tieneEntidad(entidadUpper);
+  async capturarYSubirSoporte(entidad: EntidadTramiteSlug, tipo: string, etiqueta?: string): Promise<void> {
+    if (this.snapshot.subiendoArchivoKey || this.snapshot.guardando) {
+      return;
+    }
+    try {
+      const data64 = await this.recursos.capturarFotoBase64(tipo, etiqueta);
+      if (data64) {
+        await this.subirSoporte(entidad, tipo, data64);
+      }
+    } catch {
+      await this.ui.showToast('No fue posible acceder a la cámara o galería.', 'danger');
+    }
+  }
 
-    this.coreLogger.info('FACADE_ELIMINAR_ENTIDAD_OPCIONAL', {
-      entidad,
-      tramiteId,
-      existeEntidad,
-      cargando: this.snapshot.cargando,
-      guardando: this.snapshot.guardando
+  async solicitarEliminacionSoporte(archivoId: number): Promise<void> {
+    const confirmado = await this.ui.confirm({
+      header: 'Eliminar soporte',
+      message: '¿Deseas retirar este archivo del expediente?',
+      confirmText: 'Eliminar',
+      destructive: true
     });
-
-    if (!tramiteId) {
-      this.patchState({ cargando: false, guardando: false });
-      return false;
-    }
-
-    // Si la entidad no existe en el trámite aún, no hay nada que eliminar — avanzar silenciosamente.
-    if (!existeEntidad) {
-      this.patchState({ cargando: false, guardando: false });
-      return true;
-    }
-
-    this.patchState({ guardando: true, errorMensaje: null, erroresCampo: {}, mensajeExito: null });
-
-    try {
-      const res = await firstValueFrom(this.tramiteApi.eliminarItemTramite(tramiteId, entidad));
-      if (res?.data) {
-        const pasosActualizados = this.recalcularPasos(this.snapshot.pasos, res.data);
-        this.patchState({
-          guardando: false,
-          tramite: res.data,
-          pasos: pasosActualizados,
-          mensajeExito: `Sección ${entidad} retirada del trámite.`
-        });
-        return true;
-      }
-      this.patchState({ guardando: false });
-      return false;
-    } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, `No fue posible quitar ${entidad} del trámite.`);
-      this.coreLogger.log('TramiteRegistroFacade.eliminarEntidadOpcional error', { entidad, ...parsed });
-      // 404 = la entidad ya no existe en backend → tratar como éxito silencioso.
-      if (parsed.status === 404) {
-        this.patchState({ guardando: false });
-        return true;
-      }
-      this.patchState({ guardando: false, errorMensaje: parsed.message });
-      return false;
+    if (confirmado) {
+      await this.ejecutarMutacion(
+        (id) => firstValueFrom(this.tramiteApi.eliminarArchivoTramite(id, archivoId)),
+        'No fue posible eliminar el documento.',
+        'Documento eliminado'
+      );
     }
   }
 
-  async reabrirTramiteRechazado(): Promise<boolean> {
-    this.patchState({ cargando: true, errorMensaje: null, mensajeExito: null });
+  async solicitarEnvioFinal(): Promise<void> {
+    const confirmado = await this.ui.confirm({
+      header: 'Enviar registro a revisión',
+      message:
+        'Al enviarlo, operaciones de ALDÍA revisará tus datos y documentos. Mientras esté en revisión no podrás editar el expediente.',
+      confirmText: 'Confirmar y enviar',
+      cancelText: 'Revisar más tarde'
+    });
+    if (confirmado) {
+      await this.ejecutarMutacion(
+        (id) => firstValueFrom(this.tramiteApi.enviarTramite(id)),
+        'No fue posible enviar el trámite a revisión.',
+        'Registro enviado a revisión por operaciones ALDÍA',
+        { guardarFaltan: true }
+      );
+    }
+  }
 
+  async reabrirTramiteRechazado(): Promise<void> {
+    this.patchState({ cargando: true, errorMensaje: null, erroresCampo: {}, faltanEnviar: [] });
     try {
       await firstValueFrom(this.tramiteApi.reabrirRegistro());
       await this.inicializarFlujo();
-      this.patchState({ mensajeExito: 'Trámite reabierto en borrador para corrección.' });
-      return true;
+      await this.ui.showToast('Trámite reabierto en borrador para corrección.', 'success');
     } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'No fue posible reabrir el trámite.');
+      const parsed = parsearErrorTramite(err, 'No fue posible reabrir el trámite.');
       this.coreLogger.log('TramiteRegistroFacade.reabrirTramiteRechazado error', parsed);
       this.patchState({ cargando: false, errorMensaje: parsed.message });
-      return false;
     }
   }
 
-  async subirSoporte(entidad: EntidadTramiteSlug, tipo: string, data64: string): Promise<boolean> {
-    const tramiteId = this.resolveTramiteId();
-    if (!tramiteId) {
-      this.patchState({ errorMensaje: 'No se encontró un trámite de registro activo.' });
-      return false;
-    }
-
-    const key = `${entidad.toUpperCase()}:${tipo}`;
-    this.patchState({ subiendoArchivoKey: key, errorMensaje: null, mensajeExito: null });
-
-    try {
-      const res = await firstValueFrom(
-        this.tramiteApi.subirArchivoTramite(tramiteId, { entidad, tipo, data64 })
-      );
-      if (res?.data) {
-        const pasosActualizados = this.recalcularPasos(this.snapshot.pasos, res.data);
-        this.patchState({
-          subiendoArchivoKey: null,
-          tramite: res.data,
-          pasos: pasosActualizados,
-          mensajeExito: 'Documento cargado correctamente.'
-        });
-        return true;
-      }
-      this.patchState({ subiendoArchivoKey: null });
-      return false;
-    } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'No fue posible subir la imagen.');
-      this.coreLogger.log('TramiteRegistroFacade.subirSoporte error', { entidad, tipo, ...parsed });
-      this.patchState({ subiendoArchivoKey: null, errorMensaje: parsed.message });
-      return false;
-    }
+  async notificarFormularioInvalido(mensaje: string): Promise<void> {
+    await this.ui.showToast(mensaje, 'warning');
   }
 
-  async eliminarSoporte(archivoId: number): Promise<boolean> {
-    const tramiteId = this.resolveTramiteId();
-    if (!tramiteId) {
-      return false;
-    }
-
-    this.patchState({ guardando: true, errorMensaje: null, mensajeExito: null });
-
-    try {
-      const res = await firstValueFrom(this.tramiteApi.eliminarArchivoTramite(tramiteId, archivoId));
-      if (res?.data) {
-        const pasosActualizados = this.recalcularPasos(this.snapshot.pasos, res.data);
-        this.patchState({
-          guardando: false,
-          tramite: res.data,
-          pasos: pasosActualizados,
-          mensajeExito: 'Documento eliminado del expediente.'
-        });
-        return true;
-      }
-      this.patchState({ guardando: false });
-      return false;
-    } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'No fue posible eliminar el documento.');
-      this.coreLogger.log('TramiteRegistroFacade.eliminarSoporte error', { archivoId, ...parsed });
-      this.patchState({ guardando: false, errorMensaje: parsed.message });
-      return false;
-    }
-  }
-
-  async enviarTramiteARevision(): Promise<boolean> {
-    const tramiteId = this.resolveTramiteId();
-    if (!tramiteId) {
-      this.patchState({ errorMensaje: 'No se encontró un trámite de registro activo.' });
-      return false;
-    }
-
-    this.patchState({ guardando: true, errorMensaje: null, faltanEnviar: [], mensajeExito: null });
-
-    try {
-      const res = await firstValueFrom(this.tramiteApi.enviarTramite(tramiteId));
-      if (res?.data) {
-        this.patchState({
-          guardando: false,
-          tramite: res.data,
-          estadoRegistro: res.data.estado,
-          faltanEnviar: [],
-          mensajeExito: 'Tu registro fue enviado a revisión por operaciones de ALDÍA.'
-        });
-        return true;
-      }
-      this.patchState({ guardando: false });
-      return false;
-    } catch (err: unknown) {
-      const parsed = this.parseHttpError(err, 'No fue posible enviar el trámite a revisión.');
-      this.coreLogger.log('TramiteRegistroFacade.enviarTramiteARevision error', parsed);
-      this.patchState({
-        guardando: false,
-        errorMensaje: parsed.message,
-        faltanEnviar: parsed.faltan
-      });
-      return false;
-    }
+  async irALogin(): Promise<void> {
+    await this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   async cerrarSesionRegistro(): Promise<void> {
-    this.catalogosApi.clearCache();
+    this.recursos.limpiarCacheCatalogos();
     await this.authService.logout();
   }
 
-  obtenerDatosEntidad<T extends Record<string, unknown>>(entidad: EntidadTramiteUpper): Partial<T> {
-    const item = this.snapshot.tramite?.items?.find((i) => i.entidad === entidad);
-    return (item?.datos || {}) as Partial<T>;
+  private async subirSoporte(entidad: EntidadTramiteSlug, tipo: string, data64: string): Promise<void> {
+    const tramiteId = this.resolveTramiteId();
+    if (!tramiteId) {
+      this.patchState({ errorMensaje: 'No se encontró un trámite de registro activo.' });
+      return;
+    }
+    this.patchState({ subiendoArchivoKey: `${entidad.toUpperCase()}:${tipo}`, errorMensaje: null });
+    try {
+      const tramite = await firstValueFrom(this.tramiteApi.subirArchivoTramite(tramiteId, { entidad, tipo, data64 }));
+      this.patchState({ subiendoArchivoKey: null, tramite, pasos: recalcularPasosTramite(tramite, this.snapshot.pasos) });
+      await this.ui.showToast('Documento cargado correctamente', 'success');
+    } catch (err: unknown) {
+      const parsed = parsearErrorTramite(err, 'No fue posible subir la imagen.');
+      this.coreLogger.log('TramiteRegistroFacade.subirSoporte error', { entidad, tipo, ...parsed });
+      this.patchState({ subiendoArchivoKey: null, errorMensaje: parsed.message });
+    }
   }
 
-  tieneEntidad(entidad: EntidadTramiteUpper): boolean {
-    return Boolean(this.snapshot.tramite?.items?.some((i) => i.entidad === entidad));
+  private async ejecutarMutacion(
+    accion: (tramiteId: number) => Promise<TramiteDetalle>,
+    fallbackError: string,
+    mensajeExito: string,
+    opts?: { etapaActual?: EtapaRegistro; ignorar404?: boolean; guardarFaltan?: boolean }
+  ): Promise<void> {
+    const tramiteId = this.resolveTramiteId();
+    if (!tramiteId) {
+      this.patchState({ errorMensaje: 'No se encontró un trámite de registro activo.' });
+      return;
+    }
+    this.patchState({ guardando: true, errorMensaje: null, erroresCampo: {}, faltanEnviar: [] });
+    try {
+      const tramite = await accion(tramiteId);
+      this.patchState({
+        guardando: false,
+        tramite,
+        pasos: recalcularPasosTramite(tramite, this.snapshot.pasos),
+        estadoRegistro: tramite.estado,
+        etapaActual: opts?.etapaActual ?? this.snapshot.etapaActual,
+        faltanEnviar: []
+      });
+      await this.ui.showToast(mensajeExito, 'success');
+    } catch (err: unknown) {
+      const parsed = parsearErrorTramite(err, fallbackError);
+      this.coreLogger.log('TramiteRegistroFacade.ejecutarMutacion error', parsed);
+      const ignorar = Boolean(opts?.ignorar404 && parsed.status === 404);
+      this.patchState({
+        guardando: false,
+        errorMensaje: ignorar ? null : parsed.message,
+        erroresCampo: parsed.erroresCampo,
+        faltanEnviar: opts?.guardarFaltan ? parsed.faltan : this.snapshot.faltanEnviar
+      });
+    }
+  }
+
+  private async cargarCatalogosIniciales(tramite: TramiteDetalle): Promise<void> {
+    if (!this.catalogosCargados) {
+      this.patchState({ cargandoCatalogos: true });
+      try {
+        const catalogos = await firstValueFrom(this.recursos.cargarCatalogos());
+        this.catalogosCargados = true;
+        this.patchState({ catalogos, cargandoCatalogos: false });
+      } catch {
+        this.patchState({ cargandoCatalogos: false });
+      }
+    }
+    const marcaNombre = String(tramite?.items?.find((i) => i.entidad === 'VEHICULO')?.datos?.['marca'] || '');
+    const encontrada = this.snapshot.catalogos.marcas.find((m) => m.nombre === marcaNombre);
+    if (encontrada) {
+      await this.cargarLineasPorMarca(encontrada.id);
+    }
   }
 
   private resolveTramiteId(): number | null {
     return this.snapshot.tramite?.id ?? this.sessionStore.snapshot.tramiteId ?? null;
   }
 
-  private recalcularPasos(pasosActuales: PasoRegistro[], tramite: TramiteDetalle): PasoRegistro[] {
-    const llavesPrecargadas = new Set(['documento', 'celular', 'placa', 'cedula_conductor', 'placa_trailer']);
-    const pasos = Array.isArray(pasosActuales) ? pasosActuales : [];
-    const items = Array.isArray(tramite?.items) ? tramite.items : [];
-    const archivos = Array.isArray(tramite?.archivos) ? tramite.archivos : [];
-
-    return pasos.map((paso) => {
-      const item = items.find((i) => i.entidad === paso.entidad);
-      const datos = item?.datos || {};
-      const conDatos = Object.entries(datos).some(
-        ([k, v]) => !llavesPrecargadas.has(k) && v !== null && v !== '' && v !== undefined
-      );
-      const imagenes = archivos.filter((a) => a.entidad === paso.entidad).length;
-      return {
-        ...paso,
-        con_datos: conDatos,
-        imagenes
-      };
-    });
-  }
-
   private patchState(partial: Partial<TramiteRegistroState>): void {
-    this.stateSubject.next({
-      ...this.snapshot,
-      ...partial
-    });
-  }
-
-  private parseHttpError(
-    err: unknown,
-    fallbackMessage: string
-  ): {
-    status: number;
-    code: string;
-    message: string;
-    reenviarEnSegundos?: number;
-    intentosRestantes?: number;
-    erroresCampo: Record<string, string[]>;
-    faltan: CampoFaltanteRegistro[];
-  } {
-    const httpErr = err as HttpErrorResponse;
-    const body = (httpErr?.error || {}) as ErrorTramiteBody;
-    const status = httpErr?.status ?? 0;
-    const code = body?.error || (status === 0 ? 'NETWORK_ERROR' : 'ERROR_API');
-    const message = body?.message || fallbackMessage;
-    const erroresCampo = body?.errors || {};
-    const faltan = Array.isArray(body?.faltan) ? body.faltan : [];
-
-    return {
-      status,
-      code,
-      message,
-      reenviarEnSegundos: body?.reenviar_en_segundos,
-      intentosRestantes: body?.intentos_restantes,
-      erroresCampo,
-      faltan
-    };
+    this.stateSubject.next({ ...this.snapshot, ...partial });
   }
 }
